@@ -1,0 +1,18 @@
+{
+  "name": "devolution-idle-game",
+  "version": "0.1.0",
+  "description": "퇴화형 순환 방치 수집 로그라이트 - 순화와 교감으로 몬스터를 팀에 합류시키는 턴제 수집 게임",
+  "scripts": {
+    "dev": "cd src && python -m http.server 8080",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "gh-pages -d src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangjin-krafton/Devolution-Idle-Game.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
+  }
+}
