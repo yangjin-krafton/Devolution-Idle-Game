@@ -57,7 +57,9 @@
       "Bash(npm uninstall vite typescript)",
       "Bash(npm uninstall pixi.js)",
       "Bash(mkdir -p src/asset sandbox thumbs docs/devlog)",
-      "Bash(rm -f index.html)"
+      "Bash(rm -f index.html)",
+      "Bash(npx http-server src -p 8080 -c-1 --silent)",
+      "Bash(BASE=\"https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images\")"
     ],
     "additionalDirectories": [
       "\\tmp"

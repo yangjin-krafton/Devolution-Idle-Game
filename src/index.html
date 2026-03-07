@@ -3,15 +3,587 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Devolution Idle Game</title>
+  <title>Devolution Idle Game - MVP</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #1a1a2e; overflow: hidden; }
-    canvas { display: block; }
+    body {
+      background: #0f0f1a;
+      color: #d0d0e0;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game {
+      width: 480px;
+      height: 850px;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #2a2a4a;
+      position: relative;
+      overflow: hidden;
+      transform-origin: center center;
+    }
+
+    /* ---- Top: Enemy Area ---- */
+    #enemy-area {
+      padding: 16px;
+      background: linear-gradient(180deg, #1e1e38, #1a1a2e);
+      border-bottom: 1px solid #2a2a4a;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    #enemy-img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 8px rgba(120,120,255,0.3));
+      transition: transform 0.3s;
+    }
+    #enemy-img.shake {
+      animation: enemyShake 0.4s ease;
+    }
+    @keyframes enemyShake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    #enemy-info { flex: 1; }
+    #enemy-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e8e8ff;
+      margin-bottom: 2px;
+    }
+    #enemy-desc {
+      font-size: 12px;
+      color: #8888aa;
+      margin-bottom: 12px;
+    }
+    .gauge-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+    .gauge-label {
+      font-size: 11px;
+      width: 32px;
+      text-align: right;
+      color: #9999bb;
+      flex-shrink: 0;
+    }
+    .gauge-bar {
+      flex: 1;
+      height: 14px;
+      background: #12122a;
+      border-radius: 7px;
+      overflow: hidden;
+      position: relative;
+    }
+    .gauge-fill {
+      height: 100%;
+      border-radius: 7px;
+      transition: width 0.4s ease;
+    }
+    .gauge-taming .gauge-fill { background: linear-gradient(90deg, #4a9eff, #7fdbff); }
+    .gauge-escape .gauge-fill { background: linear-gradient(90deg, #ff6b6b, #ff4757); }
+    .gauge-percent {
+      font-size: 10px;
+      width: 36px;
+      text-align: left;
+      color: #7777aa;
+      flex-shrink: 0;
+    }
+
+    /* ---- Middle: Log Area ---- */
+    #log-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      scroll-behavior: smooth;
+    }
+    #log-area::-webkit-scrollbar { width: 4px; }
+    #log-area::-webkit-scrollbar-track { background: transparent; }
+    #log-area::-webkit-scrollbar-thumb { background: #3a3a5a; border-radius: 2px; }
+    .log-entry {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #b0b0cc;
+      animation: fadeIn 0.3s ease;
+    }
+    .log-entry.important { color: #7fdbff; font-weight: 600; }
+    .log-entry.danger { color: #ff6b6b; }
+    .log-entry.success { color: #7bed9f; font-weight: 600; }
+    .log-entry.system { color: #ffa502; font-style: italic; }
+    .log-turn-divider {
+      border-top: 1px solid #2a2a4a;
+      margin: 4px 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- Bottom: Ally + Actions ---- */
+    #ally-area {
+      border-top: 1px solid #2a2a4a;
+      background: #16162b;
+      padding: 10px 16px;
+    }
+    #ally-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .ally-tab {
+      flex: 1;
+      padding: 6px 4px;
+      background: #1e1e38;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 11px;
+      color: #8888aa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .ally-tab-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+    .ally-tab:hover { background: #262650; }
+    .ally-tab.active {
+      background: #2a2a5a;
+      border-color: #4a9eff;
+      color: #e8e8ff;
+    }
+    .ally-tab.fainted {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .ally-tab.in-egg {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #2a2a20;
+      border-color: #665500;
+      color: #aa9944;
+    }
+    .ally-tab-name { font-weight: 600; font-size: 12px; }
+    .ally-tab-hp { font-size: 10px; margin-top: 2px; }
+
+    #action-area {
+      padding: 0 16px 12px;
+      background: #16162b;
+    }
+    #actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .action-btn {
+      padding: 10px 12px;
+      background: #1e1e3a;
+      border: 1px solid #3a3a5a;
+      border-radius: 8px;
+      color: #c0c0dd;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      font-family: inherit;
+      font-size: 13px;
+    }
+    .action-btn:hover {
+      background: #2a2a55;
+      border-color: #5a5aaa;
+      color: #e8e8ff;
+    }
+    .action-btn:active {
+      transform: scale(0.98);
+    }
+    .action-btn.bonding {
+      border-color: #4a9eff;
+      background: #1a2a4a;
+    }
+    .action-btn.bonding:hover {
+      background: #2a3a6a;
+      border-color: #7fdbff;
+    }
+    .action-btn.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .action-name { font-weight: 600; }
+    .action-desc { font-size: 11px; color: #7777aa; margin-top: 2px; }
+    .action-axis {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: #2a2a4a;
+      color: #9999bb;
+      margin-left: 8px;
+    }
+
+    /* ---- Bonding Toggle ---- */
+    #bonding-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #3a3a5a;
+      border-radius: 6px;
+      background: #1e1e3a;
+      color: #8888aa;
+      cursor: pointer;
+      text-align: center;
+      font-family: inherit;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .mode-btn:hover { background: #2a2a55; }
+    .mode-btn.active {
+      background: #2a3a6a;
+      border-color: #4a9eff;
+      color: #7fdbff;
+    }
+    .mode-btn.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ---- Screens ---- */
+    .screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+    .screen.active { display: flex; }
+
+    /* ---- Result Screen ---- */
+    #result-screen {
+      justify-content: center;
+      align-items: center;
+      padding: 32px;
+      text-align: center;
+    }
+    #result-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    #result-desc {
+      font-size: 14px;
+      color: #8888aa;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    #result-xp-logs {
+      text-align: left;
+      margin-bottom: 24px;
+      padding: 12px;
+      background: #12122a;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.8;
+      max-height: 200px;
+      overflow-y: auto;
+      width: 100%;
+    }
+    .next-btn {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #4a9eff, #2a6ecc);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .next-btn:hover {
+      background: linear-gradient(135deg, #5ab0ff, #3a7eee);
+      transform: translateY(-1px);
+    }
+
+    /* ---- Team Screen (between battles) ---- */
+    #team-screen {
+      padding: 24px;
+    }
+    #team-screen h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #e8e8ff;
+    }
+    .team-card {
+      padding: 12px;
+      background: #1e1e38;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .team-card-name { font-weight: 600; font-size: 14px; color: #e8e8ff; }
+    .team-card-status { font-size: 12px; color: #8888aa; margin-top: 4px; }
+    .team-card.egg {
+      border-color: #665500;
+      background: #1e1e20;
+    }
+    .team-card.egg .team-card-name { color: #aa9944; }
+    .egg-progress-bar {
+      height: 6px;
+      background: #12122a;
+      border-radius: 3px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .egg-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #aa9944, #ffdd57);
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+    #collection-area {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #2a2a4a;
+    }
+    #collection-area h3 {
+      font-size: 14px;
+      color: #7fdbff;
+      margin-bottom: 8px;
+    }
+    .collection-item {
+      font-size: 12px;
+      color: #8888aa;
+      padding: 4px 0;
+    }
+    #team-actions {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* ---- Title Screen ---- */
+    #title-screen {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px;
+    }
+    #title-screen h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e8e8ff;
+      margin-bottom: 8px;
+    }
+    #title-screen p {
+      font-size: 13px;
+      color: #7777aa;
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+
+    /* ---- Devolution Reveal ---- */
+    #devo-screen {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px;
+    }
+    #devo-screen h2 {
+      font-size: 20px;
+      color: #ffdd57;
+      margin-bottom: 12px;
+    }
+    #devo-images {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .devo-img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+    }
+    .devo-img.old { opacity: 0.5; filter: grayscale(0.5); }
+    .devo-img.new { filter: drop-shadow(0 0 12px rgba(127,219,159,0.5)); }
+    #devo-old-name {
+      font-size: 14px;
+      color: #8888aa;
+      margin-bottom: 4px;
+    }
+    #devo-arrow {
+      font-size: 24px;
+      color: #ffdd57;
+      margin: 8px 0;
+    }
+    #devo-new-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #7bed9f;
+      margin-bottom: 4px;
+    }
+    #devo-new-desc {
+      font-size: 13px;
+      color: #b0b0cc;
+      margin-bottom: 24px;
+    }
+
+    /* ---- Game Over ---- */
+    #gameover-screen {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 32px;
+    }
+    #gameover-screen h2 {
+      font-size: 24px;
+      color: #ff6b6b;
+      margin-bottom: 12px;
+    }
+    #gameover-stats {
+      font-size: 13px;
+      color: #8888aa;
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
   </style>
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+  <div id="game">
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen active">
+      <h1>Devolution</h1>
+      <p>
+        야생 몬스터를 공격하지 않고<br/>
+        순화와 교감으로 팀에 합류시키세요.<br/><br/>
+        몬스터는 전투를 거치며<br/>
+        더 단순하고 귀여운 모습으로 퇴화합니다.
+      </p>
+      <button class="next-btn" id="start-btn">탐험 시작</button>
+    </div>
+
+    <!-- Combat Screen -->
+    <div id="combat-screen" class="screen">
+      <div id="enemy-area">
+        <img id="enemy-img" src="" alt="" />
+        <div id="enemy-info">
+        <div id="enemy-name"></div>
+        <div id="enemy-desc"></div>
+        <div class="gauge-row">
+          <span class="gauge-label">순화</span>
+          <div class="gauge-bar gauge-taming">
+            <div class="gauge-fill" id="taming-fill" style="width:0%"></div>
+          </div>
+          <span class="gauge-percent" id="taming-pct">0%</span>
+        </div>
+        <div class="gauge-row">
+          <span class="gauge-label">탈출</span>
+          <div class="gauge-bar gauge-escape">
+            <div class="gauge-fill" id="escape-fill" style="width:0%"></div>
+          </div>
+          <span class="gauge-percent" id="escape-pct">0%</span>
+        </div>
+        </div><!-- /enemy-info -->
+      </div>
+
+      <div id="log-area"></div>
+
+      <div id="ally-area">
+        <div id="ally-tabs"></div>
+      </div>
+      <div id="action-area">
+        <div id="bonding-toggle">
+          <button class="mode-btn active" id="mode-taming">순화 행동</button>
+          <button class="mode-btn" id="mode-bonding">인간 교감</button>
+        </div>
+        <div id="actions"></div>
+      </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen">
+      <div id="result-title"></div>
+      <div id="result-desc"></div>
+      <div id="result-xp-logs"></div>
+      <button class="next-btn" id="result-next-btn">계속</button>
+    </div>
+
+    <!-- Team Screen -->
+    <div id="team-screen" class="screen">
+      <h2>팀 상태</h2>
+      <div id="team-cards"></div>
+      <div id="collection-area">
+        <h3>수집한 몬스터</h3>
+        <div id="collection-list"></div>
+      </div>
+      <div id="team-actions">
+        <button class="next-btn" id="next-battle-btn">다음 전투</button>
+      </div>
+    </div>
+
+    <!-- Devolution Reveal Screen -->
+    <div id="devo-screen" class="screen">
+      <h2>퇴화 완료!</h2>
+      <div id="devo-images">
+        <img class="devo-img old" id="devo-old-img" src="" alt="" />
+        <span style="font-size:28px;color:#ffdd57;">→</span>
+        <img class="devo-img new" id="devo-new-img" src="" alt="" />
+      </div>
+      <div id="devo-old-name"></div>
+      <div id="devo-arrow"></div>
+      <div id="devo-new-name"></div>
+      <div id="devo-new-desc"></div>
+      <button class="next-btn" id="devo-next-btn">확인</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="screen">
+      <h2>탐험 종료</h2>
+      <div id="gameover-stats"></div>
+      <button class="next-btn" id="restart-btn">다시 시작</button>
+    </div>
+  </div>
+
+  <script>
+    function fitGame() {
+      const game = document.getElementById('game');
+      const scaleX = window.innerWidth / 480;
+      const scaleY = window.innerHeight / 850;
+      const scale = Math.min(scaleX, scaleY);
+      game.style.transform = 'scale(' + scale + ')';
+    }
+    fitGame();
+    window.addEventListener('resize', fitGame);
+  </script>
   <script type="module" src="main.js"></script>
 </body>
 </html>
