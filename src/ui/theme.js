@@ -4,6 +4,7 @@
 
 export const W = 480;
 export const H = 850;
+export const S = 2; // UI text scale factor for mobile readability
 
 export const C = {
   bg: 0xffe8f0, bgAlt: 0xfff4f8,
@@ -29,7 +30,7 @@ export function hex(c) {
 export function lbl(text, size, color, bold) {
   return new PIXI.Text({ text, style: {
     fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-    fontSize: size,
+    fontSize: size * S,
     fill: typeof color === 'number' ? hex(color) : color,
     fontWeight: bold ? '800' : '400',
   }});
@@ -59,13 +60,14 @@ export function cuteBar(x, y, w, h, ratio, fillColor, bgColor) {
 
 // Cute pill-shaped button
 export function cuteBtn(x, y, w, h, text, bgColor, textColor) {
+  const bw = w * S, bh = h * S;
   const c = new PIXI.Container(); c.x = x; c.y = y;
-  const r = h / 2;
-  c.addChild(new PIXI.Graphics().roundRect(2, 3, w, h, r).fill({ color: 0x000000, alpha: 0.08 }));
-  c.addChild(new PIXI.Graphics().roundRect(0, 0, w, h, r).fill({ color: bgColor || C.pink }));
-  c.addChild(new PIXI.Graphics().roundRect(4, 2, w - 8, h * 0.4, r).fill({ color: 0xffffff, alpha: 0.25 }));
+  const r = bh / 2;
+  c.addChild(new PIXI.Graphics().roundRect(2, 3, bw, bh, r).fill({ color: 0x000000, alpha: 0.08 }));
+  c.addChild(new PIXI.Graphics().roundRect(0, 0, bw, bh, r).fill({ color: bgColor || C.pink }));
+  c.addChild(new PIXI.Graphics().roundRect(4, 2, bw - 8, bh * 0.4, r).fill({ color: 0xffffff, alpha: 0.25 }));
   const t = lbl(text, 11, textColor || 0xffffff, true);
-  t.anchor = { x: 0.5, y: 0.5 }; t.x = w / 2; t.y = h / 2;
+  t.anchor = { x: 0.5, y: 0.5 }; t.x = bw / 2; t.y = bh / 2;
   c.addChild(t);
   c.eventMode = 'static'; c.cursor = 'pointer';
   return c;

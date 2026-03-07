@@ -581,13 +581,13 @@ function buildAllyArea() {
   container.addChild(refs.allySprite);
 
   refs.allyInfo = new PIXI.Container();
-  refs.allyInfo.x = W - 200; refs.allyInfo.y = 230;
+  refs.allyInfo.x = W - 290; refs.allyInfo.y = 220;
   container.addChild(refs.allyInfo);
 }
 
 function buildPartyBar() {
   const y = 340;
-  container.addChild(new PIXI.Graphics().roundRect(8, y, W - 16, 34, 12).fill({ color: 0xffffff, alpha: 0.6 }));
+  container.addChild(new PIXI.Graphics().roundRect(8, y, W - 16, 50, 12).fill({ color: 0xffffff, alpha: 0.6 }));
   container.addChild(Object.assign(lbl('PARTY', 7, C.dim), { x: 16, y: y + 4 }));
   refs.partyBar = new PIXI.Container();
   refs.partyBar.y = y;
@@ -606,7 +606,7 @@ function buildDanmaku() {
 }
 
 function buildActionPanel() {
-  const actBg = 385;
+  const actBg = 395;
   container.addChild(new PIXI.Graphics().roundRect(0, actBg, W, H - actBg, 24).fill({ color: C.cream }));
 
   // Mode tabs
@@ -617,7 +617,7 @@ function buildActionPanel() {
 
   // Action card container
   refs.actionContainer = new PIXI.Container();
-  refs.actionContainer.y = 440;
+  refs.actionContainer.y = 470;
   container.addChild(refs.actionContainer);
 }
 
@@ -630,13 +630,13 @@ export function renderEnemy(enemy) {
   refs.enemySprite.addChild(monster(130, enemy.img));
 
   refs.enemyInfo.removeChildren();
-  refs.enemyInfo.addChild(softPanel(0, 0, 180, 70, C.white, C.lavender));
+  refs.enemyInfo.addChild(softPanel(0, 0, 280, 120, C.white, C.lavender));
   refs.enemyInfo.addChild(Object.assign(lbl(enemy.name, 11, C.text, true), { x: 14, y: 8 }));
-  refs.enemyInfo.addChild(Object.assign(lbl('TAME', 8, C.taming), { x: 14, y: 28 }));
-  refs.tamingBar = cuteBar(52, 30, 112, 10, 0, C.taming);
+  refs.enemyInfo.addChild(Object.assign(lbl('TAME', 8, C.taming), { x: 14, y: 42 }));
+  refs.tamingBar = cuteBar(80, 44, 180, 16, 0, C.taming);
   refs.enemyInfo.addChild(refs.tamingBar);
-  refs.enemyInfo.addChild(Object.assign(lbl('ESC', 8, C.escape), { x: 14, y: 46 }));
-  refs.escapeBar = cuteBar(52, 48, 112, 10, 0, C.escape);
+  refs.enemyInfo.addChild(Object.assign(lbl('ESC', 8, C.escape), { x: 14, y: 72 }));
+  refs.escapeBar = cuteBar(80, 74, 180, 16, 0, C.escape);
   refs.enemyInfo.addChild(refs.escapeBar);
 }
 
@@ -644,13 +644,13 @@ export function updateGauges(tamingPercent, escapePercent) {
   if (refs.tamingBar) {
     const idx = refs.enemyInfo.children.indexOf(refs.tamingBar);
     if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
-    refs.tamingBar = cuteBar(52, 30, 112, 10, tamingPercent / 100, C.taming);
+    refs.tamingBar = cuteBar(80, 44, 180, 16, tamingPercent / 100, C.taming);
     refs.enemyInfo.addChildAt(refs.tamingBar, Math.min(idx, refs.enemyInfo.children.length));
   }
   if (refs.escapeBar) {
     const idx = refs.enemyInfo.children.indexOf(refs.escapeBar);
     if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
-    refs.escapeBar = cuteBar(52, 48, 112, 10, escapePercent / 100, C.escape);
+    refs.escapeBar = cuteBar(80, 74, 180, 16, escapePercent / 100, C.escape);
     refs.enemyInfo.addChildAt(refs.escapeBar, Math.min(idx, refs.enemyInfo.children.length));
   }
 }
@@ -663,13 +663,13 @@ export function renderAlly(ally) {
   refs.allySprite.addChild(m);
 
   refs.allyInfo.removeChildren();
-  refs.allyInfo.addChild(softPanel(0, 0, 185, 70, C.white, C.pinkLight));
+  refs.allyInfo.addChild(softPanel(0, 0, 280, 110, C.white, C.pinkLight));
   refs.allyInfo.addChild(Object.assign(lbl(ally.name, 11, C.text, true), { x: 14, y: 8 }));
-  refs.allyInfo.addChild(Object.assign(lbl('Lv.' + (ally.level || 1), 9, C.dim), { x: 130, y: 10 }));
-  refs.allyInfo.addChild(Object.assign(lbl('HP', 8, C.hp), { x: 14, y: 28 }));
+  refs.allyInfo.addChild(Object.assign(lbl('Lv.' + (ally.level || 1), 9, C.dim), { x: 200, y: 10 }));
+  refs.allyInfo.addChild(Object.assign(lbl('HP', 8, C.hp), { x: 14, y: 42 }));
   const hpRatio = ally.hp / ally.maxHp;
-  refs.allyInfo.addChild(cuteBar(40, 30, 130, 10, hpRatio, hpRatio > 0.3 ? C.hp : C.hpLow));
-  refs.allyInfo.addChild(Object.assign(lbl(ally.hp + '/' + ally.maxHp, 8, C.dim), { x: 130, y: 44 }));
+  refs.allyInfo.addChild(cuteBar(60, 44, 200, 16, hpRatio, hpRatio > 0.3 ? C.hp : C.hpLow));
+  refs.allyInfo.addChild(Object.assign(lbl(ally.hp + '/' + ally.maxHp, 8, C.dim), { x: 200, y: 68 }));
 }
 
 // Danmaku log color categorization
@@ -700,13 +700,13 @@ function spawnDanmaku(msg) {
 
   const t = new PIXI.Text({ text: msg, style: {
     fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-    fontSize: 11, fill: hex(color), fontWeight: 'bold',
+    fontSize: 22, fill: hex(color), fontWeight: 'bold',
     dropShadow: { color: '#000000', alpha: 0.5, blur: 2, distance: 1 },
   }});
   t.alpha = 0.85;
 
   // Stagger Y position across available lanes
-  const lanes = [10, 30, 50, 70, 90];
+  const lanes = [10, 40, 70, 100, 130];
   const lane = lanes[danmakuItems.length % lanes.length];
   t.x = W + 10;
   t.y = lane;
@@ -775,39 +775,39 @@ export function renderActions(ally, canBond) {
   if (currentMode === 'taming') {
     if (!ally) return;
     ally.actions.forEach((action, i) => {
-      const y = i * 62;
+      const y = i * 100;
       const ct = new PIXI.Container(); ct.y = y;
       ct.eventMode = 'static'; ct.cursor = 'pointer';
 
-      ct.addChild(softPanel(14, 0, W - 28, 54, C.white, i === 0 ? C.pink : C.border));
+      ct.addChild(softPanel(14, 0, W - 28, 90, C.white, i === 0 ? C.pink : C.border));
 
       const axColor = AXIS_COLORS[action.axis] || C.lavender;
-      ct.addChild(new PIXI.Graphics().circle(40, 27, 16).fill({ color: axColor }));
+      ct.addChild(new PIXI.Graphics().circle(44, 45, 24).fill({ color: axColor }));
       const axLbl = lbl(AXIS_LABELS[action.axis] || '?', 7, 0xffffff, true);
-      axLbl.anchor = { x: 0.5, y: 0.5 }; axLbl.x = 40; axLbl.y = 27;
+      axLbl.anchor = { x: 0.5, y: 0.5 }; axLbl.x = 44; axLbl.y = 45;
       ct.addChild(axLbl);
 
-      ct.addChild(Object.assign(lbl(action.name, 12, C.text, true), { x: 64, y: 8 }));
-      ct.addChild(Object.assign(lbl(action.log, 8, C.dim), { x: 64, y: 30 }));
+      ct.addChild(Object.assign(lbl(action.name, 12, C.text, true), { x: 80, y: 10 }));
+      ct.addChild(Object.assign(lbl(action.log, 8, C.dim), { x: 80, y: 48 }));
 
       ct.on('pointerdown', () => { if (onAction) onAction(i); });
       refs.actionContainer.addChild(ct);
     });
   } else {
     BONDING_ACTIONS.forEach((bonding, i) => {
-      const y = i * 62;
+      const y = i * 100;
       const ct = new PIXI.Container(); ct.y = y;
       ct.eventMode = 'static'; ct.cursor = 'pointer';
 
-      ct.addChild(softPanel(14, 0, W - 28, 54, 0xfff8ee, C.orange));
+      ct.addChild(softPanel(14, 0, W - 28, 90, 0xfff8ee, C.orange));
 
-      ct.addChild(new PIXI.Graphics().circle(40, 27, 16).fill({ color: C.orange }));
+      ct.addChild(new PIXI.Graphics().circle(44, 45, 24).fill({ color: C.orange }));
       const ic = lbl('HB', 7, 0xffffff, true);
-      ic.anchor = { x: 0.5, y: 0.5 }; ic.x = 40; ic.y = 27;
+      ic.anchor = { x: 0.5, y: 0.5 }; ic.x = 44; ic.y = 45;
       ct.addChild(ic);
 
-      ct.addChild(Object.assign(lbl(bonding.name, 12, C.text, true), { x: 64, y: 8 }));
-      ct.addChild(Object.assign(lbl(bonding.desc, 8, C.dim), { x: 64, y: 30 }));
+      ct.addChild(Object.assign(lbl(bonding.name, 12, C.text, true), { x: 80, y: 10 }));
+      ct.addChild(Object.assign(lbl(bonding.desc, 8, C.dim), { x: 80, y: 48 }));
 
       if (canBond) {
         ct.on('pointerdown', () => { if (onBonding) onBonding(i); });
@@ -822,26 +822,26 @@ export function renderActions(ally, canBond) {
 function updateTabVisuals(canBond) {
   refs.tabTaming.removeChildren();
   refs.tabBonding.removeChildren();
-  const tabY = 396;
+  const tabY = 406;
 
   const tamingActive = currentMode === 'taming';
   refs.tabTaming.addChild(new PIXI.Graphics()
-    .roundRect(14, tabY, W / 2 - 18, 30, 15)
+    .roundRect(14, tabY, W / 2 - 18, 50, 20)
     .fill({ color: tamingActive ? C.pink : C.dimmer }));
   const t1 = lbl('순화 행동', 10, 0xffffff, true);
-  t1.anchor = { x: 0.5, y: 0.5 }; t1.x = W / 4 + 2; t1.y = tabY + 15;
+  t1.anchor = { x: 0.5, y: 0.5 }; t1.x = W / 4 + 2; t1.y = tabY + 25;
   refs.tabTaming.addChild(t1);
 
   const bondActive = currentMode === 'bonding';
   refs.tabBonding.addChild(new PIXI.Graphics()
-    .roundRect(W / 2 + 4, tabY, W / 2 - 18, 30, 15)
+    .roundRect(W / 2 + 4, tabY, W / 2 - 18, 50, 20)
     .fill({ color: bondActive ? C.orange : (canBond ? C.dimmer : 0xddccdd) }));
   const t2 = lbl('인간 교감', 10, canBond ? 0xffffff : 0xddbbdd, true);
-  t2.anchor = { x: 0.5, y: 0.5 }; t2.x = W * 3 / 4 + 2; t2.y = tabY + 15;
+  t2.anchor = { x: 0.5, y: 0.5 }; t2.x = W * 3 / 4 + 2; t2.y = tabY + 25;
   refs.tabBonding.addChild(t2);
   if (!canBond) {
     const lockTxt = lbl('TAME 50%+', 6, 0xddbbdd);
-    lockTxt.anchor = { x: 0.5, y: 0.5 }; lockTxt.x = W * 3 / 4 + 2; lockTxt.y = tabY + 30;
+    lockTxt.anchor = { x: 0.5, y: 0.5 }; lockTxt.x = W * 3 / 4 + 2; lockTxt.y = tabY + 50;
     refs.tabBonding.addChild(lockTxt);
   }
 }
