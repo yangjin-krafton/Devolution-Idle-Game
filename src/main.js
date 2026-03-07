@@ -15,8 +15,9 @@ import {
   tickCombat, resetDanmaku,
 } from './ui/combatUI.js';
 import { randomEnvironment } from './backgrounds.js';
+import { initTitle } from './ui/titleUI.js';
 import {
-  initTitle, initResult, renderResult,
+  initResult, renderResult,
   initTeam, renderTeamCards, updateEggProgress,
   initDevo, renderDevoReveal, tickDevo,
   initGameOver, renderGameOver,
