@@ -59,7 +59,11 @@
       "Bash(mkdir -p src/asset sandbox thumbs docs/devlog)",
       "Bash(rm -f index.html)",
       "Bash(npx http-server src -p 8080 -c-1 --silent)",
-      "Bash(BASE=\"https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images\")"
+      "Bash(BASE=\"https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images\")",
+      "Bash(npx http-server sandbox/battle-layout -p 8081 -c-1 --silent)",
+      "Bash(npx http-server . -p 8082 -c-1 --silent)",
+      "Bash(npx http-server . -p 8082 -c-1)",
+      "Bash(taskkill //F //IM \"node.exe\")"
     ],
     "additionalDirectories": [
       "\\tmp"
