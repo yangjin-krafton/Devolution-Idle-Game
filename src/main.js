@@ -1,35 +1,29 @@
 // ============================================================
-// Main Game Controller
+// Main Game Controller (bootstrap + flow)
 // ============================================================
 
-import { BONDING_ACTIONS } from './data.js';
 import { CombatSystem } from './combat.js';
 import { TeamManager } from './team.js';
+import { showScreen, $ } from './ui/screens.js';
+import {
+  setCombatCallbacks, setMode, renderEnemy, updateGauges,
+  renderLogs, renderAllyTabs, renderActions, shakeEnemy,
+  triggerTamingVFX, triggerAttackVFX,
+  triggerBondingAttemptVFX, triggerBondingSuccessVFX,
+  triggerBondingFailVFX, triggerEscapeVFX, triggerFaintVFX,
+} from './ui/combatUI.js';
+import {
+  renderResult, renderTeamCards, updateEggProgress,
+  renderDevoReveal, renderGameOver,
+} from './ui/teamUI.js';
 
 // ---- State ----
 let teamManager;
 let combat;
-let currentMode = 'taming'; // taming | bonding
 let battleCount = 0;
 let capturedCount = 0;
 let pendingDevoReveals = [];
-
-// ---- DOM Refs ----
-const $ = (id) => document.getElementById(id);
-
-const screens = {
-  title: $('title-screen'),
-  combat: $('combat-screen'),
-  result: $('result-screen'),
-  team: $('team-screen'),
-  devo: $('devo-screen'),
-  gameover: $('gameover-screen'),
-};
-
-function showScreen(name) {
-  Object.values(screens).forEach(s => s.classList.remove('active'));
-  screens[name].classList.add('active');
-}
+let eggCheckInterval = null;
 
 // ---- Title ----
 $('start-btn').addEventListener('click', () => {
@@ -39,12 +33,10 @@ $('start-btn').addEventListener('click', () => {
   startBattle();
 });
 
-// ---- Combat ----
+// ---- Combat Flow ----
 function startBattle() {
-  // Check egg hatches before battle
   const hatchLogs = teamManager.checkEggHatch();
   if (hatchLogs.length > 0) {
-    // Show devolution reveal
     for (const ally of teamManager.allies) {
       if (ally.devolved && !ally._revealed) {
         ally._revealed = true;
@@ -60,7 +52,6 @@ function startBattle() {
 
   const battleTeam = teamManager.getActiveTeam();
   if (battleTeam.length === 0) {
-    // All in egg — show team screen, wait for hatches
     showTeamScreen();
     return;
   }
@@ -68,239 +59,126 @@ function startBattle() {
   battleCount++;
   const enemy = teamManager.getRandomEnemy();
   combat = new CombatSystem(battleTeam, enemy);
-  currentMode = 'taming';
+  setMode('taming');
+
+  // Wire up combat UI callbacks
+  setCombatCallbacks({
+    action: handleAction,
+    bonding: handleBonding,
+    switchAlly: (i) => {
+      combat.switchAlly(i);
+      refreshCombatUI();
+    },
+  });
+
+  // Wire up mode toggle
+  $('mode-taming').onclick = () => {
+    setMode('taming');
+    renderActions(combat.getActiveAlly(), combat.canBond());
+  };
+  $('mode-bonding').onclick = () => {
+    if (combat && combat.canBond()) {
+      setMode('bonding');
+      renderActions(combat.getActiveAlly(), combat.canBond());
+    }
+  };
 
   showScreen('combat');
-  renderEnemy();
-  renderLogs();
-  renderAllyTabs();
-  renderActions();
-  updateGauges();
+  renderEnemy(combat.enemy);
+  refreshCombatUI();
 }
 
-function renderEnemy() {
-  $('enemy-name').textContent = combat.enemy.name;
-  $('enemy-desc').textContent = combat.enemy.desc;
-  $('enemy-img').src = combat.enemy.img || '';
-  $('enemy-img').alt = combat.enemy.name;
-}
-
-function updateGauges() {
-  const result = combat.getResult();
-  $('taming-fill').style.width = result.tamingPercent + '%';
-  $('taming-pct').textContent = result.tamingPercent + '%';
-  $('escape-fill').style.width = result.escapePercent + '%';
-  $('escape-pct').textContent = result.escapePercent + '%';
-}
-
-function renderLogs() {
-  const logArea = $('log-area');
-  logArea.innerHTML = '';
-  for (const msg of combat.logs) {
-    const div = document.createElement('div');
-    div.className = 'log-entry';
-    // Classify log messages
-    if (msg.includes('교감') && msg.includes('성공')) div.className += ' success';
-    else if (msg.includes('도망') || msg.includes('훈미') || msg.includes('게임 오버') || msg.includes('피해')) div.className += ' danger';
-    else if (msg.includes('나타났다') || msg.includes('경험치') || msg.includes('알 상태')) div.className += ' system';
-    else if (msg.includes('교감') || msg.includes('순화')) div.className += ' important';
-    div.textContent = msg;
-    logArea.appendChild(div);
-  }
-  logArea.scrollTop = logArea.scrollHeight;
-}
-
-function renderAllyTabs() {
-  const tabs = $('ally-tabs');
-  tabs.innerHTML = '';
-  combat.team.forEach((ally, i) => {
-    const tab = document.createElement('div');
-    tab.className = 'ally-tab';
-    if (i === combat.activeAllyIndex) tab.className += ' active';
-    if (ally.hp <= 0) tab.className += ' fainted';
-    if (ally.inEgg) tab.className += ' in-egg';
-
-    tab.innerHTML = `
-      <img class="ally-tab-img" src="${ally.img || ''}" alt="${ally.name}" />
-      <div class="ally-tab-name">${ally.name}</div>
-      <div class="ally-tab-hp">HP ${ally.hp}/${ally.maxHp}</div>
-    `;
-    tab.addEventListener('click', () => {
-      if (ally.hp > 0 && !ally.inEgg && combat.state === 'active') {
-        combat.switchAlly(i);
-        renderAllyTabs();
-        renderActions();
-        renderLogs();
-      }
-    });
-    tabs.appendChild(tab);
-  });
-}
-
-function renderActions() {
-  const actionsDiv = $('actions');
-  actionsDiv.innerHTML = '';
-
-  // Update mode buttons
-  const modeTaming = $('mode-taming');
-  const modeBonding = $('mode-bonding');
-  modeTaming.className = 'mode-btn' + (currentMode === 'taming' ? ' active' : '');
-  modeBonding.className = 'mode-btn' + (currentMode === 'bonding' ? ' active' : '');
-  if (!combat.canBond()) {
-    modeBonding.className += ' disabled';
-  }
-
-  if (currentMode === 'taming') {
-    const ally = combat.getActiveAlly();
-    if (!ally) return;
-    const axisLabels = { sound: '청각', temperature: '온도', smell: '후각', behavior: '행동' };
-
-    ally.actions.forEach((action, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'action-btn';
-      btn.innerHTML = `
-        <span class="action-name">${action.name}</span>
-        <span class="action-axis">${axisLabels[action.axis]}</span>
-        <div class="action-desc">${action.log}</div>
-      `;
-      btn.addEventListener('click', () => handleAction(i));
-      actionsDiv.appendChild(btn);
-    });
-  } else {
-    // Bonding actions
-    BONDING_ACTIONS.forEach((bonding, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'action-btn bonding';
-      const canBond = combat.canBond();
-      if (!canBond) btn.className += ' disabled';
-      btn.innerHTML = `
-        <span class="action-name">${bonding.name}</span>
-        <div class="action-desc">${bonding.desc}</div>
-      `;
-      if (canBond) {
-        btn.addEventListener('click', () => handleBonding(i));
-      }
-      actionsDiv.appendChild(btn);
-    });
-  }
-}
-
-$('mode-taming').addEventListener('click', () => {
-  currentMode = 'taming';
-  renderActions();
-});
-
-$('mode-bonding').addEventListener('click', () => {
-  if (combat && combat.canBond()) {
-    currentMode = 'bonding';
-    renderActions();
-  }
-});
-
-function shakeEnemy() {
-  const img = $('enemy-img');
-  img.classList.remove('shake');
-  void img.offsetWidth; // reflow to retrigger
-  img.classList.add('shake');
+function refreshCombatUI() {
+  const r = combat.getResult();
+  updateGauges(r.tamingPercent, r.escapePercent);
+  renderLogs(r.logs);
+  renderAllyTabs(combat.team, combat.activeAllyIndex, combat.state);
+  renderActions(combat.getActiveAlly(), r.canBond);
 }
 
 function handleAction(index) {
   if (!combat || combat.state !== 'active') return;
 
+  const ally = combat.getActiveAlly();
+  const action = ally?.actions[index];
+  const prevHp = ally ? ally.hp : 0;
+
   combat.useAction(index);
   shakeEnemy();
-  updateGauges();
-  renderLogs();
-  renderAllyTabs();
-  renderActions();
 
-  if (combat.state !== 'active') {
-    setTimeout(() => endBattle(), 800);
+  // VFX: taming effect
+  if (action) {
+    const pref = combat.enemy.preferences[action.axis] || 1.0;
+    triggerTamingVFX(action.axis, pref >= 1.0);
   }
+
+  // VFX: attack if ally took damage
+  if (ally && ally.hp < prevHp) {
+    setTimeout(() => triggerAttackVFX(), 200);
+  }
+  if (ally && ally.hp <= 0) {
+    setTimeout(() => triggerFaintVFX(), 300);
+  }
+
+  // VFX: escape
+  if (combat.state === 'escaped') triggerEscapeVFX();
+
+  refreshCombatUI();
+  if (combat.state !== 'active') setTimeout(endBattle, 800);
 }
 
 function handleBonding(index) {
   if (!combat || combat.state !== 'active') return;
 
+  triggerBondingAttemptVFX();
+  const prevState = combat.state;
   combat.useBonding(index);
-  updateGauges();
-  renderLogs();
-  renderAllyTabs();
-  renderActions();
 
-  if (combat.state !== 'active') {
-    setTimeout(() => endBattle(), 800);
+  if (combat.state === 'victory') {
+    setTimeout(() => triggerBondingSuccessVFX(), 200);
+  } else if (prevState === 'active' && combat.state === 'active') {
+    triggerBondingFailVFX();
   }
+  if (combat.state === 'escaped') triggerEscapeVFX();
+
+  refreshCombatUI();
+  if (combat.state !== 'active') setTimeout(endBattle, 800);
 }
 
 // ---- End Battle ----
 function endBattle() {
   const result = combat.getResult();
-
-  // Award XP
   const xpLogs = teamManager.awardXP(result.actedAllies);
-
-  // Check devolution triggers
   const devoLogs = teamManager.checkDevolution();
 
-  // If victory, add to collection
   if (result.state === 'victory') {
     capturedCount++;
     teamManager.addCaptured(combat.enemy);
   }
 
-  // Show result screen
   showScreen('result');
-
-  if (result.state === 'victory') {
-    $('result-title').textContent = '교감 성립!';
-    $('result-title').style.color = '#7bed9f';
-    $('result-desc').textContent = `${combat.enemy.name}과(와) 교감에 성공했습니다.`;
-  } else if (result.state === 'escaped') {
-    $('result-title').textContent = '도주...';
-    $('result-title').style.color = '#ffa502';
-    $('result-desc').textContent = `${combat.enemy.name}이(가) 도망쳤습니다.`;
-  } else if (result.state === 'defeat') {
-    $('result-title').textContent = '전멸';
-    $('result-title').style.color = '#ff6b6b';
-    $('result-desc').textContent = '모든 아군이 쓰러졌습니다.';
-  }
-
-  const xpDiv = $('result-xp-logs');
-  xpDiv.innerHTML = '';
-  [...xpLogs, ...devoLogs].forEach(log => {
-    const div = document.createElement('div');
-    div.className = 'log-entry';
-    if (log.includes('알 상태')) div.className += ' system';
-    div.textContent = log;
-    xpDiv.appendChild(div);
-  });
+  renderResult(result.state, combat.enemy.name, xpLogs, devoLogs);
 
   $('result-next-btn').onclick = () => {
-    if (result.state === 'defeat') {
-      showGameOver();
-    } else {
-      showTeamScreen();
-    }
+    if (result.state === 'defeat') showGameOver();
+    else showTeamScreen();
   };
 }
 
 // ---- Team Screen ----
 function showTeamScreen() {
-  // Heal team between battles
   teamManager.healTeam();
-
   showScreen('team');
-  renderTeamCards();
-
-  // Start checking for egg hatches
+  renderTeamCards(
+    teamManager.allies,
+    teamManager.collection,
+    (id) => teamManager.getEggProgress(id),
+  );
   startEggCheckInterval();
 }
 
-let eggCheckInterval = null;
-
 function startEggCheckInterval() {
-  if (eggCheckInterval) clearInterval(eggCheckInterval);
+  stopEggCheckInterval();
   eggCheckInterval = setInterval(() => {
     const hatchLogs = teamManager.checkEggHatch();
     if (hatchLogs.length > 0) {
@@ -310,77 +188,22 @@ function startEggCheckInterval() {
           pendingDevoReveals.push(ally);
         }
       }
-      renderTeamCards();
+      renderTeamCards(
+        teamManager.allies,
+        teamManager.collection,
+        (id) => teamManager.getEggProgress(id),
+      );
     }
-    // Update egg progress bars
-    updateEggProgress();
+    updateEggProgress(teamManager.allies, (id) => teamManager.getEggProgress(id));
   }, 500);
 }
 
 function stopEggCheckInterval() {
-  if (eggCheckInterval) {
-    clearInterval(eggCheckInterval);
-    eggCheckInterval = null;
-  }
-}
-
-function renderTeamCards() {
-  const container = $('team-cards');
-  container.innerHTML = '';
-
-  for (const ally of teamManager.allies) {
-    const card = document.createElement('div');
-    card.className = 'team-card' + (ally.inEgg ? ' egg' : '');
-
-    let statusText = `HP ${ally.hp}/${ally.maxHp} | XP ${ally.xp}/${ally.xpThreshold}`;
-    if (ally.inEgg) statusText = '알 상태 (퇴화 중...)';
-    if (ally.devolved) statusText += ' | 퇴화 완료';
-
-    card.innerHTML = `
-      <div class="team-card-name">${ally.name}</div>
-      <div class="team-card-status">${statusText}</div>
-      ${ally.inEgg ? `
-        <div class="egg-progress-bar">
-          <div class="egg-progress-fill" data-ally-id="${ally.id}" style="width:0%"></div>
-        </div>
-      ` : ''}
-    `;
-    container.appendChild(card);
-  }
-
-  // Collection
-  const collList = $('collection-list');
-  collList.innerHTML = '';
-  if (teamManager.collection.length === 0) {
-    collList.innerHTML = '<div class="collection-item">아직 수집한 몬스터가 없습니다.</div>';
-  } else {
-    teamManager.collection.forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'collection-item';
-      div.textContent = `${c.name} - ${c.desc}`;
-      collList.appendChild(div);
-    });
-  }
-
-  updateEggProgress();
-}
-
-function updateEggProgress() {
-  for (const ally of teamManager.allies) {
-    if (ally.inEgg) {
-      const fill = document.querySelector(`[data-ally-id="${ally.id}"]`);
-      if (fill) {
-        const progress = teamManager.getEggProgress(ally.id);
-        fill.style.width = (progress || 0) + '%';
-      }
-    }
-  }
+  if (eggCheckInterval) { clearInterval(eggCheckInterval); eggCheckInterval = null; }
 }
 
 $('next-battle-btn').addEventListener('click', () => {
   stopEggCheckInterval();
-
-  // Check for pending reveals
   teamManager.checkEggHatch();
   for (const ally of teamManager.allies) {
     if (ally.devolved && !ally._revealed) {
@@ -388,18 +211,9 @@ $('next-battle-btn').addEventListener('click', () => {
       pendingDevoReveals.push(ally);
     }
   }
-
-  if (pendingDevoReveals.length > 0) {
-    showDevoReveal();
-    return;
-  }
-
+  if (pendingDevoReveals.length > 0) { showDevoReveal(); return; }
   const battleTeam = teamManager.getActiveTeam();
-  if (battleTeam.filter(a => a.hp > 0).length === 0) {
-    showGameOver();
-    return;
-  }
-
+  if (battleTeam.filter(a => a.hp > 0).length === 0) { showGameOver(); return; }
   startBattle();
 });
 
@@ -407,24 +221,12 @@ $('next-battle-btn').addEventListener('click', () => {
 function showDevoReveal() {
   stopEggCheckInterval();
   showScreen('devo');
-
-  const ally = pendingDevoReveals[0];
-  const ORIGINAL_NAMES = { water: '이슬요정', fire: '숯뭉이', grass: '잎사귀요정' };
-
-  $('devo-old-img').src = ally._oldImg || '';
-  $('devo-new-img').src = ally.img || '';
-  $('devo-old-name').textContent = ORIGINAL_NAMES[ally.id] || ally.id;
-  $('devo-arrow').textContent = '~ 퇴화 ~';
-  $('devo-new-name').textContent = ally.name;
-  $('devo-new-desc').textContent = ally.desc;
+  renderDevoReveal(pendingDevoReveals[0]);
 
   $('devo-next-btn').onclick = () => {
     pendingDevoReveals.shift();
-    if (pendingDevoReveals.length > 0) {
-      showDevoReveal();
-    } else {
-      startBattle();
-    }
+    if (pendingDevoReveals.length > 0) showDevoReveal();
+    else startBattle();
   };
 }
 
@@ -432,11 +234,7 @@ function showDevoReveal() {
 function showGameOver() {
   stopEggCheckInterval();
   showScreen('gameover');
-  $('gameover-stats').innerHTML = `
-    전투 횟수: ${battleCount}회<br/>
-    수집한 몬스터: ${capturedCount}마리<br/><br/>
-    다시 도전해보세요!
-  `;
+  renderGameOver(battleCount, capturedCount);
 }
 
 $('restart-btn').addEventListener('click', () => {
