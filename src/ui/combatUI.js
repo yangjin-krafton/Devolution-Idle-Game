@@ -14,6 +14,24 @@ import {
 const AXIS_LABELS = { sound: 'SND', temperature: 'TMP', smell: 'SML', behavior: 'ACT' };
 const AXIS_COLORS = { sound: C.water, temperature: C.fire, smell: C.mint, behavior: C.lavender };
 
+// Mood tag system — maps taming/escape percentages to visible mood
+const MOOD_TAGS = [
+  { tag: '경계',  color: C.dim,      check: (t, e) => t < 20 && e < 30 },
+  { tag: '긴장',  color: C.escape,   check: (t, e) => e >= 60 },
+  { tag: '불안',  color: C.orange,   check: (t, e) => e >= 30 && t < 40 },
+  { tag: '의심',  color: C.lavender, check: (t, e) => t >= 20 && t < 50 && e < 30 },
+  { tag: '관심',  color: C.taming,   check: (t, e) => t >= 50 && t < 75 && e < 40 },
+  { tag: '호감',  color: C.mint,     check: (t, e) => t >= 75 && e < 50 },
+  { tag: '친근',  color: C.pink,     check: (t, e) => t >= 90 },
+];
+
+function getMoodTag(tamingPct, escapePct) {
+  for (const m of MOOD_TAGS) {
+    if (m.check(tamingPct, escapePct)) return m;
+  }
+  return { tag: '경계', color: C.dim };
+}
+
 let container;
 let currentMode = 'taming';
 let onAction = null, onBonding = null, onSwitchAlly = null;
@@ -550,7 +568,7 @@ function createWeatherParticle(config, layer) {
 
 // ---- Enemy Area ----
 function buildEnemyArea() {
-  const ePlatX = W * 0.68, ePlatY = 70;
+  const ePlatX = W * 0.78, ePlatY = 70;
 
   // Foot shadow (ellipse)
   refs.enemyShadow = new PIXI.Graphics();
@@ -568,7 +586,7 @@ function buildEnemyArea() {
 }
 
 function buildAllyArea() {
-  const aPlatX = W * 0.28, aPlatY = 270;
+  const aPlatX = W * 0.18, aPlatY = 270;
 
   // Foot shadow (ellipse)
   refs.allyShadow = new PIXI.Graphics();
@@ -629,29 +647,40 @@ export function renderEnemy(enemy) {
   refs.enemySprite.removeChildren();
   refs.enemySprite.addChild(monster(130, enemy.img));
 
+  // Derive a display level from enemy difficulty (tamingThreshold)
+  const enemyLv = Math.max(1, Math.round(enemy.tamingThreshold / 10));
+  refs.enemyLevel = enemyLv;
+
   refs.enemyInfo.removeChildren();
-  refs.enemyInfo.addChild(softPanel(0, 0, 280, 120, C.white, C.lavender));
-  refs.enemyInfo.addChild(Object.assign(lbl(enemy.name, 11, C.text, true), { x: 14, y: 8 }));
-  refs.enemyInfo.addChild(Object.assign(lbl('TAME', 8, C.taming), { x: 14, y: 42 }));
-  refs.tamingBar = cuteBar(80, 44, 180, 16, 0, C.taming);
-  refs.enemyInfo.addChild(refs.tamingBar);
-  refs.enemyInfo.addChild(Object.assign(lbl('ESC', 8, C.escape), { x: 14, y: 72 }));
-  refs.escapeBar = cuteBar(80, 74, 180, 16, 0, C.escape);
-  refs.enemyInfo.addChild(refs.escapeBar);
+  refs.enemyInfo.addChild(softPanel(0, 0, 200, 80, C.white, C.lavender));
+  refs.enemyInfo.addChild(Object.assign(lbl(enemy.name, 10, C.text, true), { x: 12, y: 6 }));
+  refs.enemyInfo.addChild(Object.assign(lbl('Lv.' + enemyLv, 8, C.dim), { x: 145, y: 8 }));
+
+  // Mood tag placeholder
+  const mood = getMoodTag(0, 0);
+  refs.moodTagBg = new PIXI.Graphics().roundRect(12, 40, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
+  refs.enemyInfo.addChild(refs.moodTagBg);
+  refs.moodTagLabel = lbl(mood.tag, 8, mood.color, true);
+  refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 54;
+  refs.enemyInfo.addChild(refs.moodTagLabel);
 }
 
 export function updateGauges(tamingPercent, escapePercent) {
-  if (refs.tamingBar) {
-    const idx = refs.enemyInfo.children.indexOf(refs.tamingBar);
-    if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
-    refs.tamingBar = cuteBar(80, 44, 180, 16, tamingPercent / 100, C.taming);
-    refs.enemyInfo.addChildAt(refs.tamingBar, Math.min(idx, refs.enemyInfo.children.length));
-  }
-  if (refs.escapeBar) {
-    const idx = refs.enemyInfo.children.indexOf(refs.escapeBar);
-    if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
-    refs.escapeBar = cuteBar(80, 74, 180, 16, escapePercent / 100, C.escape);
-    refs.enemyInfo.addChildAt(refs.escapeBar, Math.min(idx, refs.enemyInfo.children.length));
+  const mood = getMoodTag(tamingPercent, escapePercent);
+
+  if (refs.moodTagBg && refs.moodTagLabel) {
+    // Remove old tag elements
+    const bgIdx = refs.enemyInfo.children.indexOf(refs.moodTagBg);
+    const lblIdx = refs.enemyInfo.children.indexOf(refs.moodTagLabel);
+    if (lblIdx >= 0) refs.enemyInfo.removeChildAt(lblIdx);
+    if (bgIdx >= 0) refs.enemyInfo.removeChildAt(bgIdx);
+
+    // Rebuild mood tag
+    refs.moodTagBg = new PIXI.Graphics().roundRect(12, 40, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
+    refs.enemyInfo.addChild(refs.moodTagBg);
+    refs.moodTagLabel = lbl(mood.tag, 8, mood.color, true);
+    refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 54;
+    refs.enemyInfo.addChild(refs.moodTagLabel);
   }
 }
 
