@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Devolution Idle Game Home Icon</title>
+  <desc id="desc">A stylized primordial eye over a cracked egg shell.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#17344f" />
+      <stop offset="100%" stop-color="#09131f" />
+    </linearGradient>
+    <linearGradient id="shell" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f5e6b7" />
+      <stop offset="100%" stop-color="#b8944e" />
+    </linearGradient>
+    <radialGradient id="iris" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#8ff0c8" />
+      <stop offset="100%" stop-color="#1f8f78" />
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)" />
+  <path d="M14 42c2-12 10-19 18-19s16 7 18 19c-4 5-11 8-18 8s-14-3-18-8Z" fill="url(#shell)" />
+  <path d="M32 20 28 26l4 5-5 5 6 3 5-7-3-4 3-5Z" fill="#6d4d24" opacity=".9" />
+  <ellipse cx="32" cy="33" rx="12" ry="8" fill="#f8f4dc" />
+  <circle cx="32" cy="33" r="5.5" fill="url(#iris)" />
+  <ellipse cx="32" cy="33" rx="2.2" ry="5" fill="#081218" />
+  <circle cx="34.2" cy="30.8" r="1.4" fill="#fffdf6" />
+  <path d="M17 45c5 4 10 5 15 5" fill="none" stroke="#ffe8aa" stroke-linecap="round" stroke-width="1.8" opacity=".65" />
+  <path d="M47 45c-5 4-10 5-15 5" fill="none" stroke="#8a6a2b" stroke-linecap="round" stroke-width="1.8" opacity=".65" />
+</svg>
