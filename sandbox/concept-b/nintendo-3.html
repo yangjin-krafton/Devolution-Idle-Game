@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Devolution - Nintendo Style 3: Kirby Cute</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Noto+Sans+KR:wght@400;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; height: 100dvh; width: 100vw; display: flex; justify-content: center; align-items: center; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+  <script>
+(async () => {
+
+const W = 480;
+const H = 720;
+
+const app = new PIXI.Application();
+await app.init({
+  background: '#ffe8f0', width: W, height: H,
+  antialias: true, roundPixels: true,
+  resolution: 2, autoDensity: true,
+});
+document.body.appendChild(app.canvas);
+
+// Load monster textures
+const ASSET = '../../src/asset/monsters/';
+const textures = {};
+const texList = {
+  water: 'water_ally.png', fire: 'fire_ally.png', grass: 'grass_ally.png',
+  water_devolved: 'water_devolved.png', fire_devolved: 'fire_devolved.png', grass_devolved: 'grass_devolved.png',
+  enemy_abyss_wolf: 'enemy_abyss_wolf.png', enemy_glass_moth: 'enemy_glass_moth.png',
+  enemy_stone_turtle: 'enemy_stone_turtle.png', enemy_shadow_cat: 'enemy_shadow_cat.png',
+  enemy_crystal_deer: 'enemy_crystal_deer.png', enemy_fog_jellyfish: 'enemy_fog_jellyfish.png',
+  enemy_iron_boar: 'enemy_iron_boar.png', enemy_echo_bat: 'enemy_echo_bat.png',
+};
+for (const [key, file] of Object.entries(texList)) {
+  textures[key] = await PIXI.Assets.load(ASSET + file);
+}
+
+function resize() {
+  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  app.canvas.style.width = W * s + 'px';
+  app.canvas.style.height = H * s + 'px';
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ============================================================
+// Theme: Kirby / HAL Labs Cute — soft pastels, big rounded shapes,
+//   star decorations, bouncy animations, pink/cream/lavender palette
+// ============================================================
+const C = {
+  bg: 0xffe8f0, bgAlt: 0xfff4f8,
+  pink: 0xff88aa, pinkLight: 0xffb8cc, pinkDark: 0xdd6688,
+  cream: 0xfff8e8, yellow: 0xffe060, yellowLight: 0xfff0a0,
+  orange: 0xffaa60, red: 0xff6070,
+  sky: 0xc0e8ff, skyDark: 0x90c0e8,
+  mint: 0x88ddbb, mintLight: 0xb0f0d8,
+  lavender: 0xccaaee, lavLight: 0xe0d0ff,
+  white: 0xffffff, text: 0x554455, dim: 0x998899, dimmer: 0xccbbcc,
+  border: 0xeebbcc,
+  water: 0x88bbee, fire: 0xffaa77, leaf: 0x88cc88, dark: 0xbb99dd,
+  hp: 0x88dd88, hpLow: 0xff8888,
+  taming: 0x88bbff, escape: 0xff8877,
+};
+
+function hex(c) { return '#' + c.toString(16).padStart(6, '0'); }
+
+function lbl(text, size, color, bold) {
+  return new PIXI.Text({ text, style: {
+    fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif', fontSize: size,
+    fill: typeof color === 'number' ? hex(color) : color,
+    fontWeight: bold ? '800' : '400',
+  }});
+}
+
+// Soft rounded panel (Kirby UI style)
+function softPanel(x, y, w, h, fill, borderCol) {
+  const g = new PIXI.Graphics();
+  const r = Math.min(20, h / 3);
+  // Shadow
+  g.roundRect(x + 2, y + 3, w, h, r).fill({ color: 0x000000, alpha: 0.06 });
+  // Main
+  g.roundRect(x, y, w, h, r).fill({ color: fill || C.white });
+  g.roundRect(x, y, w, h, r).stroke({ color: borderCol || C.border, width: 2.5 });
+  // Inner highlight
+  g.roundRect(x + 4, y + 2, w - 8, h * 0.3, r - 2).fill({ color: 0xffffff, alpha: 0.3 });
+  return g;
+}
+
+// Star decoration
+function star(x, y, size, color) {
+  const g = new PIXI.Graphics();
+  const pts = 5, outer = size, inner = size * 0.4;
+  g.moveTo(x, y - outer);
+  for (let i = 0; i < pts * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const angle = (i * Math.PI / pts) - Math.PI / 2;
+    const method = i === 0 ? 'moveTo' : 'lineTo';
+    g[method](x + Math.cos(angle) * r, y + Math.sin(angle) * r);
+  }
+  g.closePath().fill({ color: color || C.yellow });
+  return g;
+}
+
+// Monster sprite from loaded textures
+function monster(size, color, type, texKey) {
+  const c = new PIXI.Container();
+  const key = texKey || (type === 'enemy' ? 'enemy_abyss_wolf' : type);
+  const tex = textures[key];
+  if (tex) {
+    const spr = new PIXI.Sprite(tex);
+    spr.anchor.set(0.5);
+    const scale = size / Math.max(tex.width, tex.height);
+    spr.scale.set(scale);
+    c.addChild(spr);
+  }
+  return c;
+}
+
+function egg(size, color) {
+  const c = new PIXI.Container();
+  const g = new PIXI.Graphics();
+  g.ellipse(0, 0, size * 0.32, size * 0.42).fill({ color });
+  // Cute face on egg
+  g.circle(-size * 0.08, -size * 0.05, size * 0.04).fill({ color: 0x554455 });
+  g.circle(size * 0.08, -size * 0.05, size * 0.04).fill({ color: 0x554455 });
+  g.arc(0, size * 0.05, size * 0.06, 0, Math.PI).stroke({ color: 0x554455, width: 1.2 });
+  // Shine
+  g.circle(-size * 0.12, -size * 0.2, size * 0.05).fill({ color: 0xffffff, alpha: 0.4 });
+  // Crack pattern (cute zigzag)
+  g.moveTo(-size * 0.15, size * 0.15).lineTo(-size * 0.05, size * 0.22).lineTo(size * 0.05, size * 0.15)
+    .lineTo(size * 0.12, size * 0.2).stroke({ color: 0xffffff, alpha: 0.5, width: 1.5 });
+  c.addChild(g);
+  return c;
+}
+
+// Cute rounded bar
+function cuteBar(x, y, w, h, ratio, fillColor, bgColor) {
+  const c = new PIXI.Container(); c.x = x; c.y = y;
+  const r = h / 2;
+  c.addChild(new PIXI.Graphics().roundRect(0, 0, w, h, r).fill({ color: bgColor || 0xeedde0 }));
+  if (ratio > 0) c.addChild(new PIXI.Graphics().roundRect(1, 1, Math.max(h, (w - 2) * ratio), h - 2, r - 1).fill({ color: fillColor }));
+  return c;
+}
+
+// Cute button
+function cuteBtn(x, y, w, h, text, bgColor, textColor) {
+  const c = new PIXI.Container(); c.x = x; c.y = y;
+  const r = h / 2;
+  // Shadow
+  c.addChild(new PIXI.Graphics().roundRect(2, 3, w, h, r).fill({ color: 0x000000, alpha: 0.08 }));
+  c.addChild(new PIXI.Graphics().roundRect(0, 0, w, h, r).fill({ color: bgColor || C.pink }));
+  // Highlight
+  c.addChild(new PIXI.Graphics().roundRect(4, 2, w - 8, h * 0.4, r).fill({ color: 0xffffff, alpha: 0.25 }));
+  const t = lbl(text, 11, textColor || 0xffffff, true);
+  t.anchor = { x: 0.5, y: 0.5 }; t.x = w / 2; t.y = h / 2;
+  c.addChild(t);
+  c.eventMode = 'static'; c.cursor = 'pointer';
+  return c;
+}
+
+// ============================================================
+// Screen management
+// ============================================================
+const screens = {};
+let curScr = null;
+const NAMES = ['combat', 'result', 'team', 'devo', 'gameover'];
+
+function mkScreen(name) {
+  const c = new PIXI.Container(); c.visible = false;
+  app.stage.addChild(c); screens[name] = c; return c;
+}
+function show(name) {
+  if (curScr) curScr.visible = false;
+  curScr = screens[name]; curScr.visible = true;
+  updateNav(NAMES.indexOf(name));
+}
+const nav = new PIXI.Container(); nav.y = H - 22; nav.x = W / 2;
+app.stage.addChild(nav);
+function updateNav(idx) {
+  nav.removeChildren();
+  const gap = 20, sx = -(NAMES.length - 1) * gap / 2;
+  NAMES.forEach((n, i) => {
+    const d = new PIXI.Graphics();
+    if (i === idx) {
+      d.addChild(star(sx + i * gap, 0, 6, C.pink));
+    } else {
+      d.circle(sx + i * gap, 0, 4).fill({ color: C.dimmer });
+    }
+    d.eventMode = 'static'; d.cursor = 'pointer';
+    d.on('pointerdown', () => show(n));
+    nav.addChild(d);
+  });
+}
+
+// ============================================================
+// Floating stars/sparkles background layer
+// ============================================================
+function addSparkles(container, count) {
+  const sparkles = [];
+  for (let i = 0; i < count; i++) {
+    const s = star(Math.random() * W, Math.random() * H, 3 + Math.random() * 5,
+      [C.yellow, C.pinkLight, C.lavender, C.mintLight][Math.floor(Math.random() * 4)]);
+    s.alpha = 0.15 + Math.random() * 0.2;
+    container.addChild(s);
+    sparkles.push({ g: s, speed: 0.2 + Math.random() * 0.3, phase: Math.random() * Math.PI * 2 });
+  }
+  return sparkles;
+}
+
+// ============================================================
+// 1. COMBAT SCREEN — Kirby-style cute battle
+// ============================================================
+const combatScr = mkScreen('combat');
+
+// Soft gradient sky background
+const skyG = new PIXI.Graphics();
+skyG.rect(0, 0, W, 200).fill({ color: C.sky });
+skyG.rect(0, 100, W, 100).fill({ color: 0xd8f0ff, alpha: 0.5 });
+combatScr.addChild(skyG);
+
+// Puffy clouds
+[{ x: 60, y: 40, s: 1 }, { x: 280, y: 25, s: 1.3 }, { x: 400, y: 55, s: 0.8 }].forEach(cl => {
+  const g = new PIXI.Graphics();
+  g.circle(cl.x, cl.y, 20 * cl.s).fill({ color: 0xffffff, alpha: 0.6 });
+  g.circle(cl.x - 18 * cl.s, cl.y + 5, 14 * cl.s).fill({ color: 0xffffff, alpha: 0.6 });
+  g.circle(cl.x + 16 * cl.s, cl.y + 3, 16 * cl.s).fill({ color: 0xffffff, alpha: 0.6 });
+  combatScr.addChild(g);
+});
+
+// Grassy hill
+const hill = new PIXI.Graphics();
+hill.moveTo(0, 230).quadraticCurveTo(W / 2, 170, W, 220).lineTo(W, 340).lineTo(0, 340).closePath()
+  .fill({ color: C.mint });
+hill.moveTo(0, 240).quadraticCurveTo(W / 2, 190, W, 230).lineTo(W, 340).lineTo(0, 340).closePath()
+  .fill({ color: 0x78cc99 });
+combatScr.addChild(hill);
+
+// Small flowers on hill
+for (let i = 0; i < 8; i++) {
+  const fx = 30 + Math.random() * (W - 60), fy = 250 + Math.random() * 60;
+  const fl = new PIXI.Graphics();
+  fl.circle(fx, fy, 3).fill({ color: [C.pink, C.yellow, C.lavender, 0xffffff][i % 4] });
+  fl.circle(fx, fy, 1.5).fill({ color: C.yellow });
+  combatScr.addChild(fl);
+}
+
+const sparkles = addSparkles(combatScr, 6);
+
+// Enemy (top-right, on a cloud platform)
+const ePlatX = W * 0.68, ePlatY = 125;
+const eCloud = new PIXI.Graphics();
+eCloud.circle(ePlatX, ePlatY + 38, 30).fill({ color: 0xffffff, alpha: 0.5 });
+eCloud.circle(ePlatX - 22, ePlatY + 42, 20).fill({ color: 0xffffff, alpha: 0.5 });
+eCloud.circle(ePlatX + 20, ePlatY + 44, 18).fill({ color: 0xffffff, alpha: 0.5 });
+combatScr.addChild(eCloud);
+
+const enemyMon = monster(100, C.dark, 'enemy');
+enemyMon.x = ePlatX; enemyMon.y = ePlatY;
+combatScr.addChild(enemyMon);
+
+// Enemy info (cute bubble)
+const eInfo = new PIXI.Container(); eInfo.x = 10; eInfo.y = 65;
+eInfo.addChild(softPanel(0, 0, 175, 70, C.white, C.lavender));
+eInfo.addChild(Object.assign(lbl('심연 늑대', 11, C.text, true), { x: 14, y: 8 }));
+eInfo.addChild(Object.assign(lbl('TAME', 8, C.taming), { x: 14, y: 28 }));
+eInfo.addChild(cuteBar(52, 30, 108, 10, 0.4, C.taming));
+eInfo.addChild(Object.assign(lbl('ESC', 8, C.escape), { x: 14, y: 46 }));
+eInfo.addChild(cuteBar(52, 48, 108, 10, 0.25, C.escape));
+combatScr.addChild(eInfo);
+
+// Ally (bottom-left)
+const aPlatX = W * 0.28, aPlatY = 265;
+const allyMon = monster(120, C.water, 'water');
+allyMon.x = aPlatX; allyMon.y = aPlatY;
+allyMon.scale.x = -1;
+combatScr.addChild(allyMon);
+
+// Ally info (cute bubble)
+const aInfo = new PIXI.Container(); aInfo.x = W - 200; aInfo.y = 225;
+aInfo.addChild(softPanel(0, 0, 185, 80, C.white, C.pinkLight));
+aInfo.addChild(Object.assign(lbl('이슬요정', 11, C.text, true), { x: 14, y: 8 }));
+aInfo.addChild(Object.assign(lbl('Lv.3', 9, C.dim), { x: 130, y: 10 }));
+aInfo.addChild(Object.assign(lbl('HP', 8, C.hp), { x: 14, y: 28 }));
+aInfo.addChild(cuteBar(40, 30, 130, 10, 0.8, C.hp));
+aInfo.addChild(Object.assign(lbl('24/30', 8, C.dim), { x: 140, y: 44 }));
+aInfo.addChild(Object.assign(lbl('XP', 8, C.yellow), { x: 14, y: 58 }));
+aInfo.addChild(cuteBar(40, 60, 130, 6, 0.65, C.yellow));
+combatScr.addChild(aInfo);
+
+// Turn indicator (star-shaped badge)
+const turnBadge = new PIXI.Container(); turnBadge.x = W - 68; turnBadge.y = 20;
+turnBadge.addChild(new PIXI.Graphics().circle(0, 0, 24).fill({ color: C.pink }));
+turnBadge.addChild(new PIXI.Graphics().circle(0, 0, 20).fill({ color: C.pinkLight }));
+const tt = lbl('T3', 10, 0xffffff, true);
+tt.anchor = { x: 0.5, y: 0.5 }; turnBadge.addChild(tt);
+combatScr.addChild(turnBadge);
+
+// Party bar
+const partyY = 320;
+combatScr.addChild(new PIXI.Graphics().roundRect(8, partyY, W - 16, 34, 12).fill({ color: 0xffffff, alpha: 0.6 }));
+combatScr.addChild(Object.assign(lbl('PARTY', 7, C.dim), { x: 16, y: partyY + 4 }));
+[
+  { color: C.water, type: 'water', hp: 0.8 },
+  { color: C.fire, type: 'fire', hp: 0.9 },
+  { color: C.leaf, type: 'grass', hp: 0.6 },
+].forEach((p, i) => {
+  const m = monster(28, p.color, p.type);
+  m.x = 70 + i * 50; m.y = partyY + 17;
+  combatScr.addChild(m);
+  combatScr.addChild(cuteBar(84 + i * 50, partyY + 24, 30, 4, p.hp, C.hp));
+});
+
+// Message bubble (cute speech bubble style)
+const msgY = 360;
+combatScr.addChild(softPanel(14, msgY, W - 28, 44, C.white, C.pinkLight));
+// Speech bubble tail
+combatScr.addChild(new PIXI.Graphics()
+  .moveTo(60, msgY).lineTo(50, msgY - 10).lineTo(80, msgY).closePath()
+  .fill({ color: C.white }));
+combatScr.addChild(Object.assign(lbl('야생 심연 늑대가 나타났다!', 10, C.text), { x: 30, y: msgY + 12 }));
+
+// Bottom panel — Action area
+const actBg = 415;
+combatScr.addChild(new PIXI.Graphics().roundRect(0, actBg, W, H - actBg, 24).fill({ color: C.cream }));
+
+// Mode tabs (cute pill shapes)
+const tabY = actBg + 10;
+combatScr.addChild(new PIXI.Graphics().roundRect(14, tabY, W / 2 - 18, 30, 15).fill({ color: C.pink }));
+const t1 = lbl('순화 행동', 10, 0xffffff, true);
+t1.anchor = { x: 0.5, y: 0.5 }; t1.x = W / 4 + 2; t1.y = tabY + 15;
+combatScr.addChild(t1);
+
+combatScr.addChild(new PIXI.Graphics().roundRect(W / 2 + 4, tabY, W / 2 - 18, 30, 15).fill({ color: C.dimmer }));
+const t2 = lbl('인간 교감', 10, 0xffffff, true);
+t2.anchor = { x: 0.5, y: 0.5 }; t2.x = W * 3 / 4 + 2; t2.y = tabY + 15;
+combatScr.addChild(t2);
+
+// Action cards (cute rounded cards)
+const actions = [
+  { name: '빗소리', axis: 'SND', desc: '잔잔한 빗소리가 퍼진다', color: C.water, emoji: '~' },
+  { name: '서늘한 안개', axis: 'TMP', desc: '서늘한 안개가 감싼다', color: C.fire, emoji: '*' },
+  { name: '거리 유지', axis: 'ACT', desc: '조용히 지켜본다', color: C.mint, emoji: '.' },
+];
+
+const cardY = tabY + 44;
+actions.forEach((a, i) => {
+  const y = cardY + i * 62;
+  const ct = new PIXI.Container(); ct.y = y;
+  ct.eventMode = 'static'; ct.cursor = 'pointer';
+
+  ct.addChild(softPanel(14, 0, W - 28, 54, C.white, i === 0 ? C.pink : C.border));
+
+  // Color circle (Kirby ability icon style)
+  ct.addChild(new PIXI.Graphics().circle(40, 27, 16).fill({ color: a.color }));
+  const axLbl = lbl(a.axis, 7, 0xffffff, true);
+  axLbl.anchor = { x: 0.5, y: 0.5 }; axLbl.x = 40; axLbl.y = 27;
+  ct.addChild(axLbl);
+
+  ct.addChild(Object.assign(lbl(a.name, 12, C.text, true), { x: 64, y: 8 }));
+  ct.addChild(Object.assign(lbl(a.desc, 9, C.dim), { x: 64, y: 30 }));
+
+  // Cute arrow
+  if (i === 0) {
+    ct.addChild(Object.assign(lbl('>', 14, C.pink, true), { x: W - 46, y: 14 }));
+  }
+
+  combatScr.addChild(ct);
+});
+
+// ============================================================
+// 2. RESULT SCREEN
+// ============================================================
+const resultScr = mkScreen('result');
+resultScr.addChild(new PIXI.Graphics().rect(0, 0, W, H).fill({ color: C.bgAlt }));
+const rSparkles = addSparkles(resultScr, 10);
+
+// Big celebration
+const celebrate = new PIXI.Container(); celebrate.x = W / 2; celebrate.y = 90;
+for (let i = 0; i < 5; i++) {
+  celebrate.addChild(star(-50 + i * 25, -20 + Math.sin(i) * 15, 6 + i * 2,
+    [C.yellow, C.pink, C.lavender, C.mint, C.yellow][i]));
+}
+resultScr.addChild(celebrate);
+
+const stxt = lbl('TAMING SUCCESS!', 16, C.pink, true);
+stxt.anchor = { x: 0.5, y: 0.5 }; stxt.x = W / 2; stxt.y = 80;
+resultScr.addChild(stxt);
+const stxt2 = lbl('심연 늑대를 길들였다!', 10, C.dim);
+stxt2.anchor = { x: 0.5, y: 0.5 }; stxt2.x = W / 2; stxt2.y = 110;
+resultScr.addChild(stxt2);
+
+const capMon = monster(120, C.dark, 'enemy');
+capMon.x = W / 2; capMon.y = 190; resultScr.addChild(capMon);
+
+// Heart decorations around captured monster
+for (let i = 0; i < 4; i++) {
+  const hx = W / 2 + Math.cos(i * Math.PI / 2) * 60;
+  const hy = 190 + Math.sin(i * Math.PI / 2) * 40;
+  const h = lbl('♥', 14, C.pinkLight);
+  h.anchor = { x: 0.5, y: 0.5 }; h.x = hx; h.y = hy; h.alpha = 0.5;
+  resultScr.addChild(h);
+}
+
+// EXP panel
+resultScr.addChild(softPanel(20, 260, W - 40, 140, C.white, C.pinkLight));
+resultScr.addChild(Object.assign(lbl('EXP GAINED', 10, C.pink, true), { x: 36, y: 272 }));
+
+[
+  { name: '이슬요정', xp: '+12 XP', color: C.water, type: 'water', r: 0.65 },
+  { name: '숯뭉이', xp: '+8 XP', color: C.fire, type: 'fire', r: 0.8 },
+].forEach((a, i) => {
+  const y = 300 + i * 44;
+  const m = monster(32, a.color, a.type); m.x = 44; m.y = y + 12; resultScr.addChild(m);
+  resultScr.addChild(Object.assign(lbl(a.name, 9, C.text, true), { x: 66, y: y }));
+  resultScr.addChild(Object.assign(lbl(a.xp, 9, C.orange, true), { x: 66, y: y + 18 }));
+  resultScr.addChild(cuteBar(220, y + 8, 180, 10, a.r, C.yellow));
+});
+
+// Egg alert (cute bubble)
+resultScr.addChild(softPanel(40, 420, W - 80, 44, C.yellowLight, C.orange));
+const eaLbl = lbl('숯뭉이 -> EGG STATE!', 10, C.orange, true);
+eaLbl.anchor = { x: 0.5, y: 0.5 }; eaLbl.x = W / 2; eaLbl.y = 442;
+resultScr.addChild(eaLbl);
+resultScr.addChild(star(56, 440, 6, C.yellow));
+resultScr.addChild(star(W - 56, 440, 6, C.yellow));
+
+const rnb = cuteBtn(W / 2 - 80, 500, 160, 42, 'VIEW TEAM', C.taming, 0xffffff);
+rnb.on('pointerdown', () => show('team'));
+resultScr.addChild(rnb);
+
+// ============================================================
+// 3. TEAM SCREEN
+// ============================================================
+const teamScr = mkScreen('team');
+teamScr.addChild(new PIXI.Graphics().rect(0, 0, W, H).fill({ color: C.bgAlt }));
+
+// Header (cloud-shaped)
+teamScr.addChild(new PIXI.Graphics().roundRect(0, 0, W, 44, 0).fill({ color: C.pink }));
+teamScr.addChild(new PIXI.Graphics().roundRect(10, 38, W - 20, 14, 7).fill({ color: C.pink }));
+const ht = lbl('MY TEAM', 12, 0xffffff, true);
+ht.anchor = { x: 0.5, y: 0.5 }; ht.x = W / 2; ht.y = 22;
+teamScr.addChild(ht);
+teamScr.addChild(Object.assign(lbl('DEX 4/12', 8, C.pinkLight), { x: W - 80, y: 16 }));
+
+const teamData = [
+  { name: '이슬요정', lv: 3, hp: [30, 30], xp: 0.65, color: C.water, type: 'water', st: 'active' },
+  { name: '숯뭉이', lv: 2, hp: [0, 0], xp: 1.0, color: C.fire, type: 'fire', st: 'egg' },
+  { name: '잎사귀요정', lv: 1, hp: [28, 28], xp: 0.3, color: C.leaf, type: 'grass', st: 'active' },
+];
+
+teamData.forEach((m, i) => {
+  const y = 65 + i * 115;
+  const card = new PIXI.Container(); card.y = y;
+  card.addChild(softPanel(10, 0, W - 20, 105, C.white, m.st === 'egg' ? C.orange : C.pinkLight));
+
+  if (m.st === 'egg') {
+    const e = egg(44, m.color); e.x = 52; e.y = 50; card.addChild(e);
+    // Cute timer bubble
+    card.addChild(new PIXI.Graphics().roundRect(26, 78, 52, 18, 9).fill({ color: C.yellow }));
+    card.addChild(Object.assign(lbl('0:12', 8, C.text), { x: 36, y: 80 }));
+  } else {
+    const s = monster(70, m.color, m.type); s.x = 52; s.y = 46; card.addChild(s);
+  }
+
+  card.addChild(Object.assign(lbl(m.name, 12, C.text, true), { x: 90, y: 10 }));
+  card.addChild(Object.assign(lbl('Lv.' + m.lv, 9, C.dim), { x: 90, y: 28 }));
+
+  if (m.st === 'egg') {
+    card.addChild(new PIXI.Graphics().roundRect(90, 44, 52, 20, 10).fill({ color: C.yellowLight }));
+    card.addChild(Object.assign(lbl('EGG', 9, C.orange, true), { x: 102, y: 47 }));
+    card.addChild(Object.assign(lbl('DEVOLVING...', 8, C.orange), { x: 90, y: 70 }));
+  } else {
+    card.addChild(Object.assign(lbl('HP', 8, C.hp), { x: 90, y: 46 }));
+    card.addChild(cuteBar(116, 48, 150, 10, m.hp[0] / m.hp[1], C.hp));
+    card.addChild(Object.assign(lbl(m.hp[0] + '/' + m.hp[1], 8, C.dim), { x: 270, y: 46 }));
+    card.addChild(Object.assign(lbl('READY', 8, C.mint, true), { x: 90, y: 68 }));
+  }
+
+  card.addChild(Object.assign(lbl('XP', 8, C.yellow), { x: 90, y: 86 }));
+  card.addChild(cuteBar(116, 88, 150, 8, m.xp, C.yellow));
+  if (m.xp >= 1.0) {
+    card.addChild(Object.assign(lbl('MAX!', 8, C.orange, true), { x: 272, y: 86 }));
+    card.addChild(star(298, 92, 5, C.yellow));
+  }
+
+  teamScr.addChild(card);
+});
+
+// Bestiary
+teamScr.addChild(Object.assign(lbl('BESTIARY', 10, C.pink, true), { x: 20, y: 418 }));
+[
+  { color: C.dark, type: 'enemy', name: '심연 늑대', locked: false },
+  { color: C.dimmer, type: 'enemy', name: '???', locked: true },
+  { color: C.dimmer, type: 'enemy', name: '???', locked: true },
+  { color: C.dimmer, type: 'enemy', name: '???', locked: true },
+].forEach((m, i) => {
+  const x = 20 + i * 112, y = 448;
+  const ct = new PIXI.Container(); ct.x = x; ct.y = y;
+  ct.addChild(softPanel(0, 0, 100, 82, m.locked ? C.bgAlt : C.white, m.locked ? C.dimmer : C.pinkLight));
+  const s = monster(44, m.color, m.type); s.x = 50; s.y = 34; if (m.locked) s.alpha = 0.15;
+  ct.addChild(s);
+  if (m.locked) {
+    const q = lbl('?', 18, C.dimmer, true);
+    q.anchor = { x: 0.5, y: 0.5 }; q.x = 50; q.y = 34; ct.addChild(q);
+  }
+  const n = lbl(m.name, 7, m.locked ? C.dimmer : C.dim);
+  n.anchor = { x: 0.5, y: 0 }; n.x = 50; n.y = 62; ct.addChild(n);
+  teamScr.addChild(ct);
+});
+
+const nbb = cuteBtn(W / 2 - 90, 555, 180, 44, 'NEXT BATTLE >', C.mint, 0xffffff);
+nbb.on('pointerdown', () => show('combat'));
+teamScr.addChild(nbb);
+
+// ============================================================
+// 4. DEVOLUTION REVEAL
+// ============================================================
+const devoScr = mkScreen('devo');
+devoScr.addChild(new PIXI.Graphics().rect(0, 0, W, H).fill({ color: C.yellowLight }));
+const dSparkles = addSparkles(devoScr, 15);
+
+// Rainbow border effect
+devoScr.addChild(new PIXI.Graphics().rect(0, 0, W, H).stroke({ color: C.yellow, width: 6 }));
+
+const dvt = lbl('DEVOLUTION!', 18, C.orange, true);
+dvt.anchor = { x: 0.5, y: 0.5 }; dvt.x = W / 2; dvt.y = 80;
+devoScr.addChild(dvt);
+
+// Stars around title
+[-60, -30, 30, 60].forEach(ox => {
+  devoScr.addChild(star(W / 2 + ox, 55, 7, C.yellow));
+});
+
+const dvs = lbl('숯뭉이가 새로운 형태로!', 10, C.dim);
+dvs.anchor = { x: 0.5, y: 0.5 }; dvs.x = W / 2; dvs.y = 110;
+devoScr.addChild(dvs);
+
+// Before -> After (cute transformation display)
+devoScr.addChild(softPanel(30, 140, W - 60, 160, C.white, C.orange));
+devoScr.addChild(Object.assign(lbl('BEFORE', 8, C.dim), { x: W / 2 - 100, y: 155 }));
+const bm = monster(80, C.fire, 'fire'); bm.x = W / 2 - 80; bm.y = 225; bm.alpha = 0.3;
+devoScr.addChild(bm);
+
+// Cute sparkle arrow
+const arrowC = new PIXI.Container(); arrowC.x = W / 2; arrowC.y = 220;
+arrowC.addChild(star(0, 0, 12, C.yellow));
+arrowC.addChild(star(-14, -8, 5, C.pinkLight));
+arrowC.addChild(star(14, 8, 5, C.mintLight));
+devoScr.addChild(arrowC);
+
+devoScr.addChild(Object.assign(lbl('AFTER', 8, C.orange, true), { x: W / 2 + 50, y: 155 }));
+const aam = monster(80, 0xffaa77, 'fire', 'fire_devolved'); aam.x = W / 2 + 80; aam.y = 225;
+devoScr.addChild(aam);
+
+// New name bubble
+devoScr.addChild(softPanel(60, 320, W - 120, 56, C.white, C.orange));
+const nn = lbl('불씨요정', 14, C.text, true);
+nn.anchor = { x: 0.5, y: 0.5 }; nn.x = W / 2; nn.y = 340;
+devoScr.addChild(nn);
+const nd = lbl('더 작고 귀여운 불꽃이 되었다.', 9, C.dim);
+nd.anchor = { x: 0.5, y: 0.5 }; nd.x = W / 2; nd.y = 362;
+devoScr.addChild(nd);
+
+// Stat changes
+devoScr.addChild(softPanel(40, 400, W - 80, 110, C.white, C.pinkLight));
+devoScr.addChild(Object.assign(lbl('STAT CHANGES', 9, C.pink, true), { x: 58, y: 412 }));
+[
+  { name: 'HP', b: 25, a: 20, d: -5 },
+  { name: 'TAME', b: 8, a: 12, d: +4 },
+  { name: 'BOND', b: 5, a: 9, d: +4 },
+].forEach((s, i) => {
+  const y = 435 + i * 24;
+  devoScr.addChild(Object.assign(lbl(s.name, 9, C.dim), { x: 58, y }));
+  devoScr.addChild(Object.assign(lbl(s.b + ' -> ' + s.a, 9, C.text, true), { x: 160, y }));
+  const dc = s.d > 0 ? C.mint : C.red;
+  devoScr.addChild(Object.assign(lbl((s.d > 0 ? '+' : '') + s.d, 9, dc, true), { x: 300, y }));
+  if (s.d > 0) devoScr.addChild(star(330, y + 6, 4, C.yellow));
+});
+
+const dOk = cuteBtn(W / 2 - 70, 535, 140, 40, 'OK!', C.pink, 0xffffff);
+dOk.on('pointerdown', () => show('combat'));
+devoScr.addChild(dOk);
+
+// ============================================================
+// 5. GAME OVER
+// ============================================================
+const goScr = mkScreen('gameover');
+goScr.addChild(new PIXI.Graphics().rect(0, 0, W, H).fill({ color: 0xf0e0e8 }));
+
+// Sad face cloud
+const sadCloud = new PIXI.Graphics();
+sadCloud.circle(W / 2, 90, 40).fill({ color: 0xeeddee });
+sadCloud.circle(W / 2 - 30, 95, 25).fill({ color: 0xeeddee });
+sadCloud.circle(W / 2 + 28, 97, 22).fill({ color: 0xeeddee });
+goScr.addChild(sadCloud);
+
+const got = lbl('GAME OVER', 18, C.pinkDark, true);
+got.anchor = { x: 0.5, y: 0.5 }; got.x = W / 2; got.y = 160;
+goScr.addChild(got);
+const gos = lbl('모든 아군이 쓰러졌습니다.', 9, C.dim);
+gos.anchor = { x: 0.5, y: 0.5 }; gos.x = W / 2; gos.y = 190;
+goScr.addChild(gos);
+
+// Sad fainted monsters
+[C.water, C.fire, C.leaf].forEach((col, i) => {
+  const s = monster(50, col, ['water', 'fire', 'grass'][i]);
+  s.x = W / 2 - 60 + i * 60; s.y = 240; s.alpha = 0.25;
+  s.rotation = [0.3, -0.2, 0.25][i];
+  goScr.addChild(s);
+});
+
+// Stats
+goScr.addChild(softPanel(40, 290, W - 80, 180, C.white, C.pinkLight));
+goScr.addChild(Object.assign(lbl('RUN STATS', 10, C.pink, true), { x: W / 2 - 40, y: 304 }));
+[
+  { l: 'BATTLES', v: '7' },
+  { l: 'CAPTURED', v: '3' },
+  { l: 'DEVOLVED', v: '1' },
+  { l: 'BEST TAME%', v: '92%' },
+].forEach((s, i) => {
+  const y = 330 + i * 32;
+  goScr.addChild(Object.assign(lbl(s.l, 9, C.dim), { x: 64, y }));
+  goScr.addChild(Object.assign(lbl(s.v, 11, C.text, true), { x: W - 130, y }));
+});
+
+const rb = cuteBtn(W / 2 - 80, 510, 160, 44, 'RETRY', C.pinkDark, 0xffffff);
+rb.on('pointerdown', () => show('combat'));
+goScr.addChild(rb);
+
+// ============================================================
+// Init & animation
+// ============================================================
+show('combat');
+
+let tick = 0;
+app.ticker.add((ticker) => {
+  tick += 0.016;
+  const dt = ticker.deltaTime;
+
+  // Bouncy monsters (Kirby-style squish)
+  const bounce = Math.sin(tick * 3);
+  enemyMon.y = ePlatY + bounce * 4;
+  enemyMon.scale.set(1 + Math.sin(tick * 3) * 0.02, 1 - Math.sin(tick * 3) * 0.02);
+  allyMon.y = aPlatY - bounce * 3;
+  allyMon.scale.set(1 - Math.sin(tick * 3 + 0.5) * 0.02, 1 + Math.sin(tick * 3 + 0.5) * 0.02);
+
+  // Turn badge pulse
+  turnBadge.scale.set(1 + Math.sin(tick * 2) * 0.05);
+
+  // Sparkle twinkle
+  sparkles.forEach(s => {
+    s.g.alpha = 0.1 + Math.sin(tick * s.speed * 5 + s.phase) * 0.15;
+  });
+  rSparkles.forEach(s => {
+    s.g.alpha = 0.1 + Math.sin(tick * s.speed * 5 + s.phase) * 0.15;
+  });
+  dSparkles.forEach(s => {
+    s.g.alpha = 0.15 + Math.sin(tick * s.speed * 5 + s.phase) * 0.2;
+  });
+
+  // Captured monster happy bounce
+  capMon.y = 190 + Math.sin(tick * 3) * 5;
+  capMon.scale.set(1 + Math.sin(tick * 3) * 0.03);
+
+  // Devo sparkle arrow rotation
+  arrowC.rotation = Math.sin(tick * 2) * 0.1;
+
+  // Devo border pulse
+  if (curScr === screens['devo']) {
+    devoScr.children[1].alpha = 0.4 + Math.sin(tick * 3) * 0.3;
+  }
+});
+
+})();
+  </script>
+</body>
+</html>

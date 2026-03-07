@@ -63,7 +63,8 @@
       "Bash(npx http-server sandbox/battle-layout -p 8081 -c-1 --silent)",
       "Bash(npx http-server . -p 8082 -c-1 --silent)",
       "Bash(npx http-server . -p 8082 -c-1)",
-      "Bash(taskkill //F //IM \"node.exe\")"
+      "Bash(taskkill //F //IM \"node.exe\")",
+      "Bash(npx http-server src -p 8080 --cors -c-1)"
     ],
     "additionalDirectories": [
       "\\tmp"

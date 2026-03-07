@@ -1,127 +1,109 @@
 // ============================================================
-// Visual Effects - Pure CSS/DOM (no external library)
-// Screen flash, sprite blink, screen shake, hit freeze
-// Same export API — drop-in replacement for mo.js version
+// Pixi-based Visual Effects
 // ============================================================
 
-const game = () => document.getElementById('game');
+import { W, H } from './ui/theme.js';
 
-// ---- Core Utility Effects ----
+let _app = null;
+let _flashOverlay = null;
 
-function screenFlash(color = '#fff', duration = 120) {
-  const el = document.getElementById('vfx-flash');
-  if (!el) return;
-  el.style.background = color;
-  el.style.opacity = '0.6';
-  el.style.display = 'block';
-  setTimeout(() => {
-    el.style.opacity = '0';
-    setTimeout(() => { el.style.display = 'none'; }, duration);
-  }, duration);
+export function initEffects(app) {
+  _app = app;
+  _flashOverlay = new PIXI.Graphics();
+  _flashOverlay.zIndex = 9999;
+  _flashOverlay.visible = false;
+  app.stage.addChild(_flashOverlay);
+}
+
+function screenFlash(color, duration = 120, alpha = 0.5) {
+  if (!_flashOverlay) return;
+  _flashOverlay.clear();
+  _flashOverlay.rect(0, 0, W, H).fill({ color, alpha });
+  _flashOverlay.visible = true;
+  setTimeout(() => { _flashOverlay.visible = false; }, duration);
 }
 
 function screenShake(intensity = 4, duration = 300) {
-  const g = game();
-  let start = Date.now();
+  if (!_app) return;
+  const stage = _app.stage;
+  const start = Date.now();
   function frame() {
     const elapsed = Date.now() - start;
-    if (elapsed > duration) { g.style.translate = ''; return; }
+    if (elapsed > duration) { stage.x = 0; stage.y = 0; return; }
     const decay = 1 - elapsed / duration;
-    const x = (Math.random() - 0.5) * intensity * 2 * decay;
-    const y = (Math.random() - 0.5) * intensity * 2 * decay;
-    g.style.translate = `${x}px ${y}px`;
+    stage.x = (Math.random() - 0.5) * intensity * 2 * decay;
+    stage.y = (Math.random() - 0.5) * intensity * 2 * decay;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 }
 
-function spriteBlink(el, times = 3, interval = 80) {
-  if (!el) return;
+function spriteBlink(container, times = 3, interval = 80) {
+  if (!container) return;
   let count = 0;
   const id = setInterval(() => {
-    el.style.opacity = count % 2 === 0 ? '0.2' : '1';
+    container.alpha = count % 2 === 0 ? 0.2 : 1;
     count++;
-    if (count >= times * 2) { clearInterval(id); el.style.opacity = '1'; }
+    if (count >= times * 2) { clearInterval(id); container.alpha = 1; }
   }, interval);
 }
 
-function hitFreeze(duration = 50) {
-  const g = game();
-  g.style.filter = 'brightness(2)';
-  return new Promise(r => setTimeout(() => { g.style.filter = ''; r(); }, duration));
-}
+// ---- Exported Effect Functions ----
 
-// ---- Taming Action Effects ----
+const FLASH_COLORS = {
+  sound: 0xc0e8ff, temperature: 0xfff0d0,
+  smell: 0xd8fcd8, behavior: 0xe8e0ff,
+};
 
-export function playTamingEffect(targetEl, axis, isGood) {
-  const FLASH = {
-    sound: '#e0f4ff', temperature: '#fff3e0',
-    smell: '#e8fce8', behavior: '#f0ecff',
-  };
+export function playTamingEffect(axis, isGood) {
   if (isGood) {
-    screenFlash(FLASH[axis] || '#f0ecff', 150);
+    screenFlash(FLASH_COLORS[axis] || 0xe8e0ff, 150, 0.3);
   } else {
-    screenFlash('#440000', 100);
+    screenFlash(0x440000, 100, 0.3);
     screenShake(2, 150);
   }
 }
 
-// ---- Enemy Attack Effect ----
-
-export async function playAttackEffect(targetEl) {
-  await hitFreeze(50);
-  screenFlash('#ff0000', 80);
-  screenShake(6, 250);
-  spriteBlink(targetEl, 4, 70);
+export function playAttackEffect(targetContainer) {
+  screenFlash(0xff0000, 80, 0.3);
+  screenShake(5, 250);
+  spriteBlink(targetContainer, 3, 70);
 }
 
-// ---- Bonding Attempt ----
-
-export function playBondingAttempt(targetEl) {
-  screenFlash('#e0f0ff', 200);
+export function playBondingAttempt() {
+  screenFlash(0xc0e0ff, 200, 0.25);
 }
 
-// ---- Bonding Success ----
-
-export function playBondingSuccess(targetEl) {
-  screenFlash('#ffffff', 250);
+export function playBondingSuccess() {
+  screenFlash(0xffffff, 300, 0.5);
   screenShake(3, 200);
 }
 
-// ---- Bonding Fail ----
-
-export function playBondingFail(targetEl) {
-  screenFlash('#220000', 150);
+export function playBondingFail() {
+  screenFlash(0x220000, 150, 0.3);
   screenShake(4, 200);
 }
 
-// ---- Enemy Escape ----
-
-export function playEscapeEffect(targetEl) {
-  if (targetEl) {
-    targetEl.style.transition = 'all 0.5s ease';
-    targetEl.style.opacity = '0';
-    targetEl.style.translate = '0 -30px';
-    setTimeout(() => {
-      targetEl.style.transition = '';
-      targetEl.style.opacity = '1';
-      targetEl.style.translate = '';
-    }, 600);
+export function playEscapeEffect(targetContainer) {
+  if (targetContainer) {
+    let frame = 0;
+    const id = setInterval(() => {
+      targetContainer.alpha = Math.max(0, 1 - frame * 0.1);
+      targetContainer.y -= 2;
+      frame++;
+      if (frame > 10) { clearInterval(id); }
+    }, 30);
   }
-  screenFlash('#333', 200);
+  screenFlash(0x333333, 200, 0.3);
 }
 
-// ---- Devolution Reveal ----
-
-export function playDevolutionEffect(targetEl) {
-  screenFlash('#fffde0', 300);
-  screenShake(2, 300);
-}
-
-// ---- Ally Faint ----
-
-export function playFaintEffect(targetEl) {
-  spriteBlink(targetEl, 3, 100);
-  screenFlash('#000', 100);
+export function playFaintEffect(targetContainer) {
+  spriteBlink(targetContainer, 3, 100);
+  screenFlash(0x000000, 100, 0.3);
   screenShake(3, 150);
+}
+
+export function playDevolutionEffect() {
+  screenFlash(0xfff8c0, 300, 0.4);
+  screenShake(2, 300);
 }
