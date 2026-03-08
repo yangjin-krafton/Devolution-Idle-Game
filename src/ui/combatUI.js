@@ -15,7 +15,6 @@ import {
 
 import {
   initActionPanel, setActionCallbacks,
-  setMode as _setMode, getMode as _getMode,
   renderActions,
 } from './actionPanelUI.js';
 
@@ -33,13 +32,10 @@ export function initCombat() {
 export function getContainer() { return container; }
 
 // ---- Callbacks ----
-export function setCombatCallbacks({ action, bonding, switchAlly }) {
-  setActionCallbacks({ action, bonding });
-  setSwitchAllyCallback(switchAlly);
+export function setCombatCallbacks({ action, switchAlly }) {
+  setActionCallbacks({ action });
+  if (switchAlly) setSwitchAllyCallback(switchAlly);
 }
-
-export function setMode(mode) { _setMode(mode); }
-export function getMode() { return _getMode(); }
 
 // ---- Re-exports from battleFieldUI ----
 export {

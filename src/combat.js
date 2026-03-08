@@ -1,44 +1,48 @@
 // ============================================================
-// Combat System
+// Combat System — 3분류 스킬 + 3v1 턴 구조
 // ============================================================
 
-import { BONDING_ACTIONS, GENERIC_LOGS } from './data.js';
+import { GENERIC_LOGS } from './data.js';
 
 export class CombatSystem {
   constructor(team, enemy) {
-    this.team = team;            // array of ally monster refs
-    this.enemy = { ...enemy };   // copy enemy data
+    this.team = team;            // array of ally monster refs (active 3)
+    this.enemy = { ...enemy };
     this.tamingGauge = 0;
     this.escapeGauge = 0;
     this.turn = 0;
-    this.state = 'active';       // active | bonding | victory | defeat | escaped
+    this.state = 'active';       // active | victory | defeat | escaped
     this.logs = [];
-    this.activeAllyIndex = 0;
-    this.actedThisBattle = new Set(); // track which allies acted (for XP)
+    this.actedThisBattle = new Set();
+
+    // 3v1 turn tracking
+    this.turnPhase = 0;          // 0,1,2 = ally turn index, 3 = enemy turn
+    this.defenseBoost = 0;       // accumulated defense from defend skills this turn
 
     this.log(GENERIC_LOGS.encounter(this.enemy.name));
   }
 
-  log(msg) {
-    this.logs.push(msg);
-  }
+  log(msg) { this.logs.push(msg); }
 
   getActiveAlly() {
-    return this.team[this.activeAllyIndex];
+    // Current ally in the turn sequence
+    const alive = this.getAliveAllies();
+    if (alive.length === 0) return null;
+    return alive[Math.min(this.turnPhase, alive.length - 1)];
   }
 
-  getAvailableAllies() {
+  getAliveAllies() {
     return this.team.filter(a => a.hp > 0 && !a.inEgg);
   }
 
-  switchAlly(index) {
-    if (this.team[index] && this.team[index].hp > 0 && !this.team[index].inEgg) {
-      this.activeAllyIndex = index;
-      this.log(`${this.team[index].name}(으)로 교체했다!`);
-    }
+  getCurrentTurnAllyIndex() {
+    const alive = this.getAliveAllies();
+    if (alive.length === 0) return -1;
+    const idx = Math.min(this.turnPhase, alive.length - 1);
+    return this.team.indexOf(alive[idx]);
   }
 
-  // Player uses a taming action
+  // Use any skill (stimulate / capture / defend)
   useAction(actionIndex) {
     if (this.state !== 'active') return null;
 
@@ -48,26 +52,16 @@ export class CombatSystem {
     const action = ally.actions[actionIndex];
     if (!action) return null;
 
-    this.turn++;
     this.actedThisBattle.add(ally.id);
-
-    // Calculate taming effect based on enemy preference for this axis
-    const pref = this.enemy.preferences[action.axis] || 1.0;
-    const isGood = pref >= 1.0;
-    const tamingGain = Math.round(action.power * pref);
-    const escapeChange = Math.round(action.escapeRisk * (isGood ? 0.7 : 1.5));
-
-    this.tamingGauge = Math.min(this.tamingGauge + tamingGain, 150);
-    this.escapeGauge = Math.max(0, this.escapeGauge + escapeChange);
-
-    // Action log
     this.log(action.log);
 
-    // Reaction log based on axis + preference
-    const axisKey = { sound: 'sound', temperature: 'temp', smell: 'smell', behavior: 'behav' }[action.axis];
-    const reactionKey = `${axisKey}_${isGood ? 'good' : 'bad'}`;
-    if (this.enemy.reactions[reactionKey]) {
-      this.log(this.enemy.reactions[reactionKey]);
+    // Dispatch by category
+    if (action.category === 'stimulate') {
+      this._handleStimulate(ally, action);
+    } else if (action.category === 'capture') {
+      this._handleCapture(ally, action);
+    } else if (action.category === 'defend') {
+      this._handleDefend(ally, action);
     }
 
     // Check escape
@@ -77,98 +71,122 @@ export class CombatSystem {
       return this.getResult();
     }
 
-    // Enemy attacks
-    this._enemyAttack();
+    // Check victory
+    if (this.state === 'victory') return this.getResult();
+
+    // Advance turn phase
+    this._advanceTurn();
 
     return this.getResult();
   }
 
-  // Attempt human bonding
-  useBonding(bondingIndex) {
-    if (this.state !== 'active') return null;
+  // ---- Skill Category Handlers ----
 
-    const bonding = BONDING_ACTIONS[bondingIndex];
-    if (!bonding) return null;
+  _handleStimulate(ally, action) {
+    const pref = this.enemy.preferences[action.axis] || 1.0;
+    const isGood = pref >= 1.0;
+    const stat = ally.stats ? ally.stats.gentleness : 5;
+    const tamingGain = Math.round(action.power * pref * (stat / 5));
+    const escapeChange = Math.round(action.escapeRisk * (isGood ? 0.7 : 1.5));
 
-    this.turn++;
-    this.log(bonding.log.attempt);
+    this.tamingGauge = Math.min(this.tamingGauge + tamingGain, 150);
+    this.escapeGauge = Math.max(0, this.escapeGauge + escapeChange);
 
-    // Success depends on taming gauge and bonding preference match
+    // Reaction
+    const axisKey = { sound: 'sound', temperature: 'temp', smell: 'smell', behavior: 'behav' }[action.axis];
+    const reactionKey = `${axisKey}_${isGood ? 'good' : 'bad'}`;
+    if (this.enemy.reactions[reactionKey]) this.log(this.enemy.reactions[reactionKey]);
+  }
+
+  _handleCapture(ally, action) {
     const tamingRatio = this.tamingGauge / this.enemy.tamingThreshold;
-    const prefMatch = bonding.type === this.enemy.bondingPreference;
+    const stat = ally.stats ? ally.stats.empathy : 5;
 
     // Too early = guaranteed fail
-    if (tamingRatio < 0.5) {
-      this.log(GENERIC_LOGS.bondingTooEarly);
-      this.escapeGauge += 10;
-      this._enemyAttack();
-      return this.getResult();
+    if (tamingRatio < 0.4) {
+      this.log(GENERIC_LOGS.captureTooEarly);
+      this.escapeGauge += action.escapeRisk;
+      return;
     }
 
-    // Success chance: based on how close taming is to threshold
-    // At 100% taming: 70% base (90% with pref match)
-    // At 70% taming: 40% base (55% with pref match)
-    let successChance = Math.min(0.9, (tamingRatio - 0.3) * 0.8);
-    if (prefMatch) successChance += 0.2;
+    // Success chance based on taming ratio + empathy stat
+    let successChance = Math.min(0.9, (tamingRatio - 0.2) * 0.7 * (stat / 5));
     successChance = Math.min(0.95, Math.max(0.05, successChance));
 
     if (Math.random() < successChance) {
-      // Success!
-      this.log(bonding.log.success);
-      this.tamingGauge += bonding.successBonus;
+      this.log(GENERIC_LOGS.captureSuccess(this.enemy.name));
       this.state = 'victory';
       this.log(GENERIC_LOGS.tamingSuccess(this.enemy.name));
-      this.log(this.enemy.reactions.calm);
-      return this.getResult();
+      if (this.enemy.reactions.calm) this.log(this.enemy.reactions.calm);
     } else {
-      // Fail
-      this.log(bonding.log.fail);
-      this.escapeGauge += bonding.failPenalty;
+      this.log(GENERIC_LOGS.captureFail);
+      this.escapeGauge += action.escapeRisk;
+    }
+  }
 
-      // Check escape after failed bonding
-      if (this.escapeGauge >= this.enemy.escapeThreshold) {
-        this.state = 'escaped';
-        this.log(GENERIC_LOGS.enemyEscape(this.enemy.name));
-        return this.getResult();
-      }
+  _handleDefend(ally, action) {
+    const stat = ally.stats ? ally.stats.resilience : 5;
 
+    // Defense boost for this turn
+    const boost = (action.defenseBoost || 2) * (stat / 5);
+    this.defenseBoost += Math.round(boost);
+    this.log(GENERIC_LOGS.defendEffect(ally.name));
+
+    // Heal ally
+    if (action.healAmount) {
+      const heal = Math.round(action.healAmount * (stat / 5));
+      ally.hp = Math.min(ally.maxHp, ally.hp + heal);
+      this.log(GENERIC_LOGS.healEffect(ally.name, heal));
+    }
+
+    // Reduce both gauges (stabilize)
+    const tamingReduce = Math.round(action.power * 0.3);
+    const escapeReduce = Math.round(action.power * 0.5 + action.escapeRisk * -1);
+    this.tamingGauge = Math.max(0, this.tamingGauge - tamingReduce);
+    this.escapeGauge = Math.max(0, this.escapeGauge + action.escapeRisk);
+  }
+
+  // ---- Turn Flow ----
+
+  _advanceTurn() {
+    const alive = this.getAliveAllies();
+    this.turnPhase++;
+
+    // All allies acted → enemy attacks → next turn
+    if (this.turnPhase >= alive.length) {
+      this.turn++;
       this._enemyAttack();
-      return this.getResult();
+      this.turnPhase = 0;
+      this.defenseBoost = 0; // reset defense at turn end
     }
   }
 
   _enemyAttack() {
-    const ally = this.getActiveAlly();
-    if (!ally || ally.hp <= 0) return;
+    // Pick a random alive ally to attack
+    const alive = this.getAliveAllies();
+    if (alive.length === 0) return;
+    const target = alive[Math.floor(Math.random() * alive.length)];
 
-    // Enemy attack with some variance
-    const damage = Math.max(1, this.enemy.attackPower + Math.floor(Math.random() * 3) - 1);
-    ally.hp = Math.max(0, ally.hp - damage);
+    const baseDamage = this.enemy.attackPower + Math.floor(Math.random() * 3) - 1;
+    const damage = Math.max(1, baseDamage - this.defenseBoost);
+    target.hp = Math.max(0, target.hp - damage);
 
     this.log(this.enemy.reactions.attack);
     this.log(GENERIC_LOGS.enemyAttack(this.enemy.name, damage));
 
-    if (ally.hp <= 0) {
-      this.log(GENERIC_LOGS.allyFaint(ally.name));
-
-      // Check if all allies fainted
-      const available = this.getAvailableAllies();
-      if (available.length === 0) {
+    if (target.hp <= 0) {
+      this.log(GENERIC_LOGS.allyFaint(target.name));
+      if (this.getAliveAllies().length === 0) {
         this.state = 'defeat';
         this.log(GENERIC_LOGS.allFaint);
-      } else {
-        // Auto-switch to next available ally
-        const nextIdx = this.team.findIndex(a => a.hp > 0 && !a.inEgg);
-        if (nextIdx >= 0) {
-          this.activeAllyIndex = nextIdx;
-          this.log(`${this.team[nextIdx].name}이(가) 앞으로 나섰다!`);
-        }
       }
     }
   }
 
+  // ---- Queries ----
+
   canBond() {
-    return this.tamingGauge >= this.enemy.tamingThreshold * 0.5;
+    return this.tamingGauge >= this.enemy.tamingThreshold * 0.4;
   }
 
   getTamingPercent() {
@@ -187,9 +205,11 @@ export class CombatSystem {
       tamingPercent: this.getTamingPercent(),
       escapePercent: this.getEscapePercent(),
       turn: this.turn,
+      turnPhase: this.turnPhase,
       logs: this.logs,
       canBond: this.canBond(),
       actedAllies: [...this.actedThisBattle],
+      currentAllyIndex: this.getCurrentTurnAllyIndex(),
     };
   }
 }

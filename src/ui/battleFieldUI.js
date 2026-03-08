@@ -52,18 +52,15 @@ let sparkles = [];
 let danmakuItems = [];
 let lastLogCount = 0;
 let weatherParticles = [];
-let onSwitchAlly = null;
-
 export function initBattleField(parentContainer, sharedRefs) {
   container = parentContainer;
   refs = sharedRefs;
   buildEnemyArea();
   buildAllyArea();
   buildDanmaku();
-  buildPartyBar();
 }
 
-export function setSwitchAllyCallback(cb) { onSwitchAlly = cb; }
+export function setSwitchAllyCallback() { /* 3v1 구조에서는 미사용 */ }
 
 // ---- Enemy Area ----
 function buildEnemyArea() {
@@ -84,29 +81,32 @@ function buildEnemyArea() {
 }
 
 function buildAllyArea() {
-  const aPlatX = W * 0.18, aPlatY = 270;
+  // 3마리 아군을 전장 하단에 나란히 배치
+  refs.allySlots = []; // { container, sprite, shadow, hpBar, baseX, baseY }
+  const positions = [
+    { x: W * 0.12, y: 280, size: 100 },
+    { x: W * 0.30, y: 260, size: 120 },
+    { x: W * 0.48, y: 280, size: 100 },
+  ];
 
-  refs.allyShadow = new PIXI.Graphics();
-  refs.allyShadow.ellipse(aPlatX, aPlatY + 50, 40, 12).fill({ color: 0x000000, alpha: 0.13 });
-  container.addChild(refs.allyShadow);
+  for (let i = 0; i < 3; i++) {
+    const pos = positions[i];
+    const slot = { baseX: pos.x, baseY: pos.y };
 
-  refs.allySprite = new PIXI.Container();
-  refs.allySprite.x = aPlatX; refs.allySprite.y = aPlatY;
-  refs.allyBaseY = aPlatY;
-  container.addChild(refs.allySprite);
+    slot.shadow = new PIXI.Graphics();
+    slot.shadow.ellipse(pos.x, pos.y + pos.size * 0.35, pos.size * 0.25, 8).fill({ color: 0x000000, alpha: 0.12 });
+    container.addChild(slot.shadow);
 
-  refs.allyInfo = new PIXI.Container();
-  refs.allyInfo.x = W - 210; refs.allyInfo.y = 230;
-  container.addChild(refs.allyInfo);
-}
+    slot.container = new PIXI.Container();
+    slot.container.x = pos.x; slot.container.y = pos.y;
+    container.addChild(slot.container);
 
-function buildPartyBar() {
-  const y = 340;
-  container.addChild(new PIXI.Graphics().roundRect(8, y, W - 16, 50, 12).fill({ color: 0xffffff, alpha: 0.6 }));
-  container.addChild(Object.assign(lbl('파티', 7, C.dim), { x: 16, y: y + 4 }));
-  refs.partyBar = new PIXI.Container();
-  refs.partyBar.y = y;
-  container.addChild(refs.partyBar);
+    refs.allySlots.push(slot);
+  }
+
+  // Keep refs.allySprite pointing to center ally for VFX compatibility
+  refs.allySprite = refs.allySlots[1].container;
+  refs.allyBaseY = positions[1].y;
 }
 
 function buildDanmaku() {
@@ -129,78 +129,109 @@ export function renderEnemy(enemy) {
   refs.enemyLevel = enemyLv;
 
   refs.enemyInfo.removeChildren();
-  refs.enemyInfo.addChild(softPanel(0, 0, 200, 80, C.white, C.lavender));
+  refs.enemyInfo.addChild(softPanel(0, 0, 200, 130, C.white, C.lavender));
   refs.enemyInfo.addChild(Object.assign(lbl(enemy.name, 10, C.text, true), { x: 12, y: 6 }));
   refs.enemyInfo.addChild(Object.assign(lbl('레벨' + enemyLv, 8, C.dim), { x: 145, y: 8 }));
 
+  // Taming gauge
+  refs.enemyInfo.addChild(Object.assign(lbl('순화', 7, C.taming), { x: 12, y: 32 }));
+  refs.tamingBar = cuteBar(60, 34, 125, 12, 0, C.taming);
+  refs.enemyInfo.addChild(refs.tamingBar);
+  refs.tamingPctLabel = lbl('0%', 6, C.dim);
+  refs.tamingPctLabel.x = 188; refs.tamingPctLabel.y = 32;
+  refs.enemyInfo.addChild(refs.tamingPctLabel);
+
+  // Escape gauge
+  refs.enemyInfo.addChild(Object.assign(lbl('도주', 7, C.escape), { x: 12, y: 52 }));
+  refs.escapeBar = cuteBar(60, 54, 125, 12, 0, C.escape);
+  refs.enemyInfo.addChild(refs.escapeBar);
+  refs.escapePctLabel = lbl('0%', 6, C.dim);
+  refs.escapePctLabel.x = 188; refs.escapePctLabel.y = 52;
+  refs.enemyInfo.addChild(refs.escapePctLabel);
+
+  // Mood tag
   const mood = getMoodTag(0, 0);
-  refs.moodTagBg = new PIXI.Graphics().roundRect(12, 40, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
+  refs.moodTagBg = new PIXI.Graphics().roundRect(12, 74, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
   refs.enemyInfo.addChild(refs.moodTagBg);
   refs.moodTagLabel = lbl(mood.tag, 8, mood.color, true);
-  refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 54;
+  refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 88;
   refs.enemyInfo.addChild(refs.moodTagLabel);
 }
 
 export function updateGauges(tamingPercent, escapePercent) {
-  const mood = getMoodTag(tamingPercent, escapePercent);
+  // Update gauge bars
+  if (refs.tamingBar) {
+    const idx = refs.enemyInfo.children.indexOf(refs.tamingBar);
+    if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
+    refs.tamingBar = cuteBar(60, 34, 125, 12, tamingPercent / 100, C.taming);
+    refs.enemyInfo.addChild(refs.tamingBar);
+  }
+  if (refs.tamingPctLabel) refs.tamingPctLabel.text = tamingPercent + '%';
 
+  if (refs.escapeBar) {
+    const idx = refs.enemyInfo.children.indexOf(refs.escapeBar);
+    if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
+    const escColor = escapePercent >= 70 ? C.red : C.escape;
+    refs.escapeBar = cuteBar(60, 54, 125, 12, escapePercent / 100, escColor);
+    refs.enemyInfo.addChild(refs.escapeBar);
+  }
+  if (refs.escapePctLabel) refs.escapePctLabel.text = escapePercent + '%';
+
+  // Update mood tag
+  const mood = getMoodTag(tamingPercent, escapePercent);
   if (refs.moodTagBg && refs.moodTagLabel) {
     const bgIdx = refs.enemyInfo.children.indexOf(refs.moodTagBg);
     const lblIdx = refs.enemyInfo.children.indexOf(refs.moodTagLabel);
     if (lblIdx >= 0) refs.enemyInfo.removeChildAt(lblIdx);
     if (bgIdx >= 0) refs.enemyInfo.removeChildAt(bgIdx);
 
-    refs.moodTagBg = new PIXI.Graphics().roundRect(12, 40, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
+    refs.moodTagBg = new PIXI.Graphics().roundRect(12, 74, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
     refs.enemyInfo.addChild(refs.moodTagBg);
     refs.moodTagLabel = lbl(mood.tag, 8, mood.color, true);
-    refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 54;
+    refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 88;
     refs.enemyInfo.addChild(refs.moodTagLabel);
   }
 }
 
-export function renderAlly(ally) {
-  if (!ally) return;
-  refs.allySprite.removeChildren();
-  const m = monster(168, ally.img);
-  m.scale.x = -1;
-  refs.allySprite.addChild(m);
-
-  refs.allyInfo.removeChildren();
-  refs.allyInfo.addChild(softPanel(0, 0, 200, 80, C.white, C.pinkLight));
-  refs.allyInfo.addChild(Object.assign(lbl(ally.name, 10, C.text, true), { x: 12, y: 6 }));
-  refs.allyInfo.addChild(Object.assign(lbl('레벨' + (ally.level || 1), 8, C.dim), { x: 145, y: 8 }));
-  const hpRatio = ally.hp / ally.maxHp;
-  refs.allyInfo.addChild(Object.assign(lbl('체력', 7, C.hp), { x: 12, y: 40 }));
-  refs.allyInfo.addChild(cuteBar(50, 42, 100, 14, hpRatio, hpRatio > 0.3 ? C.hp : C.hpLow));
-  refs.allyInfo.addChild(Object.assign(lbl(ally.hp + '/' + ally.maxHp, 7, C.dim), { x: 155, y: 40 }));
+export function renderAlly() {
+  // 3v1 구조: renderAllyTabs에서 3마리 일괄 렌더링
 }
 
 export function renderAllyTabs(team, activeAllyIndex, combatState) {
-  refs.partyBar.removeChildren();
-  team.forEach((ally, i) => {
-    const x = 65 + i * 55;
-    const ct = new PIXI.Container(); ct.x = x; ct.y = 6;
+  if (!refs.allySlots) return;
+  const sizes = [100, 120, 100];
 
-    if (i === activeAllyIndex) {
-      ct.addChild(new PIXI.Graphics().circle(0, 12, 14).stroke({ color: C.pink, width: 2 }));
-    }
+  for (let i = 0; i < refs.allySlots.length; i++) {
+    const slot = refs.allySlots[i];
+    slot.container.removeChildren();
 
-    const m = monster(28, ally.img);
-    m.y = 12;
+    const ally = team[i];
+    if (!ally) continue;
+
+    const size = sizes[i];
+    const m = monster(size, ally.img);
+    m.scale.x = -1;
     if (ally.hp <= 0) m.alpha = 0.3;
     if (ally.inEgg) m.alpha = 0.4;
-    ct.addChild(m);
+    slot.container.addChild(m);
 
-    ct.addChild(cuteBar(-12, 24, 24, 3, ally.hp / ally.maxHp, C.hp));
+    // Active ally highlight ring
+    if (i === activeAllyIndex && combatState === 'active') {
+      const ring = new PIXI.Graphics();
+      ring.circle(0, 0, size * 0.35).stroke({ color: C.pink, width: 2.5, alpha: 0.7 });
+      slot.container.addChild(ring);
+    }
 
-    ct.eventMode = 'static'; ct.cursor = 'pointer';
-    ct.on('pointerdown', () => {
-      if (ally.hp > 0 && !ally.inEgg && combatState === 'active' && onSwitchAlly) {
-        onSwitchAlly(i);
-      }
-    });
-    refs.partyBar.addChild(ct);
-  });
+    // HP bar above head
+    const barW = size * 0.5;
+    const barY = -size * 0.4;
+    const hpRatio = ally.hp / ally.maxHp;
+    const hpColor = hpRatio > 0.3 ? C.hp : C.hpLow;
+    slot.container.addChild(cuteBar(-barW / 2, barY, barW, 6, hpRatio, hpColor));
+  }
+
+  // Keep allySprite ref pointing at center slot for VFX
+  refs.allySprite = refs.allySlots[1].container;
 }
 
 // ---- Danmaku ----
@@ -355,9 +386,12 @@ export function tickBattleField(tick) {
     refs.enemySprite.y = refs.enemyBaseY + bounce * 4;
     refs.enemySprite.scale.set(1 + Math.sin(tick * 3) * 0.02, 1 - Math.sin(tick * 3) * 0.02);
   }
-  if (refs.allySprite && refs.allyBaseY != null) {
-    refs.allySprite.y = refs.allyBaseY - bounce * 3;
-    refs.allySprite.scale.set(1 - Math.sin(tick * 3 + 0.5) * 0.02, 1 + Math.sin(tick * 3 + 0.5) * 0.02);
+  if (refs.allySlots) {
+    refs.allySlots.forEach((slot, i) => {
+      const phase = tick * 3 + i * 0.7;
+      slot.container.y = slot.baseY - Math.sin(phase) * 3;
+      slot.container.scale.set(1 - Math.sin(phase) * 0.015, 1 + Math.sin(phase) * 0.015);
+    });
   }
   sparkles.forEach(s => {
     s.g.alpha = 0.1 + Math.sin(tick * s.speed * 5 + s.phase) * 0.15;

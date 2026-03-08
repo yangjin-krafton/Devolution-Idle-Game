@@ -1,27 +1,34 @@
 // ============================================================
-// Team Management & Devolution System
+// Team Management — 6마리 팀 + 퇴화 + 스탯 시스템
 // ============================================================
 
 import { ALLY_MONSTERS, ENEMY_MONSTERS, GENERIC_LOGS } from './data.js';
 
 export class TeamManager {
   constructor() {
-    this.allies = ALLY_MONSTERS.map(a => ({ ...a, actions: a.actions.map(ac => ({ ...ac })) }));
-    this.collection = [];       // captured enemies (for team replacement)
-    this.eggTimers = new Map(); // allyId -> { startTime, duration }
-    this.onLog = null;          // callback for logs
-  }
-
-  log(msg) {
-    if (this.onLog) this.onLog(msg);
+    this.allies = ALLY_MONSTERS.map(a => ({
+      ...a,
+      actions: a.actions.map(ac => ({ ...ac })),
+      stats: { ...a.stats },
+    }));
+    this.collection = [];
+    this.eggTimers = new Map();
+    // First 3 are active, last 3 are bench
+    this.activeSlots = [0, 1, 2];
   }
 
   getActiveTeam() {
-    return this.allies.filter(a => !a.inEgg);
+    return this.activeSlots
+      .map(i => this.allies[i])
+      .filter(a => a && !a.inEgg);
   }
 
   getBattleTeam() {
-    return this.allies.filter(a => !a.inEgg && a.hp > 0);
+    return this.getActiveTeam().filter(a => a.hp > 0);
+  }
+
+  getBenchTeam() {
+    return this.allies.filter((a, i) => !this.activeSlots.includes(i));
   }
 
   getRandomEnemy() {
@@ -29,7 +36,6 @@ export class TeamManager {
     return { ...ENEMY_MONSTERS[idx] };
   }
 
-  // After combat: award XP to allies that acted
   awardXP(actedAllyIds) {
     const logs = [];
     for (const id of actedAllyIds) {
@@ -41,7 +47,6 @@ export class TeamManager {
     return logs;
   }
 
-  // Check and trigger egg state for allies over XP threshold
   checkDevolution() {
     const logs = [];
     for (const ally of this.allies) {
@@ -51,7 +56,7 @@ export class TeamManager {
         ally.hp = 0;
         this.eggTimers.set(ally.id, {
           startTime: Date.now(),
-          duration: 15000, // 15 seconds for MVP (short for testing)
+          duration: 15000,
         });
         logs.push(GENERIC_LOGS.eggEnter(ally.name));
       }
@@ -59,7 +64,6 @@ export class TeamManager {
     return logs;
   }
 
-  // Check if any eggs are ready to hatch
   checkEggHatch() {
     const logs = [];
     for (const [allyId, timer] of this.eggTimers) {
@@ -76,7 +80,11 @@ export class TeamManager {
           ally.img = ally.devolvedImg || ally.img;
           ally.hp = ally.maxHp;
           ally.xp = 0;
-          // Change one action slightly (power boost after devolution)
+          // Apply devolved stats (concentrated)
+          if (ally.devolvedStats) {
+            ally.stats = { ...ally.devolvedStats };
+          }
+          // Boost first action power
           if (ally.actions[0]) {
             ally.actions[0].power += 3;
           }
@@ -95,7 +103,6 @@ export class TeamManager {
     return Math.min(100, Math.round((elapsed / timer.duration) * 100));
   }
 
-  // Heal all allies between battles (partial heal)
   healTeam() {
     for (const ally of this.allies) {
       if (!ally.inEgg) {
@@ -104,7 +111,6 @@ export class TeamManager {
     }
   }
 
-  // Add captured enemy as a new ally (simplified for MVP)
   addCaptured(enemy) {
     this.collection.push({
       id: enemy.id,

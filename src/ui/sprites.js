@@ -50,7 +50,7 @@ export function allyDevolvedImg(id) {
 
 // Map ally id to color (still used for egg color)
 export function allyColor(id) {
-  return { water: C.water, fire: C.fire, grass: C.leaf }[id] || C.dark;
+  return { water: C.water, fire: C.fire, grass: C.leaf, crystal: C.lavender, moss: C.mint, spark: C.yellow }[id] || C.dark;
 }
 
 export function egg(size, color) {

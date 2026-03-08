@@ -1,12 +1,12 @@
 // ============================================================
-// Main Game Controller — Pixi bootstrap + game flow
+// Main Game Controller — 3v1 전투 + 3분류 스킬 체계
 // ============================================================
 
 import { W, H } from './ui/theme.js';
 import { initScreens, addScreen, showScreen } from './ui/screens.js';
 import { initEffects } from './effects.js';
 import {
-  initCombat, setCombatCallbacks, setMode, renderEnemy,
+  initCombat, setCombatCallbacks, renderEnemy,
   updateGauges, renderLogs, renderAllyTabs, renderActions,
   renderAlly, shakeEnemy, applyBackground,
   triggerTamingVFX, triggerAttackVFX,
@@ -40,7 +40,6 @@ await app.init({
 document.body.appendChild(app.canvas);
 
 function resize() {
-  // Use visualViewport for accurate mobile size (excludes virtual keyboard, address bar)
   const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
   const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const s = Math.min(vw / W, vh / H);
@@ -49,9 +48,7 @@ function resize() {
 }
 resize();
 window.addEventListener('resize', resize);
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', resize);
-}
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
 
 // ============================================================
 // Init all modules
@@ -98,7 +95,7 @@ titleScr._startBtn.on('pointerdown', () => {
 });
 
 // ============================================================
-// Combat Flow
+// Combat Flow — 3v1 턴 구조
 // ============================================================
 function startBattle() {
   const hatchLogs = teamManager.checkEggHatch();
@@ -111,31 +108,20 @@ function startBattle() {
     }
   }
 
-  if (pendingDevoReveals.length > 0) {
-    showDevoRevealScreen();
-    return;
-  }
+  if (pendingDevoReveals.length > 0) { showDevoRevealScreen(); return; }
 
-  const battleTeam = teamManager.getActiveTeam();
-  if (battleTeam.length === 0) {
-    showTeamScreen();
-    return;
-  }
+  const battleTeam = teamManager.getBattleTeam();
+  if (battleTeam.length === 0) { showTeamScreen(); return; }
 
   battleCount++;
   const enemy = teamManager.getRandomEnemy();
   combat = new CombatSystem(battleTeam, enemy);
-  setMode('taming');
   resetDanmaku();
   applyBackground(randomEnvironment());
 
   setCombatCallbacks({
     action: handleAction,
-    bonding: handleBonding,
-    switchAlly: (i) => {
-      combat.switchAlly(i);
-      refreshCombatUI();
-    },
+    switchAlly: null, // 3v1에서는 자동 순차 행동
   });
 
   showScreen('combat');
@@ -147,9 +133,18 @@ function refreshCombatUI() {
   const r = combat.getResult();
   updateGauges(r.tamingPercent, r.escapePercent);
   renderLogs(r.logs);
-  renderAlly(combat.getActiveAlly());
-  renderAllyTabs(combat.team, combat.activeAllyIndex, combat.state);
-  renderActions(combat.getActiveAlly(), r.canBond);
+
+  const currentAlly = combat.getActiveAlly();
+  renderAlly(currentAlly);
+  renderAllyTabs(combat.team, r.currentAllyIndex, combat.state);
+
+  // Pass combat result for turn phase display
+  renderActions(currentAlly, {
+    tamingPercent: r.tamingPercent,
+    escapePercent: r.escapePercent,
+    turnPhase: r.turnPhase,
+    aliveCount: combat.getAliveAllies().length,
+  });
 }
 
 function handleAction(index) {
@@ -157,32 +152,33 @@ function handleAction(index) {
 
   const ally = combat.getActiveAlly();
   const action = ally?.actions[index];
+  if (!action) return;
+
   const prevHp = ally ? ally.hp : 0;
+  const prevState = combat.state;
 
   combat.useAction(index);
-  shakeEnemy();
 
-  if (action) {
+  // VFX based on category
+  if (action.category === 'stimulate') {
+    shakeEnemy();
     const pref = combat.enemy.preferences[action.axis] || 1.0;
     triggerTamingVFX(action.axis, pref >= 1.0);
+  } else if (action.category === 'capture') {
+    triggerBondingAttemptVFX();
+    if (combat.state === 'victory') {
+      setTimeout(() => triggerBondingSuccessVFX(), 200);
+    } else if (prevState === 'active' && combat.state === 'active') {
+      triggerBondingFailVFX();
+    }
+  } else if (action.category === 'defend') {
+    // Subtle defensive VFX
+    triggerTamingVFX(action.axis, true);
   }
+
+  // Attack VFX (enemy attacked after full turn)
   if (ally && ally.hp < prevHp) setTimeout(() => triggerAttackVFX(), 200);
   if (ally && ally.hp <= 0) setTimeout(() => triggerFaintVFX(), 300);
-  if (combat.state === 'escaped') triggerEscapeVFX();
-
-  refreshCombatUI();
-  if (combat.state !== 'active') setTimeout(endBattle, 800);
-}
-
-function handleBonding(index) {
-  if (!combat || combat.state !== 'active') return;
-
-  triggerBondingAttemptVFX();
-  const prevState = combat.state;
-  combat.useBonding(index);
-
-  if (combat.state === 'victory') setTimeout(() => triggerBondingSuccessVFX(), 200);
-  else if (prevState === 'active' && combat.state === 'active') triggerBondingFailVFX();
   if (combat.state === 'escaped') triggerEscapeVFX();
 
   refreshCombatUI();
@@ -234,7 +230,7 @@ function onNextBattle() {
     }
   }
   if (pendingDevoReveals.length > 0) { showDevoRevealScreen(); return; }
-  const battleTeam = teamManager.getActiveTeam();
+  const battleTeam = teamManager.getBattleTeam();
   if (battleTeam.filter(a => a.hp > 0).length === 0) { showGameOverScreen(); return; }
   startBattle();
 }
