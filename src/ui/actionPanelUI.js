@@ -2,7 +2,7 @@
 // Action Panel — 3x3 그리드 (닌텐도 스위치 스타일 v2)
 // ============================================================
 
-import { W, H, S, lbl, cuteBar } from './theme.js';
+import { W, H, S, lbl } from './theme.js';
 import { monster } from './sprites.js';
 
 const CAT = {
@@ -78,9 +78,6 @@ export function renderActions(team, cr) {
     hd.addChild(pt);
     // 이름
     hd.addChild(Object.assign(lbl(ally.name, 6, isPend ? 0x00d4aa : 0x8888aa, true), { x: 26, y: 4 }));
-    // HP 바
-    const hpR = ally.hp / ally.maxHp;
-    hd.addChild(cuteBar(26, 17, colW - 48, 5, hpR, hpR > 0.3 ? 0x00d4aa : 0xff6b6b));
     // 하단 구분선
     const sep = new PIXI.Graphics();
     sep.moveTo(6, headH - 2).lineTo(colW - 12, headH - 2)
