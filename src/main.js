@@ -121,7 +121,6 @@ function startBattle() {
 
   setCombatCallbacks({
     action: handleAction,
-    switchAlly: null, // 3v1에서는 자동 순차 행동
   });
 
   showScreen('combat');
@@ -134,52 +133,60 @@ function refreshCombatUI() {
   updateGauges(r.tamingPercent, r.escapePercent);
   renderLogs(r.logs);
 
-  const currentAlly = combat.getActiveAlly();
-  renderAlly(currentAlly);
-  renderAllyTabs(combat.team, r.currentAllyIndex, combat.state);
+  // 현재 행동 선택 중인 첫 번째 슬롯을 하이라이트
+  const pendingIdx = r.pendingSlots.length > 0 ? r.pendingSlots[0] : -1;
+  renderAlly();
+  renderAllyTabs(combat.team, pendingIdx, combat.state);
 
-  // Pass combat result for turn phase display
-  renderActions(currentAlly, {
+  // 스킬 효과 미리보기 계산
+  const previews = {};
+  combat.team.forEach((ally, i) => {
+    if (ally.hp <= 0 || ally.inEgg) return;
+    previews[i] = ally.actions.map(action => combat.previewAction(ally, action));
+  });
+
+  // 3x3 그리드에 전체 팀 + 선택 상태 + 미리보기 전달
+  renderActions(combat.team, {
     tamingPercent: r.tamingPercent,
     escapePercent: r.escapePercent,
-    turnPhase: r.turnPhase,
-    aliveCount: combat.getAliveAllies().length,
+    pendingSlots: r.pendingSlots,
+    selectedActions: r.selectedActions,
+    turnOrder: r.turnOrder,
+    _previews: previews,
   });
 }
 
-function handleAction(index) {
+function handleAction(allyIndex, actionIndex) {
   if (!combat || combat.state !== 'active') return;
 
-  const ally = combat.getActiveAlly();
-  const action = ally?.actions[index];
+  const ally = combat.team[allyIndex];
+  const action = ally?.actions[actionIndex];
   if (!action) return;
 
-  const prevHp = ally ? ally.hp : 0;
+  // 선택 전 HP 스냅샷 (VFX용)
+  const hpBefore = combat.team.map(a => a.hp);
   const prevState = combat.state;
 
-  combat.useAction(index);
+  combat.selectAction(allyIndex, actionIndex);
 
-  // VFX based on category
-  if (action.category === 'stimulate') {
+  // 턴 실행 완료 (모든 선택이 끝난 후) → VFX
+  const r = combat.getResult();
+  if (r.turn > 0 && Object.keys(r.selectedActions).length === 0) {
+    // 턴이 실행되었음 — VFX 재생
     shakeEnemy();
-    const pref = combat.enemy.preferences[action.axis] || 1.0;
-    triggerTamingVFX(action.axis, pref >= 1.0);
-  } else if (action.category === 'capture') {
-    triggerBondingAttemptVFX();
+    triggerTamingVFX('behavior', true);
+
     if (combat.state === 'victory') {
       setTimeout(() => triggerBondingSuccessVFX(), 200);
-    } else if (prevState === 'active' && combat.state === 'active') {
-      triggerBondingFailVFX();
     }
-  } else if (action.category === 'defend') {
-    // Subtle defensive VFX
-    triggerTamingVFX(action.axis, true);
-  }
+    if (combat.state === 'escaped') triggerEscapeVFX();
 
-  // Attack VFX (enemy attacked after full turn)
-  if (ally && ally.hp < prevHp) setTimeout(() => triggerAttackVFX(), 200);
-  if (ally && ally.hp <= 0) setTimeout(() => triggerFaintVFX(), 300);
-  if (combat.state === 'escaped') triggerEscapeVFX();
+    // HP 변화 체크
+    combat.team.forEach((a, i) => {
+      if (a.hp < hpBefore[i]) setTimeout(() => triggerAttackVFX(), 200);
+      if (a.hp <= 0 && hpBefore[i] > 0) setTimeout(() => triggerFaintVFX(), 300);
+    });
+  }
 
   refreshCombatUI();
   if (combat.state !== 'active') setTimeout(endBattle, 800);

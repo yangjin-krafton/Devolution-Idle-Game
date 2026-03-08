@@ -65,7 +65,11 @@
       "Bash(npx http-server . -p 8082 -c-1)",
       "Bash(taskkill //F //IM \"node.exe\")",
       "Bash(npx http-server src -p 8080 --cors -c-1)",
-      "Bash(grep -rn \"lbl\\(\" /f/Workspace/Devolution-Idle-Game/src/ui/*.js)"
+      "Bash(grep -rn \"lbl\\(\" /f/Workspace/Devolution-Idle-Game/src/ui/*.js)",
+      "Bash(sed -i \"s/{ x: W \\\\* 0.15, y: 275, size: 95 },   \\\\/\\\\/ 좌/{ x: W * 0.10, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(위쪽, 적 옆 포위\\)/\" src/ui/battleFieldUI.js)",
+      "Bash(sed -i \"s/{ x: W \\\\* 0.85, y: 275, size: 95 },    \\\\/\\\\/ 우/{ x: W * 0.90, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(위쪽, 적 옆 포위\\)/\" src/ui/battleFieldUI.js)",
+      "Bash(sed -i \"s/{ x: W \\\\* 0.10, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(위쪽, 적 옆 포위\\)/{ x: W * 0.18, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(적 옆 포위\\)/\" \"f:/Workspace/Devolution-Idle-Game/src/ui/battleFieldUI.js\")",
+      "Bash(sed -i \"s/{ x: W \\\\* 0.90, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(위쪽, 적 옆 포위\\)/{ x: W * 0.82, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(적 옆 포위\\)/\" \"f:/Workspace/Devolution-Idle-Game/src/ui/battleFieldUI.js\")"
     ],
     "additionalDirectories": [
       "\\tmp"

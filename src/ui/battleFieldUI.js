@@ -2,7 +2,7 @@
 // Battle Field — background, enemy/ally sprites, danmaku, party bar, VFX, tick
 // ============================================================
 
-import { W, H, C, hex, lbl, softPanel, cuteBar, addSparkles } from './theme.js';
+import { W, H, C, hex, lbl, cuteBar, addSparkles } from './theme.js';
 import { monster } from './sprites.js';
 import {
   playTamingEffect, playAttackEffect,
@@ -62,12 +62,12 @@ export function initBattleField(parentContainer, sharedRefs) {
 
 export function setSwitchAllyCallback() { /* 3v1 구조에서는 미사용 */ }
 
-// ---- Enemy Area ----
+// ---- Enemy Area (상단 중앙) ----
 function buildEnemyArea() {
-  const ePlatX = W * 0.78, ePlatY = 130;
+  const ePlatX = W * 0.5, ePlatY = 115;
 
   refs.enemyShadow = new PIXI.Graphics();
-  refs.enemyShadow.ellipse(ePlatX, ePlatY + 42, 36, 10).fill({ color: 0x000000, alpha: 0.15 });
+  refs.enemyShadow.ellipse(ePlatX, ePlatY + 50, 40, 12).fill({ color: 0x000000, alpha: 0.15 });
   container.addChild(refs.enemyShadow);
 
   refs.enemySprite = new PIXI.Container();
@@ -75,26 +75,27 @@ function buildEnemyArea() {
   refs.enemyBaseY = ePlatY;
   container.addChild(refs.enemySprite);
 
-  refs.enemyInfo = new PIXI.Container();
-  refs.enemyInfo.x = 10; refs.enemyInfo.y = 35;
-  container.addChild(refs.enemyInfo);
+  // HUD container above enemy head (gauges + mood)
+  refs.enemyHud = new PIXI.Container();
+  refs.enemyHud.x = ePlatX; refs.enemyHud.y = ePlatY - 90;
+  container.addChild(refs.enemyHud);
 }
 
+// ---- Ally Area (하단 좌/중/우 — 적을 둘러싸는 배치) ----
 function buildAllyArea() {
-  // 3마리 아군을 전장 하단에 나란히 배치
-  refs.allySlots = []; // { container, sprite, shadow, hpBar, baseX, baseY }
+  refs.allySlots = [];
   const positions = [
-    { x: W * 0.12, y: 280, size: 100 },
-    { x: W * 0.30, y: 260, size: 120 },
-    { x: W * 0.48, y: 280, size: 100 },
+    { x: W * 0.18, y: 215, size: 88 },    // 좌 (적 옆 포위)
+    { x: W * 0.50, y: 290, size: 105 },   // 중앙 (약간 뒤)
+    { x: W * 0.82, y: 215, size: 88 },    // 우 (적 옆 포위)
   ];
 
   for (let i = 0; i < 3; i++) {
     const pos = positions[i];
-    const slot = { baseX: pos.x, baseY: pos.y };
+    const slot = { baseX: pos.x, baseY: pos.y, size: pos.size };
 
     slot.shadow = new PIXI.Graphics();
-    slot.shadow.ellipse(pos.x, pos.y + pos.size * 0.35, pos.size * 0.25, 8).fill({ color: 0x000000, alpha: 0.12 });
+    slot.shadow.ellipse(pos.x, pos.y + pos.size * 0.32, pos.size * 0.22, 7).fill({ color: 0x000000, alpha: 0.12 });
     container.addChild(slot.shadow);
 
     slot.container = new PIXI.Container();
@@ -104,7 +105,7 @@ function buildAllyArea() {
     refs.allySlots.push(slot);
   }
 
-  // Keep refs.allySprite pointing to center ally for VFX compatibility
+  // VFX compatibility — default to center ally
   refs.allySprite = refs.allySlots[1].container;
   refs.allyBaseY = positions[1].y;
 }
@@ -123,74 +124,55 @@ function buildDanmaku() {
 
 export function renderEnemy(enemy) {
   refs.enemySprite.removeChildren();
-  refs.enemySprite.addChild(monster(130, enemy.img));
+  refs.enemySprite.addChild(monster(140, enemy.img));
 
-  const enemyLv = Math.max(1, Math.round(enemy.tamingThreshold / 10));
-  refs.enemyLevel = enemyLv;
+  refs.enemyLevel = Math.max(1, Math.round(enemy.tamingThreshold / 10));
 
-  refs.enemyInfo.removeChildren();
-  refs.enemyInfo.addChild(softPanel(0, 0, 200, 130, C.white, C.lavender));
-  refs.enemyInfo.addChild(Object.assign(lbl(enemy.name, 10, C.text, true), { x: 12, y: 6 }));
-  refs.enemyInfo.addChild(Object.assign(lbl('레벨' + enemyLv, 8, C.dim), { x: 145, y: 8 }));
+  // Build HUD above enemy head
+  _renderEnemyHud(0, 0);
+}
 
-  // Taming gauge
-  refs.enemyInfo.addChild(Object.assign(lbl('순화', 7, C.taming), { x: 12, y: 32 }));
-  refs.tamingBar = cuteBar(60, 34, 125, 12, 0, C.taming);
-  refs.enemyInfo.addChild(refs.tamingBar);
-  refs.tamingPctLabel = lbl('0%', 6, C.dim);
-  refs.tamingPctLabel.x = 188; refs.tamingPctLabel.y = 32;
-  refs.enemyInfo.addChild(refs.tamingPctLabel);
+function _renderEnemyHud(tamingPct, escapePct) {
+  if (!refs.enemyHud) return;
+  refs.enemyHud.removeChildren();
 
-  // Escape gauge
-  refs.enemyInfo.addChild(Object.assign(lbl('도주', 7, C.escape), { x: 12, y: 52 }));
-  refs.escapeBar = cuteBar(60, 54, 125, 12, 0, C.escape);
-  refs.enemyInfo.addChild(refs.escapeBar);
-  refs.escapePctLabel = lbl('0%', 6, C.dim);
-  refs.escapePctLabel.x = 188; refs.escapePctLabel.y = 52;
-  refs.enemyInfo.addChild(refs.escapePctLabel);
+  const bw = 120; // bar width
+  const hx = -bw / 2; // centered
 
-  // Mood tag
-  const mood = getMoodTag(0, 0);
-  refs.moodTagBg = new PIXI.Graphics().roundRect(12, 74, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
-  refs.enemyInfo.addChild(refs.moodTagBg);
-  refs.moodTagLabel = lbl(mood.tag, 8, mood.color, true);
-  refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 88;
-  refs.enemyInfo.addChild(refs.moodTagLabel);
+  // Taming bar
+  const tamLbl = lbl('순화', 5, C.taming, true);
+  tamLbl.anchor = { x: 1, y: 0.5 }; tamLbl.x = hx - 4; tamLbl.y = 5;
+  refs.enemyHud.addChild(tamLbl);
+  refs.enemyHud.addChild(cuteBar(hx, 0, bw, 8, tamingPct / 100, C.taming));
+  const tamPct = lbl(tamingPct + '%', 5, C.dim);
+  tamPct.x = hx + bw + 4; tamPct.y = -1;
+  refs.enemyHud.addChild(tamPct);
+  refs.tamingPctLabel = tamPct;
+
+  // Escape bar
+  const escColor = escapePct >= 70 ? C.red : C.escape;
+  const escLbl = lbl('도주', 5, C.escape, true);
+  escLbl.anchor = { x: 1, y: 0.5 }; escLbl.x = hx - 4; escLbl.y = 19;
+  refs.enemyHud.addChild(escLbl);
+  refs.enemyHud.addChild(cuteBar(hx, 14, bw, 8, escapePct / 100, escColor));
+  const escPctLbl = lbl(escapePct + '%', 5, C.dim);
+  escPctLbl.x = hx + bw + 4; escPctLbl.y = 13;
+  refs.enemyHud.addChild(escPctLbl);
+  refs.escapePctLabel = escPctLbl;
+
+  // Mood tag pill (centered below bars)
+  const mood = getMoodTag(tamingPct, escapePct);
+  const pillW = 56, pillH = 18;
+  const pillBg = new PIXI.Graphics().roundRect(-pillW / 2, 26, pillW, pillH, 9)
+    .fill({ color: mood.color, alpha: 0.25 });
+  refs.enemyHud.addChild(pillBg);
+  const moodLbl = lbl(mood.tag, 6, mood.color, true);
+  moodLbl.anchor = { x: 0.5, y: 0.5 }; moodLbl.x = 0; moodLbl.y = 35;
+  refs.enemyHud.addChild(moodLbl);
 }
 
 export function updateGauges(tamingPercent, escapePercent) {
-  // Update gauge bars
-  if (refs.tamingBar) {
-    const idx = refs.enemyInfo.children.indexOf(refs.tamingBar);
-    if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
-    refs.tamingBar = cuteBar(60, 34, 125, 12, tamingPercent / 100, C.taming);
-    refs.enemyInfo.addChild(refs.tamingBar);
-  }
-  if (refs.tamingPctLabel) refs.tamingPctLabel.text = tamingPercent + '%';
-
-  if (refs.escapeBar) {
-    const idx = refs.enemyInfo.children.indexOf(refs.escapeBar);
-    if (idx >= 0) refs.enemyInfo.removeChildAt(idx);
-    const escColor = escapePercent >= 70 ? C.red : C.escape;
-    refs.escapeBar = cuteBar(60, 54, 125, 12, escapePercent / 100, escColor);
-    refs.enemyInfo.addChild(refs.escapeBar);
-  }
-  if (refs.escapePctLabel) refs.escapePctLabel.text = escapePercent + '%';
-
-  // Update mood tag
-  const mood = getMoodTag(tamingPercent, escapePercent);
-  if (refs.moodTagBg && refs.moodTagLabel) {
-    const bgIdx = refs.enemyInfo.children.indexOf(refs.moodTagBg);
-    const lblIdx = refs.enemyInfo.children.indexOf(refs.moodTagLabel);
-    if (lblIdx >= 0) refs.enemyInfo.removeChildAt(lblIdx);
-    if (bgIdx >= 0) refs.enemyInfo.removeChildAt(bgIdx);
-
-    refs.moodTagBg = new PIXI.Graphics().roundRect(12, 74, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
-    refs.enemyInfo.addChild(refs.moodTagBg);
-    refs.moodTagLabel = lbl(mood.tag, 8, mood.color, true);
-    refs.moodTagLabel.anchor = { x: 0.5, y: 0.5 }; refs.moodTagLabel.x = 57; refs.moodTagLabel.y = 88;
-    refs.enemyInfo.addChild(refs.moodTagLabel);
-  }
+  _renderEnemyHud(tamingPercent, escapePercent);
 }
 
 export function renderAlly() {
@@ -215,11 +197,22 @@ export function renderAllyTabs(team, activeAllyIndex, combatState) {
     if (ally.inEgg) m.alpha = 0.4;
     slot.container.addChild(m);
 
-    // Active ally highlight ring
+    // Active ally indicator — bouncing arrow above HP bar
     if (i === activeAllyIndex && combatState === 'active') {
-      const ring = new PIXI.Graphics();
-      ring.circle(0, 0, size * 0.35).stroke({ color: C.pink, width: 2.5, alpha: 0.7 });
-      slot.container.addChild(ring);
+      const arrowY = -size * 0.6;
+      const arrow = new PIXI.Graphics();
+      // Cute rounded triangle pointing down (2x size)
+      arrow.moveTo(0, arrowY + 20)
+        .lineTo(-12, arrowY)
+        .quadraticCurveTo(-14, arrowY - 6, -8, arrowY - 6)
+        .lineTo(8, arrowY - 6)
+        .quadraticCurveTo(14, arrowY - 6, 12, arrowY)
+        .closePath()
+        .fill({ color: C.pink, alpha: 0.9 });
+      // Small dot on top
+      arrow.circle(0, arrowY - 10, 5).fill({ color: C.pinkLight });
+      slot.container.addChild(arrow);
+      slot._arrow = arrow;
     }
 
     // HP bar above head
@@ -391,6 +384,10 @@ export function tickBattleField(tick) {
       const phase = tick * 3 + i * 0.7;
       slot.container.y = slot.baseY - Math.sin(phase) * 3;
       slot.container.scale.set(1 - Math.sin(phase) * 0.015, 1 + Math.sin(phase) * 0.015);
+      // Bounce the active arrow indicator
+      if (slot._arrow) {
+        slot._arrow.y = Math.sin(tick * 5) * 3;
+      }
     });
   }
   sparkles.forEach(s => {

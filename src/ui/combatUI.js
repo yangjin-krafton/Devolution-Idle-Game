@@ -4,7 +4,7 @@
 // ============================================================
 
 import {
-  initBattleField, setSwitchAllyCallback,
+  initBattleField,
   renderEnemy, updateGauges, renderAlly, renderAllyTabs,
   renderLogs, resetDanmaku, applyBackground,
   shakeEnemy, triggerTamingVFX, triggerAttackVFX,
@@ -32,9 +32,8 @@ export function initCombat() {
 export function getContainer() { return container; }
 
 // ---- Callbacks ----
-export function setCombatCallbacks({ action, switchAlly }) {
+export function setCombatCallbacks({ action }) {
   setActionCallbacks({ action });
-  if (switchAlly) setSwitchAllyCallback(switchAlly);
 }
 
 // ---- Re-exports from battleFieldUI ----
