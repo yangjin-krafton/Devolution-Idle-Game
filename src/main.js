@@ -8,7 +8,7 @@ import { initEffects } from './effects.js';
 import {
   initCombat, setCombatCallbacks, renderEnemy,
   updateGauges, renderLogs, renderAllyTabs, renderActions,
-  renderAlly, shakeEnemy, applyBackground,
+  renderAlly, shakeEnemy, applyBackground, setEmotion,
   triggerTamingVFX, triggerAttackVFX,
   triggerBondingAttemptVFX, triggerBondingSuccessVFX,
   triggerBondingFailVFX, triggerEscapeVFX, triggerFaintVFX,
@@ -131,6 +131,7 @@ function startBattle() {
 
 function refreshCombatUI() {
   const r = combat.getResult();
+  setEmotion(r.emotion);
   updateGauges(r.tamingPercent, r.escapePercent, r.turn);
   renderLogs(r.logs);
 

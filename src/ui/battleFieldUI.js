@@ -52,6 +52,10 @@ let sparkles = [];
 let danmakuItems = [];
 let lastLogCount = 0;
 let weatherParticles = [];
+let currentEmotion = null;
+
+export function setEmotion(emotion) { currentEmotion = emotion; }
+
 export function initBattleField(parentContainer, sharedRefs) {
   container = parentContainer;
   refs = sharedRefs;
@@ -136,7 +140,8 @@ function _renderEnemyHud(tamingPct, escapePct) {
   if (!refs.enemyHud) return;
   refs.enemyHud.removeChildren();
 
-  const pw = 200, ph = 68, bw = 120;
+  const hasEmotion = !!currentEmotion;
+  const pw = 200, ph = hasEmotion ? 82 : 68, bw = 120;
   const mood = getMoodTag(tamingPct, escapePct);
 
   // 패널 배경 — 둥근 다크 카드
@@ -181,9 +186,24 @@ function _renderEnemyHud(tamingPct, escapePct) {
   escL.x = 24 + bw + 4; escL.y = 40;
   refs.enemyHud.addChild(escL);
 
+  // 4행: 감정 상태 (있을 때만)
+  let bottomY = 55;
+  if (currentEmotion) {
+    const emoText = `${currentEmotion.icon} ${currentEmotion.name}`;
+    const turnsText = currentEmotion.turns > 0 ? ` (${currentEmotion.turnsLeft}턴)` : '';
+    const emoPill = new PIXI.Graphics();
+    emoPill.roundRect(8, 55, pw - 16, 14, 7).fill({ color: currentEmotion.color, alpha: 0.15 });
+    emoPill.roundRect(8, 55, pw - 16, 14, 7).stroke({ color: currentEmotion.color, width: 0.5, alpha: 0.4 });
+    refs.enemyHud.addChild(emoPill);
+    const emoL = lbl(emoText + turnsText, 5, currentEmotion.color, true);
+    emoL.anchor = { x: 0.5, y: 0.5 }; emoL.x = pw / 2; emoL.y = 62;
+    refs.enemyHud.addChild(emoL);
+    bottomY = 70;
+  }
+
   // 하단: 턴 번호
   const turnL = lbl(`Turn ${refs._turn || 0}`, 4, 0x666688);
-  turnL.x = 10; turnL.y = 55;
+  turnL.x = 10; turnL.y = bottomY;
   refs.enemyHud.addChild(turnL);
 }
 

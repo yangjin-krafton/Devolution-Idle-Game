@@ -4,7 +4,7 @@
 // ============================================================
 
 import {
-  initBattleField,
+  initBattleField, setEmotion,
   renderEnemy, updateGauges, renderAlly, renderAllyTabs,
   renderLogs, resetDanmaku, applyBackground,
   shakeEnemy, triggerTamingVFX, triggerAttackVFX,
@@ -38,6 +38,7 @@ export function setCombatCallbacks({ action, confirm }) {
 
 // ---- Re-exports from battleFieldUI ----
 export {
+  setEmotion,
   renderEnemy, updateGauges, renderAlly, renderAllyTabs,
   renderLogs, resetDanmaku, applyBackground,
   shakeEnemy, triggerTamingVFX, triggerAttackVFX,

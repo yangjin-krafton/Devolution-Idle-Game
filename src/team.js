@@ -107,6 +107,10 @@ export class TeamManager {
     for (const ally of this.allies) {
       if (!ally.inEgg) {
         ally.hp = Math.min(ally.maxHp, ally.hp + Math.ceil(ally.maxHp * 0.3));
+        // PP 전체 회복
+        for (const action of ally.actions) {
+          if (action.maxPp != null) action.pp = action.maxPp;
+        }
       }
     }
   }

@@ -130,31 +130,50 @@ export function renderActions(team, cr) {
       }
       ct.addChild(bg);
 
-      // 1줄: 아이콘 + 계열 + 수치
+      // PP 부족 시 비활성화
+      const ppEmpty = action.pp != null && action.pp <= 0;
+      const cardAlpha = ppEmpty ? 0.25 : a;
+
+      // 1줄: 아이콘 + 계열 + 수치 + 상성
       const preview = cr?._previews?.[c]?.[row];
       let pwText = `${cat.icon} ${cat.label}`;
+      let effMarker = '';
       if (preview) {
-        if (preview.type === 'stimulate') pwText = `${cat.icon} ${cat.label} ${preview.taming}`;
+        if (preview.type === 'stimulate') {
+          pwText = `${cat.icon} ${cat.label} ${preview.taming}`;
+          if (preview.effective === 'good') effMarker = ' ▲';
+          else if (preview.effective === 'bad') effMarker = ' ▼';
+        }
         else if (preview.type === 'capture') pwText = `${cat.icon} ${cat.label} ${preview.chance}%`;
         else if (preview.type === 'defend') pwText = `${cat.icon} ${cat.label} +${preview.heal}`;
       }
-      const pw = lbl(pwText, 6, cat.color, true);
-      pw.x = 10; pw.y = 7; pw.alpha = a;
+      // 상성 색상
+      const effColor = effMarker === ' ▲' ? 0x00ff88 : effMarker === ' ▼' ? 0xff4444 : cat.color;
+      const pw = lbl(pwText + effMarker, 6, effColor, true);
+      pw.x = 10; pw.y = 7; pw.alpha = cardAlpha;
       ct.addChild(pw);
+
+      // PP 표시 — 우상단
+      if (action.pp != null) {
+        const ppColor = ppEmpty ? 0xff4444 : 0x8888aa;
+        const ppL = lbl(`${action.pp}/${action.maxPp}`, 5, ppColor, true);
+        ppL.anchor = { x: 1, y: 0 }; ppL.x = cW - 6; ppL.y = 7; ppL.alpha = cardAlpha;
+        ct.addChild(ppL);
+      }
 
       // 순서 번호 — 미니 뱃지
       if (isChosen && order[c] != null) {
         const oB = new PIXI.Graphics();
-        oB.roundRect(cW - 22, 5, 16, 16, 4).fill({ color: cat.color });
+        oB.roundRect(cW - 22, 20, 16, 16, 4).fill({ color: cat.color });
         ct.addChild(oB);
         const oL = lbl(String(order[c]), 6, 0x1a1a2e, true);
-        oL.anchor = { x: 0.5, y: 0.5 }; oL.x = cW - 14; oL.y = 13;
+        oL.anchor = { x: 0.5, y: 0.5 }; oL.x = cW - 14; oL.y = 28;
         ct.addChild(oL);
       }
 
       // 2줄: 스킬 이름
-      const nL = lbl(action.name, 9, 0xddddf0, true);
-      nL.x = 10; nL.y = 26; nL.alpha = a;
+      const nL = lbl(action.name, 9, ppEmpty ? 0x666688 : 0xddddf0, true);
+      nL.x = 10; nL.y = 26; nL.alpha = cardAlpha;
       ct.addChild(nL);
 
       // 구분선
@@ -179,8 +198,8 @@ export function renderActions(team, cr) {
       dText.x = 10; dText.y = 52; dText.alpha = a;
       ct.addChild(dText);
 
-      // Click
-      if (!isLocked || isChosen) {
+      // Click (PP 빈 스킬은 클릭 불가)
+      if ((!isLocked || isChosen) && !ppEmpty) {
         ct.eventMode = 'static'; ct.cursor = 'pointer';
         ct.on('pointerdown', () => { if (onAction) onAction(c, row); });
       }

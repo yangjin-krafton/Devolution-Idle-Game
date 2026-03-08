@@ -1,8 +1,11 @@
 // ============================================================
-// Combat System — 3분류 스킬 + 3마리 동시 선택 턴 구조
+// Combat System — 감정 상태 + 적 AI + 상성 + PP
 // ============================================================
 
-import { GENERIC_LOGS } from './data.js';
+import { GENERIC_LOGS, calcSensoryMod } from './data.js';
+import { createEmotionState, tryApplyEmotion, checkAutoEmotion, tickEmotion, getEmotionMods, EMOTIONS } from './emotion.js';
+import { decideEnemyAction, decideTargeting, calcEnemyDamage, calcAoeDamage } from './enemyAI.js';
+import { statScale, previewAction as _previewAction } from './combatPreview.js';
 
 export class CombatSystem {
   constructor(team, enemy) {
@@ -15,14 +18,13 @@ export class CombatSystem {
     this.logs = [];
     this.actedThisBattle = new Set();
     this.defenseBoost = 0;
-
-    // 동시 선택: { allyIndex: actionIndex }
     this.selectedActions = {};
+    this.emotionState = createEmotionState();
+    this._badAxisStreak = 0; // 불리 상성 연속 카운터 (분노 유발용)
 
-    // 어그로 시스템: 각 아군별 누적 어그로
+    // 어그로
     this.aggro = {};
-    this.team.forEach((a, i) => { this.aggro[i] = 0; });
-    // 기본 타겟: 중앙(1번)
+    this.team.forEach((_, i) => { this.aggro[i] = 0; });
     if (this.team.length > 1) this.aggro[1] = 5;
 
     this.log(GENERIC_LOGS.encounter(this.enemy.name));
@@ -30,37 +32,31 @@ export class CombatSystem {
 
   log(msg) { this.logs.push(msg); }
 
-  getAliveAllies() {
-    return this.team.filter(a => a.hp > 0 && !a.inEgg);
-  }
+  getAliveAllies() { return this.team.filter(a => a.hp > 0 && !a.inEgg); }
 
-  // 아직 행동을 선택하지 않은 아군 슬롯 인덱스 목록
   getPendingSlots() {
     const pending = [];
     this.team.forEach((ally, i) => {
-      if (ally.hp > 0 && !ally.inEgg && this.selectedActions[i] == null) {
-        pending.push(i);
-      }
+      if (ally.hp > 0 && !ally.inEgg && this.selectedActions[i] == null) pending.push(i);
     });
     return pending;
   }
 
-  // 한 마리의 행동 선택 (토글: 다시 클릭하면 해제)
   selectAction(allyIndex, actionIndex) {
     if (this.state !== 'active') return null;
     const ally = this.team[allyIndex];
     if (!ally || ally.hp <= 0 || ally.inEgg) return null;
+    const action = ally.actions[actionIndex];
+    if (action && action.pp <= 0) return null; // PP 없으면 선택 불가
 
     if (this.selectedActions[allyIndex] === actionIndex) {
-      delete this.selectedActions[allyIndex]; // 선택 해제
+      delete this.selectedActions[allyIndex];
     } else {
       this.selectedActions[allyIndex] = actionIndex;
     }
-
     return this.getResult();
   }
 
-  // 확인 버튼으로 턴 실행
   confirmTurn() {
     if (this.state !== 'active') return null;
     if (this.getPendingSlots().length > 0) return null;
@@ -68,27 +64,30 @@ export class CombatSystem {
     return this.getResult();
   }
 
-  // ---- Turn Execution (모든 선택 후 일괄 실행) ----
-
+  // ---- Turn Execution ----
   _executeTurn() {
     this.turn++;
     this.defenseBoost = 0;
-
-    // 우선순위 순 실행: 수비 → 자극 → 포획 (동순위는 agility 높은 순)
     const ordered = this.calcTurnOrder();
 
     for (const { allyIdx, actionIdx } of ordered) {
       if (this.state !== 'active') break;
       const ally = this.team[allyIdx];
       if (!ally || ally.hp <= 0) continue;
-
       const action = ally.actions[actionIdx];
       if (!action) continue;
+
+      // PP 소모
+      if (action.pp <= 0) {
+        this.log(GENERIC_LOGS.ppEmpty(action.name));
+        continue;
+      }
+      action.pp--;
 
       this.actedThisBattle.add(ally.id);
       this.log(action.log);
 
-      // 어그로 누적: 자극 > 포획 > 수비
+      // 어그로
       const aggroGain = { stimulate: action.power, capture: action.power * 1.5, defend: action.power * 0.3 };
       this.aggro[allyIdx] = (this.aggro[allyIdx] || 0) + Math.round(aggroGain[action.category] || action.power);
 
@@ -96,7 +95,6 @@ export class CombatSystem {
       else if (action.category === 'capture') this._handleCapture(ally, action);
       else if (action.category === 'defend') this._handleDefend(ally, action);
 
-      // Check escape mid-turn
       if (this.escapeGauge >= this.enemy.escapeThreshold) {
         this.state = 'escaped';
         this.log(GENERIC_LOGS.enemyEscape(this.enemy.name));
@@ -105,35 +103,54 @@ export class CombatSystem {
       if (this.state === 'victory') break;
     }
 
-    // Enemy attacks after all allies acted
+    // 턴 종료 페이즈
     if (this.state === 'active') {
-      this._enemyAttack();
+      this._enemyAction();
+      this._turnEndPhase();
     }
 
-    // Reset for next turn
     this.selectedActions = {};
   }
 
-  // ---- Skill Category Handlers ----
+  // ---- Skill Handlers (밸런스 수정 적용) ----
 
   _handleStimulate(ally, action) {
-    const pref = this.enemy.preferences[action.axis] || 1.0;
-    const isGood = pref >= 1.0;
+    const emotionMods = getEmotionMods(this.emotionState);
+    // 상성 계산
+    const sensoryMod = calcSensoryMod(action.axis, this.enemy.sensoryType);
+    const isGood = sensoryMod >= 1.0;
     const stat = ally.stats ? ally.stats.gentleness : 5;
-    const tamingGain = Math.round(action.power * pref * (stat / 5));
-    const escapeChange = Math.round(action.escapeRisk * (isGood ? 0.7 : 1.5));
+    const tamingGain = Math.round(action.power * sensoryMod * statScale(stat) * emotionMods.tamingMod);
+    const escapeChange = Math.round(action.escapeRisk * (isGood ? 0.7 : 1.5) * emotionMods.escapeMod);
 
-    this.tamingGauge = Math.min(this.tamingGauge + tamingGain, 150);
+    this.tamingGauge = Math.min(this.tamingGauge + tamingGain, this.enemy.tamingThreshold * 1.5);
     this.escapeGauge = Math.max(0, this.escapeGauge + escapeChange);
 
+    // 반응 로그
     const axisKey = { sound: 'sound', temperature: 'temp', smell: 'smell', behavior: 'behav' }[action.axis];
     const reactionKey = `${axisKey}_${isGood ? 'good' : 'bad'}`;
     if (this.enemy.reactions[reactionKey]) this.log(this.enemy.reactions[reactionKey]);
+
+    // 불리 상성 연속 → 분노 유발
+    if (!isGood) {
+      this._badAxisStreak++;
+      if (this._badAxisStreak >= 2) {
+        const applied = tryApplyEmotion(this.emotionState, 'rage', 0.5);
+        if (applied) this.log(GENERIC_LOGS.emotionApply(this.enemy.name, applied.name));
+        this._badAxisStreak = 0;
+      }
+    } else {
+      this._badAxisStreak = 0;
+    }
+
+    // 스킬 부가 효과
+    this._processEffects(action.effects);
   }
 
   _handleCapture(ally, action) {
     const tamingRatio = this.tamingGauge / this.enemy.tamingThreshold;
     const stat = ally.stats ? ally.stats.empathy : 5;
+    const emotionMods = getEmotionMods(this.emotionState);
 
     if (tamingRatio < 0.4) {
       this.log(GENERIC_LOGS.captureTooEarly);
@@ -141,7 +158,9 @@ export class CombatSystem {
       return;
     }
 
-    let successChance = Math.min(0.9, (tamingRatio - 0.2) * 0.7 * (stat / 5));
+    // 개선된 포획 공식: 계수 0.7 → 1.0 + 감정 보정
+    let successChance = Math.min(0.9, (tamingRatio - 0.2) * 1.0 * statScale(stat));
+    successChance += emotionMods.captureMod;
     successChance = Math.min(0.95, Math.max(0.05, successChance));
 
     if (Math.random() < successChance) {
@@ -157,62 +176,93 @@ export class CombatSystem {
 
   _handleDefend(ally, action) {
     const stat = ally.stats ? ally.stats.resilience : 5;
-    const boost = (action.defenseBoost || 2) * (stat / 5);
+    const boost = (action.defenseBoost || 2) * statScale(stat);
     this.defenseBoost += Math.round(boost);
     this.log(GENERIC_LOGS.defendEffect(ally.name));
 
     if (action.healAmount) {
-      const heal = Math.round(action.healAmount * (stat / 5));
+      const heal = Math.round(action.healAmount * statScale(stat));
       ally.hp = Math.min(ally.maxHp, ally.hp + heal);
       this.log(GENERIC_LOGS.healEffect(ally.name, heal));
     }
 
-    this.tamingGauge = Math.max(0, this.tamingGauge - Math.round(action.power * 0.3));
+    // 수비 시 순화 감소 제거 — 기회비용만으로 충분
     this.escapeGauge = Math.max(0, this.escapeGauge + action.escapeRisk);
+
+    // 스킬 부가 효과 (진정 유발 등)
+    this._processEffects(action.effects);
   }
 
-  // ---- Enemy Attack ----
+  // 스킬 부가 효과 처리
+  _processEffects(effects) {
+    if (!effects) return;
+    for (const eff of effects) {
+      const applied = tryApplyEmotion(this.emotionState, eff.type, eff.chance);
+      if (applied) this.log(GENERIC_LOGS.emotionApply(this.enemy.name, applied.name));
+    }
+  }
 
-  // 어그로 기반 타겟 선택
+  // ---- Enemy Action (AI 기반) ----
+
   getAggroTarget() {
     const alive = this.getAliveAllies();
     if (alive.length === 0) return null;
     let maxAggro = -1, target = alive[0];
     for (const a of alive) {
       const idx = this.team.indexOf(a);
-      const ag = this.aggro[idx] || 0;
-      if (ag > maxAggro) { maxAggro = ag; target = a; }
+      if ((this.aggro[idx] || 0) > maxAggro) { maxAggro = this.aggro[idx]; target = a; }
     }
     return target;
   }
 
-  // 현재 어그로 타겟의 team index
   getAggroTargetIndex() {
     const target = this.getAggroTarget();
     return target ? this.team.indexOf(target) : -1;
   }
 
-  _enemyAttack() {
+  _enemyAction() {
     const alive = this.getAliveAllies();
     if (alive.length === 0) return;
 
-    // 20% 광역, 80% 어그로 타겟
-    const isAoe = alive.length >= 2 && Math.random() < 0.2;
-    this.log(this.enemy.reactions.attack);
+    const emotionMods = getEmotionMods(this.emotionState);
+    const tamingPct = this.getTamingPercent();
+    const escapePct = this.getEscapePercent();
 
-    if (isAoe) {
-      const aoeDmg = Math.max(1, Math.round(this.enemy.attackPower * 0.5) - this.defenseBoost);
-      this.log(`${this.enemy.name}의 광역 공격! 전체 ${aoeDmg}의 피해!`);
+    const decision = decideEnemyAction(this.enemy, tamingPct, escapePct, emotionMods);
+
+    if (decision.type === 'skip') {
+      this.log(decision.log);
+      return;
+    }
+
+    if (decision.type === 'flee_attempt') {
+      this.log(decision.log);
+      this.escapeGauge += 15;
+      if (this.escapeGauge >= this.enemy.escapeThreshold) {
+        this.state = 'escaped';
+        this.log(GENERIC_LOGS.enemyEscape(this.enemy.name));
+      }
+      return;
+    }
+
+    // attack or rage_attack
+    if (decision.log) this.log(decision.log);
+    else this.log(this.enemy.reactions.attack);
+
+    const targeting = decideTargeting(this.enemy, alive.length, this.enemy.personality);
+
+    if (targeting === 'aoe') {
+      const dmg = calcAoeDamage(this.enemy.attackPower, decision.atkScale, this.defenseBoost);
+      this.log(`${this.enemy.name}의 광역 공격! 전체 ${dmg}의 피해!`);
       for (const target of alive) {
-        target.hp = Math.max(0, target.hp - aoeDmg);
+        target.hp = Math.max(0, target.hp - dmg);
         if (target.hp <= 0) this.log(GENERIC_LOGS.allyFaint(target.name));
       }
     } else {
       const target = this.getAggroTarget();
-      const baseDamage = this.enemy.attackPower + Math.floor(Math.random() * 3) - 1;
-      const damage = Math.max(1, baseDamage - this.defenseBoost);
-      target.hp = Math.max(0, target.hp - damage);
-      this.log(`${this.enemy.name}이(가) ${target.name}을(를) 공격! ${damage}의 피해!`);
+      const dmg = calcEnemyDamage(this.enemy.attackPower, decision.atkScale, this.defenseBoost);
+      target.hp = Math.max(0, target.hp - dmg);
+      this.log(`${this.enemy.name}이(가) ${target.name}을(를) 공격! ${dmg}의 피해!`);
       if (target.hp <= 0) this.log(GENERIC_LOGS.allyFaint(target.name));
     }
 
@@ -222,11 +272,36 @@ export class CombatSystem {
     }
   }
 
+  // 턴 종료 페이즈: 감정 틱 + 자동 감정 체크
+  _turnEndPhase() {
+    const emotionMods = getEmotionMods(this.emotionState);
+
+    // 공포 시 매 턴 도주 증가
+    if (emotionMods.escapePerTurn > 0) {
+      this.escapeGauge += emotionMods.escapePerTurn;
+    }
+
+    // 감정 지속턴 감소
+    const expired = tickEmotion(this.emotionState);
+    if (expired) {
+      const def = EMOTIONS[expired];
+      if (def) this.log(GENERIC_LOGS.emotionExpire(this.enemy.name, def.name));
+    }
+
+    // 자동 감정 (순화/도주 기반)
+    const autoEmotion = checkAutoEmotion(this.emotionState, this.getTamingPercent(), this.getEscapePercent());
+    if (autoEmotion) this.log(GENERIC_LOGS.emotionApply(this.enemy.name, autoEmotion.name));
+
+    // 도주 체크
+    if (this.escapeGauge >= this.enemy.escapeThreshold) {
+      this.state = 'escaped';
+      this.log(GENERIC_LOGS.enemyEscape(this.enemy.name));
+    }
+  }
+
   // ---- Queries ----
 
-  canBond() {
-    return this.tamingGauge >= this.enemy.tamingThreshold * 0.4;
-  }
+  canBond() { return this.tamingGauge >= this.enemy.tamingThreshold * 0.4; }
 
   getTamingPercent() {
     return Math.min(100, Math.round((this.tamingGauge / this.enemy.tamingThreshold) * 100));
@@ -236,28 +311,10 @@ export class CombatSystem {
     return Math.min(100, Math.round((this.escapeGauge / this.enemy.escapeThreshold) * 100));
   }
 
-  // Preview skill effect for UI display
   previewAction(ally, action) {
-    const stat = ally.stats || { gentleness: 5, empathy: 5, resilience: 5, agility: 5 };
-    if (action.category === 'stimulate') {
-      const pref = this.enemy.preferences[action.axis] || 1.0;
-      const gain = Math.round(action.power * pref * (stat.gentleness / 5));
-      const esc = Math.round(action.escapeRisk * (pref >= 1.0 ? 0.7 : 1.5));
-      return { type: 'stimulate', taming: gain, escape: esc };
-    } else if (action.category === 'capture') {
-      const ratio = this.tamingGauge / this.enemy.tamingThreshold;
-      let chance = Math.min(0.9, (ratio - 0.2) * 0.7 * (stat.empathy / 5));
-      chance = Math.min(0.95, Math.max(ratio < 0.4 ? 0 : 0.05, chance));
-      return { type: 'capture', chance: Math.round(chance * 100), escape: action.escapeRisk };
-    } else {
-      const heal = action.healAmount ? Math.round(action.healAmount * (stat.resilience / 5)) : 0;
-      const def = Math.round((action.defenseBoost || 2) * (stat.resilience / 5));
-      return { type: 'defend', heal, defense: def, tamingCost: Math.round(action.power * 0.3) };
-    }
+    return _previewAction(ally, action, this.enemy, this.tamingGauge, this.emotionState);
   }
 
-  // Calculate turn execution order based on agility + category priority
-  // defend(0) → stimulate(1) → capture(2), ties broken by agility
   calcTurnOrder() {
     const catPriority = { defend: 0, stimulate: 1, capture: 2 };
     const entries = Object.entries(this.selectedActions).map(([i, ai]) => {
@@ -274,7 +331,6 @@ export class CombatSystem {
 
   getResult() {
     const order = this.calcTurnOrder();
-    // Build order map: allyIdx → order number
     const orderMap = {};
     for (const e of order) orderMap[e.allyIdx] = e.order;
 
@@ -291,6 +347,7 @@ export class CombatSystem {
       turnOrder: orderMap,
       aggroTarget: this.getAggroTargetIndex(),
       aggro: { ...this.aggro },
+      emotion: this.emotionState.type ? { ...EMOTIONS[this.emotionState.type], turnsLeft: this.emotionState.turnsLeft } : null,
     };
   }
 }
