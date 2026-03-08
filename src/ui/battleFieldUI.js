@@ -30,7 +30,7 @@ function getMoodTag(tamingPct, escapePct) {
 
 // Danmaku log color categorization
 const DANMAKU_COLORS = {
-  attack: C.escape, taming: C.taming, reaction: C.mint, bonding: C.orange, system: C.dim,
+  attack: C.escape, taming: C.taming, reaction: C.mint, bonding: C.orange, system: C.white,
 };
 
 function classifyLog(msg) {
@@ -103,7 +103,7 @@ function buildAllyArea() {
 function buildPartyBar() {
   const y = 340;
   container.addChild(new PIXI.Graphics().roundRect(8, y, W - 16, 50, 12).fill({ color: 0xffffff, alpha: 0.6 }));
-  container.addChild(Object.assign(lbl('PARTY', 7, C.dim), { x: 16, y: y + 4 }));
+  container.addChild(Object.assign(lbl('파티', 7, C.dim), { x: 16, y: y + 4 }));
   refs.partyBar = new PIXI.Container();
   refs.partyBar.y = y;
   container.addChild(refs.partyBar);
@@ -131,7 +131,7 @@ export function renderEnemy(enemy) {
   refs.enemyInfo.removeChildren();
   refs.enemyInfo.addChild(softPanel(0, 0, 200, 80, C.white, C.lavender));
   refs.enemyInfo.addChild(Object.assign(lbl(enemy.name, 10, C.text, true), { x: 12, y: 6 }));
-  refs.enemyInfo.addChild(Object.assign(lbl('Lv.' + enemyLv, 8, C.dim), { x: 145, y: 8 }));
+  refs.enemyInfo.addChild(Object.assign(lbl('레벨' + enemyLv, 8, C.dim), { x: 145, y: 8 }));
 
   const mood = getMoodTag(0, 0);
   refs.moodTagBg = new PIXI.Graphics().roundRect(12, 40, 90, 28, 14).fill({ color: mood.color, alpha: 0.2 });
@@ -168,9 +168,9 @@ export function renderAlly(ally) {
   refs.allyInfo.removeChildren();
   refs.allyInfo.addChild(softPanel(0, 0, 200, 80, C.white, C.pinkLight));
   refs.allyInfo.addChild(Object.assign(lbl(ally.name, 10, C.text, true), { x: 12, y: 6 }));
-  refs.allyInfo.addChild(Object.assign(lbl('Lv.' + (ally.level || 1), 8, C.dim), { x: 145, y: 8 }));
+  refs.allyInfo.addChild(Object.assign(lbl('레벨' + (ally.level || 1), 8, C.dim), { x: 145, y: 8 }));
   const hpRatio = ally.hp / ally.maxHp;
-  refs.allyInfo.addChild(Object.assign(lbl('HP', 7, C.hp), { x: 12, y: 40 }));
+  refs.allyInfo.addChild(Object.assign(lbl('체력', 7, C.hp), { x: 12, y: 40 }));
   refs.allyInfo.addChild(cuteBar(50, 42, 100, 14, hpRatio, hpRatio > 0.3 ? C.hp : C.hpLow));
   refs.allyInfo.addChild(Object.assign(lbl(ally.hp + '/' + ally.maxHp, 7, C.dim), { x: 155, y: 40 }));
 }

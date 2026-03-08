@@ -5,7 +5,7 @@
 import { W, H, C, lbl, softPanel } from './theme.js';
 import { BONDING_ACTIONS } from '../data.js';
 
-const AXIS_LABELS = { sound: 'SND', temperature: 'TMP', smell: 'SML', behavior: 'ACT' };
+const AXIS_LABELS = { sound: '소리', temperature: '온도', smell: '냄새', behavior: '행동' };
 const AXIS_COLORS = { sound: C.water, temperature: C.fire, smell: C.mint, behavior: C.lavender };
 
 let container;
@@ -86,7 +86,7 @@ export function renderActions(ally, canBond) {
       ct.addChild(softPanel(14, 0, W - 28, 90, 0xfff8ee, C.orange));
 
       ct.addChild(new PIXI.Graphics().circle(44, 45, 24).fill({ color: C.orange }));
-      const ic = lbl('HB', 7, 0xffffff, true);
+      const ic = lbl('교감', 7, 0xffffff, true);
       ic.anchor = { x: 0.5, y: 0.5 }; ic.x = 44; ic.y = 45;
       ct.addChild(ic);
 
@@ -124,7 +124,7 @@ function updateTabVisuals(canBond) {
   t2.anchor = { x: 0.5, y: 0.5 }; t2.x = W * 3 / 4 + 2; t2.y = tabY + 25;
   refs.tabBonding.addChild(t2);
   if (!canBond) {
-    const lockTxt = lbl('TAME 50%+', 6, 0xddbbdd);
+    const lockTxt = lbl('순화 50%+', 6, 0xddbbdd);
     lockTxt.anchor = { x: 0.5, y: 0.5 }; lockTxt.x = W * 3 / 4 + 2; lockTxt.y = tabY + 50;
     refs.tabBonding.addChild(lockTxt);
   }

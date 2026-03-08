@@ -64,7 +64,8 @@
       "Bash(npx http-server . -p 8082 -c-1 --silent)",
       "Bash(npx http-server . -p 8082 -c-1)",
       "Bash(taskkill //F //IM \"node.exe\")",
-      "Bash(npx http-server src -p 8080 --cors -c-1)"
+      "Bash(npx http-server src -p 8080 --cors -c-1)",
+      "Bash(grep -rn \"lbl\\(\" /f/Workspace/Devolution-Idle-Game/src/ui/*.js)"
     ],
     "additionalDirectories": [
       "\\tmp"

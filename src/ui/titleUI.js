@@ -11,7 +11,7 @@ export function initTitle() {
 
   addSparkles(ct, 12, W, H);
 
-  const title = lbl('Devolution', 28, C.pinkDark, true);
+  const title = lbl('디볼루션', 28, C.pinkDark, true);
   title.anchor = { x: 0.5, y: 0.5 }; title.x = W / 2; title.y = 240;
   ct.addChild(title);
 

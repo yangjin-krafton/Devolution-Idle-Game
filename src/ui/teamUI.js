@@ -142,24 +142,24 @@ export function renderTeamCards(allies, collection, getEggProgress, onNextBattle
     }
 
     card.addChild(Object.assign(lbl(ally.name, 12, C.text, true), { x: 100, y: 10 }));
-    card.addChild(Object.assign(lbl('Lv.' + (ally.level || 1), 9, C.dim), { x: 100, y: 40 }));
+    card.addChild(Object.assign(lbl('레벨' + (ally.level || 1), 9, C.dim), { x: 100, y: 40 }));
 
     if (ally.inEgg) {
       card.addChild(new PIXI.Graphics().roundRect(100, 68, 70, 28, 14).fill({ color: C.yellowLight }));
-      card.addChild(Object.assign(lbl('EGG', 9, C.orange, true), { x: 112, y: 72 }));
+      card.addChild(Object.assign(lbl('알', 9, C.orange, true), { x: 112, y: 72 }));
       card.addChild(Object.assign(lbl('퇴화 중...', 8, C.orange), { x: 100, y: 104 }));
     } else {
-      card.addChild(Object.assign(lbl('HP', 8, C.hp), { x: 100, y: 72 }));
+      card.addChild(Object.assign(lbl('체력', 8, C.hp), { x: 100, y: 72 }));
       card.addChild(cuteBar(140, 76, 180, 14, ally.hp / ally.maxHp, C.hp));
       card.addChild(Object.assign(lbl(ally.hp + '/' + ally.maxHp, 8, C.dim), { x: 330, y: 72 }));
-      card.addChild(Object.assign(lbl(ally.hp > 0 ? 'READY' : 'FAINTED', 8, ally.hp > 0 ? C.mint : C.hpLow, true), { x: 100, y: 100 }));
+      card.addChild(Object.assign(lbl(ally.hp > 0 ? '준비' : '기절', 8, ally.hp > 0 ? C.mint : C.hpLow, true), { x: 100, y: 100 }));
     }
 
     // XP bar
-    card.addChild(Object.assign(lbl('XP', 8, C.yellow), { x: 100, y: 132 }));
+    card.addChild(Object.assign(lbl('경험치', 8, C.yellow), { x: 100, y: 132 }));
     card.addChild(cuteBar(140, 136, 180, 12, ally.xp / ally.xpThreshold, C.yellow));
     if (ally.xp >= ally.xpThreshold) {
-      card.addChild(Object.assign(lbl('MAX!', 8, C.orange, true), { x: 330, y: 132 }));
+      card.addChild(Object.assign(lbl('최대!', 8, C.orange, true), { x: 330, y: 132 }));
       card.addChild(star(370, 140, 5, C.yellow));
     }
 
@@ -237,7 +237,7 @@ export function renderDevoReveal(ally, onOk) {
   // Before -> After panel
   devoRefs.body.addChild(softPanel(20, 40, W - 40, 180, C.white, C.orange));
 
-  devoRefs.body.addChild(Object.assign(lbl('BEFORE', 8, C.dim), { x: W / 2 - 110, y: 55 }));
+  devoRefs.body.addChild(Object.assign(lbl('이전', 8, C.dim), { x: W / 2 - 110, y: 55 }));
   const beforeImg = ally._oldImg || allyImg(ally.id);
   const bm = monster(80, beforeImg);
   bm.x = W / 2 - 80; bm.y = 140; bm.alpha = 0.3;
@@ -251,7 +251,7 @@ export function renderDevoReveal(ally, onOk) {
   devoRefs.body.addChild(arrowC);
   devoRefs.arrowC = arrowC;
 
-  devoRefs.body.addChild(Object.assign(lbl('AFTER', 8, C.orange, true), { x: W / 2 + 40, y: 55 }));
+  devoRefs.body.addChild(Object.assign(lbl('이후', 8, C.orange, true), { x: W / 2 + 40, y: 55 }));
   const am = monster(80, ally.img);
   am.x = W / 2 + 80; am.y = 140;
   devoRefs.body.addChild(am);
