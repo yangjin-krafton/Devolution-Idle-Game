@@ -131,7 +131,7 @@ function startBattle() {
 
 function refreshCombatUI() {
   const r = combat.getResult();
-  updateGauges(r.tamingPercent, r.escapePercent);
+  updateGauges(r.tamingPercent, r.escapePercent, r.turn);
   renderLogs(r.logs);
 
   renderAlly();

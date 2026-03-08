@@ -2,7 +2,7 @@
 // Battle Field — background, enemy/ally sprites, danmaku, party bar, VFX, tick
 // ============================================================
 
-import { W, H, C, hex, lbl, cuteBar, addSparkles } from './theme.js';
+import { W, C, hex, lbl, addSparkles } from './theme.js';
 import { monster } from './sprites.js';
 import {
   playTamingEffect, playAttackEffect,
@@ -64,7 +64,7 @@ export function setSwitchAllyCallback() { /* 3v1 구조에서는 미사용 */ }
 
 // ---- Enemy Area (상단 중앙) ----
 function buildEnemyArea() {
-  const ePlatX = W * 0.5, ePlatY = 115;
+  const ePlatX = W * 0.5, ePlatY = 130;
 
   refs.enemyShadow = new PIXI.Graphics();
   refs.enemyShadow.ellipse(ePlatX, ePlatY + 50, 40, 12).fill({ color: 0x000000, alpha: 0.15 });
@@ -75,9 +75,9 @@ function buildEnemyArea() {
   refs.enemyBaseY = ePlatY;
   container.addChild(refs.enemySprite);
 
-  // HUD container above enemy head (gauges + mood)
+  // HUD — 좌상단 컴팩트 패널 (적 가리지 않음)
   refs.enemyHud = new PIXI.Container();
-  refs.enemyHud.x = ePlatX; refs.enemyHud.y = ePlatY - 90;
+  refs.enemyHud.x = 8; refs.enemyHud.y = 6;
   container.addChild(refs.enemyHud);
 }
 
@@ -127,8 +127,8 @@ export function renderEnemy(enemy) {
   refs.enemySprite.addChild(monster(140, enemy.img));
 
   refs.enemyLevel = Math.max(1, Math.round(enemy.tamingThreshold / 10));
+  refs._enemyName = enemy.name;
 
-  // Build HUD above enemy head
   _renderEnemyHud(0, 0);
 }
 
@@ -136,42 +136,59 @@ function _renderEnemyHud(tamingPct, escapePct) {
   if (!refs.enemyHud) return;
   refs.enemyHud.removeChildren();
 
-  const bw = 120; // bar width
-  const hx = -bw / 2; // centered
-
-  // Taming bar
-  const tamLbl = lbl('순화', 5, C.taming, true);
-  tamLbl.anchor = { x: 1, y: 0.5 }; tamLbl.x = hx - 4; tamLbl.y = 5;
-  refs.enemyHud.addChild(tamLbl);
-  refs.enemyHud.addChild(cuteBar(hx, 0, bw, 8, tamingPct / 100, C.taming));
-  const tamPct = lbl(tamingPct + '%', 5, C.dim);
-  tamPct.x = hx + bw + 4; tamPct.y = -1;
-  refs.enemyHud.addChild(tamPct);
-  refs.tamingPctLabel = tamPct;
-
-  // Escape bar
-  const escColor = escapePct >= 70 ? C.red : C.escape;
-  const escLbl = lbl('도주', 5, C.escape, true);
-  escLbl.anchor = { x: 1, y: 0.5 }; escLbl.x = hx - 4; escLbl.y = 19;
-  refs.enemyHud.addChild(escLbl);
-  refs.enemyHud.addChild(cuteBar(hx, 14, bw, 8, escapePct / 100, escColor));
-  const escPctLbl = lbl(escapePct + '%', 5, C.dim);
-  escPctLbl.x = hx + bw + 4; escPctLbl.y = 13;
-  refs.enemyHud.addChild(escPctLbl);
-  refs.escapePctLabel = escPctLbl;
-
-  // Mood tag pill (centered below bars)
+  const pw = 200, ph = 68, bw = 120;
   const mood = getMoodTag(tamingPct, escapePct);
-  const pillW = 56, pillH = 18;
-  const pillBg = new PIXI.Graphics().roundRect(-pillW / 2, 26, pillW, pillH, 9)
-    .fill({ color: mood.color, alpha: 0.25 });
-  refs.enemyHud.addChild(pillBg);
-  const moodLbl = lbl(mood.tag, 6, mood.color, true);
-  moodLbl.anchor = { x: 0.5, y: 0.5 }; moodLbl.x = 0; moodLbl.y = 35;
-  refs.enemyHud.addChild(moodLbl);
+
+  // 패널 배경 — 둥근 다크 카드
+  const bg = new PIXI.Graphics();
+  bg.roundRect(0, 0, pw, ph, 14).fill({ color: 0x1a1a2e, alpha: 0.9 });
+  bg.roundRect(0, 0, pw, ph, 14).stroke({ color: 0x333355, width: 1 });
+  // 좌측 무드 컬러 바
+  bg.roundRect(0, 6, 3, ph - 12, 1.5).fill({ color: mood.color, alpha: 0.8 });
+  refs.enemyHud.addChild(bg);
+
+  // 1행: 이름 + 무드 pill
+  const nameL = lbl(refs._enemyName || '???', 7, 0xeeeeff, true);
+  nameL.x = 10; nameL.y = 5;
+  refs.enemyHud.addChild(nameL);
+
+  const moodPill = new PIXI.Graphics();
+  moodPill.roundRect(pw - 52, 6, 44, 14, 7).fill({ color: mood.color, alpha: 0.2 });
+  moodPill.roundRect(pw - 52, 6, 44, 14, 7).stroke({ color: mood.color, width: 0.5, alpha: 0.5 });
+  refs.enemyHud.addChild(moodPill);
+  const moodL = lbl(mood.tag, 5, mood.color, true);
+  moodL.anchor = { x: 0.5, y: 0.5 }; moodL.x = pw - 30; moodL.y = 13;
+  refs.enemyHud.addChild(moodL);
+
+  // 2행: 💫 순화 바
+  refs.enemyHud.addChild(Object.assign(lbl('💫', 5, 0x00d4aa), { x: 8, y: 24 }));
+  const tamBar = new PIXI.Graphics();
+  tamBar.roundRect(24, 26, bw, 8, 4).fill({ color: 0x333355 });
+  if (tamingPct > 0) tamBar.roundRect(24, 26, Math.max(8, bw * tamingPct / 100), 8, 4).fill({ color: 0x00d4aa });
+  refs.enemyHud.addChild(tamBar);
+  const tamL = lbl(tamingPct + '%', 5, 0xaaccbb, true);
+  tamL.x = 24 + bw + 4; tamL.y = 24;
+  refs.enemyHud.addChild(tamL);
+
+  // 3행: 💨 도주 바
+  refs.enemyHud.addChild(Object.assign(lbl('💨', 5, 0xff6b6b), { x: 8, y: 40 }));
+  const escCol = escapePct >= 70 ? 0xff4444 : 0xff6b6b;
+  const escBar = new PIXI.Graphics();
+  escBar.roundRect(24, 42, bw, 8, 4).fill({ color: 0x333355 });
+  if (escapePct > 0) escBar.roundRect(24, 42, Math.max(8, bw * escapePct / 100), 8, 4).fill({ color: escCol });
+  refs.enemyHud.addChild(escBar);
+  const escL = lbl(escapePct + '%', 5, escapePct >= 70 ? 0xff6666 : 0xccaaaa, true);
+  escL.x = 24 + bw + 4; escL.y = 40;
+  refs.enemyHud.addChild(escL);
+
+  // 하단: 턴 번호
+  const turnL = lbl(`Turn ${refs._turn || 0}`, 4, 0x666688);
+  turnL.x = 10; turnL.y = 55;
+  refs.enemyHud.addChild(turnL);
 }
 
-export function updateGauges(tamingPercent, escapePercent) {
+export function updateGauges(tamingPercent, escapePercent, turn) {
+  if (turn != null) refs._turn = turn;
   _renderEnemyHud(tamingPercent, escapePercent);
 }
 
@@ -198,17 +215,30 @@ export function renderAllyTabs(team, aggroTargetIndex, combatState, enemyPower) 
     if (ally.inEgg) m.alpha = 0.4;
     slot.container.addChild(m);
 
-    // HP bar (머리 바로 위)
-    const barW = size * 0.5;
+    // HP bar — 스위치 스타일 다크 바
+    const barW = size * 0.55;
     const barY = -size * 0.42;
     const hpRatio = ally.hp / ally.maxHp;
-    slot.container.addChild(cuteBar(-barW / 2, barY, barW, 6, hpRatio, hpRatio > 0.3 ? C.hp : C.hpLow));
+    const hpBg = new PIXI.Graphics();
+    hpBg.roundRect(-barW / 2 - 1, barY - 1, barW + 2, 10, 5)
+      .fill({ color: 0x1a1a2e, alpha: 0.8 });
+    hpBg.roundRect(-barW / 2, barY, barW, 8, 4)
+      .fill({ color: 0x333355 });
+    if (hpRatio > 0) {
+      const hpCol = hpRatio > 0.3 ? 0x00d4aa : 0xff6b6b;
+      hpBg.roundRect(-barW / 2, barY, Math.max(8, barW * hpRatio), 8, 4)
+        .fill({ color: hpCol });
+    }
+    slot.container.addChild(hpBg);
 
-    // 어그로 타겟 — 몬스터 머리 위에 ⚔️ + 예상 피해량
+    // 어그로 타겟 — HP바 위에 ⚔️ 표시
     if (i === aggroTargetIndex && combatState === 'active' && ally.hp > 0) {
       const dmg = enemyPower || 0;
-      const tag = lbl(`⚔️ ${dmg}`, 10, C.escape, true);
-      tag.anchor = { x: 0.5, y: 1 }; tag.x = 0; tag.y = -size * 0.52;
+      const tag = lbl(`⚔️ ${dmg}`, 8, 0xff6b6b, true);
+      tag.anchor.set(0.5, 1);
+      tag.x = 0;
+      tag.y = barY - 4;
+      tag._baseY = barY - 4;
       slot.container.addChild(tag);
       slot._arrow = tag;
     }
@@ -395,9 +425,9 @@ export function tickBattleField(tick) {
       const phase = tick * 3 + i * 0.7;
       slot.container.y = slot.baseY - Math.sin(phase) * 3;
       slot.container.scale.set(1 - Math.sin(phase) * 0.015, 1 + Math.sin(phase) * 0.015);
-      // Bounce the active arrow indicator
-      if (slot._arrow) {
-        slot._arrow.y = Math.sin(tick * 5) * 3;
+      // Bounce the aggro arrow (offset from base position)
+      if (slot._arrow && slot._arrow._baseY != null) {
+        slot._arrow.y = slot._arrow._baseY + Math.sin(tick * 5) * 3;
       }
     });
   }

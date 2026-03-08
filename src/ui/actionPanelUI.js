@@ -1,14 +1,14 @@
 // ============================================================
-// Action Panel — 3x3 그리드 (3마리 × 3스킬 동시 선택)
+// Action Panel — 3x3 그리드 (닌텐도 스위치 스타일 v2)
 // ============================================================
 
-import { W, H, C, S, lbl, cuteBar } from './theme.js';
+import { W, H, S, lbl, cuteBar } from './theme.js';
 import { monster } from './sprites.js';
 
 const CAT = {
-  stimulate: { label: '자극', color: C.taming,  dark: 0x5588cc, light: 0xeef4ff },
-  capture:   { label: '포획', color: C.orange,  dark: 0xcc7733, light: 0xfff4e8 },
-  defend:    { label: '수비', color: C.water,   dark: 0x5599aa, light: 0xeef8ff },
+  stimulate: { label: '자극', icon: '💫', color: 0x00d4aa, dark: 0x009977 },
+  capture:   { label: '포획', icon: '🤝', color: 0xff6b6b, dark: 0xcc4444 },
+  defend:    { label: '수비', icon: '🛡️', color: 0x4dabf7, dark: 0x2b7fc4 },
 };
 
 let container, refs = {}, onAction = null, onConfirm = null;
@@ -16,16 +16,17 @@ let container, refs = {}, onAction = null, onConfirm = null;
 export function initActionPanel(parentContainer, sharedRefs) {
   container = parentContainer;
   refs = sharedRefs;
-  const panelY = 340;
-  // 패널 배경 — 그라데이션 느낌 + 상단 라운드
-  const panelBg = new PIXI.Graphics();
-  panelBg.roundRect(0, panelY, W, H - panelY, 28).fill({ color: 0xf0e8ee });
-  panelBg.roundRect(0, panelY, W, 8, 28).fill({ color: C.pinkLight, alpha: 0.4 });
-  panelBg.moveTo(0, panelY + 4).lineTo(W, panelY + 4)
-    .stroke({ color: C.border, width: 1.5, alpha: 0.5 });
-  container.addChild(panelBg);
+  const pY = 340;
+  const bg = new PIXI.Graphics();
+  // 메인 다크 패널
+  bg.roundRect(0, pY - 6, W, H - pY + 6, 0).fill({ color: 0x1a1a2e });
+  // 상단 그라데이션 바
+  bg.roundRect(0, pY - 6, W, 12, 0).fill({ color: 0x25253d });
+  // 네온 액센트 라인 (JoyCon 느낌)
+  bg.moveTo(0, pY - 6).lineTo(W, pY - 6).stroke({ color: 0x00d4aa, width: 2, alpha: 0.4 });
+  container.addChild(bg);
   refs.actionContainer = new PIXI.Container();
-  refs.actionContainer.y = panelY + 10;
+  refs.actionContainer.y = pY + 4;
   container.addChild(refs.actionContainer);
 }
 
@@ -39,8 +40,8 @@ export function renderActions(team, cr) {
   if (!team || team.length === 0) return;
 
   const cols = Math.min(team.length, 3);
-  const colW = (W - 8) / cols;
-  const cardH = 156, gap = 3, headH = 26, startX = 4;
+  const colW = (W - 20) / cols;
+  const cardH = 146, gap = 5, headH = 32, startX = 10;
   const pending = cr?.pendingSlots || [];
   const sel = cr?.selectedActions || {};
   const order = cr?.turnOrder || {};
@@ -49,66 +50,68 @@ export function renderActions(team, cr) {
   for (let c = 0; c < cols; c++) {
     const ally = team[c];
     if (!ally) continue;
-    const cx = startX + c * colW;
+    const cx = startX + c * colW + c * 2;
     const chosen = sel[c];
     const hasChosen = chosen != null;
     const isPend = pending.includes(c);
 
-    // Column panel — 둥근 카드 묶음
-    const pH = headH + 3 * (cardH + gap) + 8;
+    const pH = headH + 3 * (cardH + gap) + 4;
     const colBg = new PIXI.Graphics();
-    // 그림자
-    colBg.roundRect(cx + 1, 2, colW - 3, pH, 18).fill({ color: 0x000000, alpha: 0.05 });
-    // 배경
-    colBg.roundRect(cx, 0, colW - 2, pH, 18).fill({ color: isPend ? 0xfff8fa : 0xffffff });
-    // 테두리
-    const bCol = isPend ? C.pink : (hasChosen ? C.mint : C.border);
-    colBg.roundRect(cx, 0, colW - 2, pH, 18)
-      .stroke({ color: bCol, width: isPend ? 2.5 : 1.5 });
-    // 상단 헤더 배경
-    colBg.roundRect(cx + 1, 1, colW - 4, headH, 17)
-      .fill({ color: isPend ? C.pinkLight : 0xf8f0f4, alpha: 0.7 });
+    // 열 배경 — 프로스티드 글래스
+    colBg.roundRect(cx, 0, colW - 4, pH, 14)
+      .fill({ color: isPend ? 0x2a2a42 : 0x222238 });
+    // 선택 대기 시 미세 네온 테두리
+    if (isPend) {
+      colBg.roundRect(cx, 0, colW - 4, pH, 14)
+        .stroke({ color: 0x00d4aa, width: 1, alpha: 0.35 });
+    } else if (hasChosen) {
+      colBg.roundRect(cx, 0, colW - 4, pH, 14)
+        .stroke({ color: 0x4dabf7, width: 1, alpha: 0.25 });
+    }
     refs.actionContainer.addChild(colBg);
 
-    // Header: portrait + name + HP
+    // 헤더 — 구분선 스타일
     const hd = new PIXI.Container(); hd.x = cx; hd.y = 0;
-    const portrait = monster(22, ally.img); portrait.x = 13; portrait.y = 10;
-    if (ally.hp <= 0) portrait.alpha = 0.3;
-    hd.addChild(portrait);
-    const nameL = lbl(ally.name, 6, isPend ? C.pink : C.text, true);
-    nameL.x = 26; nameL.y = 3;
-    hd.addChild(nameL);
+    // 몬스터 아이콘
+    const pt = monster(20, ally.img); pt.x = 14; pt.y = 13;
+    if (ally.hp <= 0) pt.alpha = 0.3;
+    hd.addChild(pt);
+    // 이름
+    hd.addChild(Object.assign(lbl(ally.name, 6, isPend ? 0x00d4aa : 0x8888aa, true), { x: 26, y: 4 }));
+    // HP 바
     const hpR = ally.hp / ally.maxHp;
-    hd.addChild(cuteBar(26, 16, colW - 40, 5, hpR, hpR > 0.3 ? C.hp : C.hpLow));
+    hd.addChild(cuteBar(26, 17, colW - 48, 5, hpR, hpR > 0.3 ? 0x00d4aa : 0xff6b6b));
+    // 하단 구분선
+    const sep = new PIXI.Graphics();
+    sep.moveTo(6, headH - 2).lineTo(colW - 12, headH - 2)
+      .stroke({ color: 0x444466, width: 0.5 });
+    hd.addChild(sep);
     refs.actionContainer.addChild(hd);
 
+    // 기절/알
     if (ally.hp <= 0 || ally.inEgg) {
-      const fl = lbl(ally.inEgg ? '알' : '기절', 8, C.dimmer, true);
-      fl.anchor = { x: 0.5, y: 0.5 }; fl.x = cx + colW / 2; fl.y = headH + cardH;
+      const fl = lbl(ally.inEgg ? '🥚' : '💤', 14, 0x555577, true);
+      fl.anchor = { x: 0.5, y: 0.5 }; fl.x = cx + (colW - 4) / 2; fl.y = headH + cardH;
       refs.actionContainer.addChild(fl);
       continue;
     }
 
     ally.actions.forEach((action, row) => {
-      const x = cx + 3, y = headH + row * (cardH + gap);
-      const cW = colW - 8, rd = 14;
+      const x = cx + 4, y = headH + row * (cardH + gap);
+      const cW = colW - 12, rd = 10;
       const isChosen = hasChosen && chosen === row;
       const isLocked = hasChosen && !isChosen;
 
-      // 모든 선택 완료 + 이 카드가 선택 안 된 곳 → 카드 크기 [확인] 버튼
+      // [확인] 버튼
       if (allChosen && !isChosen) {
         const btnCt = new PIXI.Container(); btnCt.x = x; btnCt.y = y;
         const btnBg = new PIXI.Graphics();
-        btnBg.roundRect(1, 2, cW, cardH, rd).fill({ color: 0x000000, alpha: 0.06 });
-        btnBg.roundRect(0, 0, cW, cardH, rd).fill({ color: C.pink });
-        btnBg.roundRect(0, 0, cW, cardH * 0.35, rd).fill({ color: 0xffffff, alpha: 0.2 });
-        btnBg.roundRect(2, 2, cW - 4, cardH - 4, rd - 1)
-          .stroke({ color: 0xffffff, width: 1.5, alpha: 0.3 });
+        btnBg.roundRect(0, 0, cW, cardH, rd).fill({ color: 0x00d4aa });
+        btnBg.roundRect(0, 0, cW, cardH * 0.3, rd).fill({ color: 0xffffff, alpha: 0.1 });
         btnCt.addChild(btnBg);
-        const btnLbl = lbl('확인', 12, 0xffffff, true);
-        btnLbl.anchor = { x: 0.5, y: 0.5 };
-        btnLbl.x = cW / 2; btnLbl.y = cardH / 2;
-        btnCt.addChild(btnLbl);
+        const bL = lbl('▶ 확인', 11, 0x1a1a2e, true);
+        bL.anchor = { x: 0.5, y: 0.5 }; bL.x = cW / 2; bL.y = cardH / 2;
+        btnCt.addChild(bL);
         btnCt.eventMode = 'static'; btnCt.cursor = 'pointer';
         btnCt.on('pointerdown', () => { if (onConfirm) onConfirm(); });
         refs.actionContainer.addChild(btnCt);
@@ -117,76 +120,69 @@ export function renderActions(team, cr) {
 
       const ct = new PIXI.Container(); ct.x = x; ct.y = y;
       const cat = CAT[action.category] || CAT.stimulate;
-      const a = isLocked ? 0.3 : 1;
+      const a = isLocked ? 0.2 : 1;
 
-      // Background — 밝은 배경 + 이중 테두리 + 하이라이트
+      // 카드 배경
       const bg = new PIXI.Graphics();
-      // 그림자
-      bg.roundRect(2, 3, cW, cardH, rd).fill({ color: cat.dark, alpha: 0.12 * a });
-      // 메인 배경
-      bg.roundRect(0, 0, cW, cardH, rd).fill({ color: isChosen ? cat.light : 0xffffff, alpha: a });
-      // 상단 하이라이트 밴드
-      bg.roundRect(0, 0, cW, cardH * 0.2, rd).fill({ color: 0xffffff, alpha: 0.5 * a });
-      // 외곽 테두리
-      bg.roundRect(0, 0, cW, cardH, rd)
-        .stroke({ color: cat.color, width: isChosen ? 3 : 1.5, alpha: (isChosen ? 1 : 0.6) * a });
-      // 안쪽 테두리 (이중 테두리)
-      bg.roundRect(3, 3, cW - 6, cardH - 6, rd - 2)
-        .stroke({ color: cat.color, width: 1, alpha: 0.2 * a });
-      // 선택 시 외부 글로우
+      bg.roundRect(0, 0, cW, cardH, rd).fill({ color: isChosen ? 0x2e2e48 : 0x262640, alpha: a });
+      // 좌측 타입 바
+      bg.roundRect(0, 4, 3, cardH - 8, 1.5).fill({ color: cat.color, alpha: 0.7 * a });
+      // 선택 시 테두리
       if (isChosen) {
-        bg.roundRect(-2, -2, cW + 4, cardH + 4, rd + 2)
-          .stroke({ color: cat.color, width: 2, alpha: 0.35 });
+        bg.roundRect(0, 0, cW, cardH, rd).stroke({ color: cat.color, width: 2 });
       }
-      // 좌측 타입 컬러 바
-      bg.roundRect(0, 8, 4, cardH - 16, 2).fill({ color: cat.color, alpha: 0.8 * a });
       ct.addChild(bg);
 
-      // ▸ 1줄: [계열] 위력수치
+      // 1줄: 아이콘 + 계열 + 수치
       const preview = cr?._previews?.[c]?.[row];
-      let powerText = cat.label;
+      let pwText = `${cat.icon} ${cat.label}`;
       if (preview) {
-        if (preview.type === 'stimulate') powerText = `${cat.label} ${preview.taming}`;
-        else if (preview.type === 'capture') powerText = `${cat.label} ${preview.chance}%`;
-        else if (preview.type === 'defend') powerText = `${cat.label} +${preview.heal}`;
+        if (preview.type === 'stimulate') pwText = `${cat.icon} ${cat.label} ${preview.taming}`;
+        else if (preview.type === 'capture') pwText = `${cat.icon} ${cat.label} ${preview.chance}%`;
+        else if (preview.type === 'defend') pwText = `${cat.icon} ${cat.label} +${preview.heal}`;
       }
-      const pwLbl = lbl(powerText, 8, cat.color, true);
-      pwLbl.x = 8; pwLbl.y = 5; pwLbl.alpha = a;
-      ct.addChild(pwLbl);
+      const pw = lbl(pwText, 6, cat.color, true);
+      pw.x = 10; pw.y = 7; pw.alpha = a;
+      ct.addChild(pw);
 
-      // ▸ 순서 번호 뱃지 (우상단)
+      // 순서 번호 — 미니 뱃지
       if (isChosen && order[c] != null) {
-        const oBg = new PIXI.Graphics();
-        oBg.circle(cW - 12, 12, 10).fill({ color: cat.color, alpha: 0.95 });
-        ct.addChild(oBg);
-        const oL = lbl(String(order[c]), 7, 0xffffff, true);
-        oL.anchor = { x: 0.5, y: 0.5 }; oL.x = cW - 12; oL.y = 12;
+        const oB = new PIXI.Graphics();
+        oB.roundRect(cW - 22, 5, 16, 16, 4).fill({ color: cat.color });
+        ct.addChild(oB);
+        const oL = lbl(String(order[c]), 6, 0x1a1a2e, true);
+        oL.anchor = { x: 0.5, y: 0.5 }; oL.x = cW - 14; oL.y = 13;
         ct.addChild(oL);
       }
 
-      // ▸ 2줄: 스킬 이름
-      const nL = lbl(action.name, 9, C.text, true);
-      nL.x = 8; nL.y = 26; nL.alpha = a;
+      // 2줄: 스킬 이름
+      const nL = lbl(action.name, 9, 0xddddf0, true);
+      nL.x = 10; nL.y = 26; nL.alpha = a;
       ct.addChild(nL);
 
-      // ▸ 나머지: 설명 (자동 글자 크기, 검정 텍스트)
-      const descArea = cardH - 52;
-      const maxCharsPerLine = Math.floor(cW / (7 * S));
-      const totalLines = Math.ceil(action.log.length / maxCharsPerLine);
-      const fitsInArea = totalLines * 11 * S;
-      let descSize = 7;
-      if (fitsInArea > descArea * S) descSize = 6;
+      // 구분선
+      const cardSep = new PIXI.Graphics();
+      cardSep.moveTo(10, 46).lineTo(cW - 10, 46)
+        .stroke({ color: 0x444466, width: 0.5, alpha: a });
+      ct.addChild(cardSep);
+
+      // 설명
+      const descH = cardH - 52;
+      const maxCPL = Math.floor(cW / (7 * S));
+      const lines = Math.ceil(action.log.length / maxCPL);
+      let dSz = 7;
+      if (lines * 11 * S > descH * S) dSz = 6;
 
       const dText = new PIXI.Text({ text: action.log, style: {
         fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-        fontSize: descSize * S, fill: '#554455', fontWeight: '400',
-        wordWrap: true, wordWrapWidth: cW - 12,
-        lineHeight: (descSize + 2) * S,
+        fontSize: dSz * S, fill: '#8888aa', fontWeight: '400',
+        wordWrap: true, wordWrapWidth: cW - 18,
+        lineHeight: (dSz + 2) * S,
       }});
-      dText.x = 6; dText.y = 50; dText.alpha = a;
+      dText.x = 10; dText.y = 52; dText.alpha = a;
       ct.addChild(dText);
 
-      // Click: 선택 / 해제 토글
+      // Click
       if (!isLocked || isChosen) {
         ct.eventMode = 'static'; ct.cursor = 'pointer';
         ct.on('pointerdown', () => { if (onAction) onAction(c, row); });
