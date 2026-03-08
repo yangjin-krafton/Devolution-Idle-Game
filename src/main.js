@@ -121,6 +121,7 @@ function startBattle() {
 
   setCombatCallbacks({
     action: handleAction,
+    confirm: handleConfirm,
   });
 
   showScreen('combat');
@@ -133,19 +134,15 @@ function refreshCombatUI() {
   updateGauges(r.tamingPercent, r.escapePercent);
   renderLogs(r.logs);
 
-  // 현재 행동 선택 중인 첫 번째 슬롯을 하이라이트
-  const pendingIdx = r.pendingSlots.length > 0 ? r.pendingSlots[0] : -1;
   renderAlly();
-  renderAllyTabs(combat.team, pendingIdx, combat.state);
+  renderAllyTabs(combat.team, r.aggroTarget, combat.state, combat.enemy.attackPower);
 
-  // 스킬 효과 미리보기 계산
   const previews = {};
   combat.team.forEach((ally, i) => {
     if (ally.hp <= 0 || ally.inEgg) return;
     previews[i] = ally.actions.map(action => combat.previewAction(ally, action));
   });
 
-  // 3x3 그리드에 전체 팀 + 선택 상태 + 미리보기 전달
   renderActions(combat.team, {
     tamingPercent: r.tamingPercent,
     escapePercent: r.escapePercent,
@@ -156,37 +153,29 @@ function refreshCombatUI() {
   });
 }
 
+// 카드 선택 / 해제 (턴 실행 안 함)
 function handleAction(allyIndex, actionIndex) {
   if (!combat || combat.state !== 'active') return;
-
-  const ally = combat.team[allyIndex];
-  const action = ally?.actions[actionIndex];
-  if (!action) return;
-
-  // 선택 전 HP 스냅샷 (VFX용)
-  const hpBefore = combat.team.map(a => a.hp);
-  const prevState = combat.state;
-
   combat.selectAction(allyIndex, actionIndex);
+  refreshCombatUI();
+}
 
-  // 턴 실행 완료 (모든 선택이 끝난 후) → VFX
-  const r = combat.getResult();
-  if (r.turn > 0 && Object.keys(r.selectedActions).length === 0) {
-    // 턴이 실행되었음 — VFX 재생
-    shakeEnemy();
-    triggerTamingVFX('behavior', true);
+// [확인] 버튼 → 턴 실행
+function handleConfirm() {
+  if (!combat || combat.state !== 'active') return;
 
-    if (combat.state === 'victory') {
-      setTimeout(() => triggerBondingSuccessVFX(), 200);
-    }
-    if (combat.state === 'escaped') triggerEscapeVFX();
+  const hpBefore = combat.team.map(a => a.hp);
+  combat.confirmTurn();
 
-    // HP 변화 체크
-    combat.team.forEach((a, i) => {
-      if (a.hp < hpBefore[i]) setTimeout(() => triggerAttackVFX(), 200);
-      if (a.hp <= 0 && hpBefore[i] > 0) setTimeout(() => triggerFaintVFX(), 300);
-    });
-  }
+  // VFX
+  shakeEnemy();
+  triggerTamingVFX('behavior', true);
+  if (combat.state === 'victory') setTimeout(() => triggerBondingSuccessVFX(), 200);
+  if (combat.state === 'escaped') triggerEscapeVFX();
+  combat.team.forEach((a, i) => {
+    if (a.hp < hpBefore[i]) setTimeout(() => triggerAttackVFX(), 200);
+    if (a.hp <= 0 && hpBefore[i] > 0) setTimeout(() => triggerFaintVFX(), 300);
+  });
 
   refreshCombatUI();
   if (combat.state !== 'active') setTimeout(endBattle, 800);

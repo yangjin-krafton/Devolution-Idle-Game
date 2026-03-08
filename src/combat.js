@@ -19,6 +19,12 @@ export class CombatSystem {
     // 동시 선택: { allyIndex: actionIndex }
     this.selectedActions = {};
 
+    // 어그로 시스템: 각 아군별 누적 어그로
+    this.aggro = {};
+    this.team.forEach((a, i) => { this.aggro[i] = 0; });
+    // 기본 타겟: 중앙(1번)
+    if (this.team.length > 1) this.aggro[1] = 5;
+
     this.log(GENERIC_LOGS.encounter(this.enemy.name));
   }
 
@@ -39,19 +45,26 @@ export class CombatSystem {
     return pending;
   }
 
-  // 한 마리의 행동 선택
+  // 한 마리의 행동 선택 (토글: 다시 클릭하면 해제)
   selectAction(allyIndex, actionIndex) {
     if (this.state !== 'active') return null;
     const ally = this.team[allyIndex];
     if (!ally || ally.hp <= 0 || ally.inEgg) return null;
 
-    this.selectedActions[allyIndex] = actionIndex;
-
-    // 모든 생존 아군이 선택 완료 → 턴 실행
-    if (this.getPendingSlots().length === 0) {
-      this._executeTurn();
+    if (this.selectedActions[allyIndex] === actionIndex) {
+      delete this.selectedActions[allyIndex]; // 선택 해제
+    } else {
+      this.selectedActions[allyIndex] = actionIndex;
     }
 
+    return this.getResult();
+  }
+
+  // 확인 버튼으로 턴 실행
+  confirmTurn() {
+    if (this.state !== 'active') return null;
+    if (this.getPendingSlots().length > 0) return null;
+    this._executeTurn();
     return this.getResult();
   }
 
@@ -74,6 +87,10 @@ export class CombatSystem {
 
       this.actedThisBattle.add(ally.id);
       this.log(action.log);
+
+      // 어그로 누적: 자극 > 포획 > 수비
+      const aggroGain = { stimulate: action.power, capture: action.power * 1.5, defend: action.power * 0.3 };
+      this.aggro[allyIdx] = (this.aggro[allyIdx] || 0) + Math.round(aggroGain[action.category] || action.power);
 
       if (action.category === 'stimulate') this._handleStimulate(ally, action);
       else if (action.category === 'capture') this._handleCapture(ally, action);
@@ -156,26 +173,46 @@ export class CombatSystem {
 
   // ---- Enemy Attack ----
 
+  // 어그로 기반 타겟 선택
+  getAggroTarget() {
+    const alive = this.getAliveAllies();
+    if (alive.length === 0) return null;
+    let maxAggro = -1, target = alive[0];
+    for (const a of alive) {
+      const idx = this.team.indexOf(a);
+      const ag = this.aggro[idx] || 0;
+      if (ag > maxAggro) { maxAggro = ag; target = a; }
+    }
+    return target;
+  }
+
+  // 현재 어그로 타겟의 team index
+  getAggroTargetIndex() {
+    const target = this.getAggroTarget();
+    return target ? this.team.indexOf(target) : -1;
+  }
+
   _enemyAttack() {
     const alive = this.getAliveAllies();
     if (alive.length === 0) return;
 
-    const isAoe = alive.length >= 2 && Math.random() < 0.3;
+    // 20% 광역, 80% 어그로 타겟
+    const isAoe = alive.length >= 2 && Math.random() < 0.2;
     this.log(this.enemy.reactions.attack);
 
     if (isAoe) {
-      const aoeDmg = Math.max(1, Math.round(this.enemy.attackPower * 0.6) - this.defenseBoost);
+      const aoeDmg = Math.max(1, Math.round(this.enemy.attackPower * 0.5) - this.defenseBoost);
       this.log(`${this.enemy.name}의 광역 공격! 전체 ${aoeDmg}의 피해!`);
       for (const target of alive) {
         target.hp = Math.max(0, target.hp - aoeDmg);
         if (target.hp <= 0) this.log(GENERIC_LOGS.allyFaint(target.name));
       }
     } else {
-      const target = alive[Math.floor(Math.random() * alive.length)];
+      const target = this.getAggroTarget();
       const baseDamage = this.enemy.attackPower + Math.floor(Math.random() * 3) - 1;
       const damage = Math.max(1, baseDamage - this.defenseBoost);
       target.hp = Math.max(0, target.hp - damage);
-      this.log(GENERIC_LOGS.enemyAttack(this.enemy.name, damage));
+      this.log(`${this.enemy.name}이(가) ${target.name}을(를) 공격! ${damage}의 피해!`);
       if (target.hp <= 0) this.log(GENERIC_LOGS.allyFaint(target.name));
     }
 
@@ -252,6 +289,8 @@ export class CombatSystem {
       pendingSlots: this.getPendingSlots(),
       selectedActions: { ...this.selectedActions },
       turnOrder: orderMap,
+      aggroTarget: this.getAggroTargetIndex(),
+      aggro: { ...this.aggro },
     };
   }
 }

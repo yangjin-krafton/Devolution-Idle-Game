@@ -29,9 +29,9 @@ export const ALLY_MONSTERS = [
     devolvedName: '물방울콩',
     devolvedDesc: '아주 작고 투명한 콩 모양의 존재',
     actions: [
-      { id: 'rain_sound',    name: '빗소리',       axis: 'sound',       category: 'stimulate', power: 12, escapeRisk: 2,  log: '잔잔한 빗소리가 주변에 퍼진다.' },
-      { id: 'cool_mist',     name: '서늘한 안개',  axis: 'temperature', category: 'defend',    power: 10, escapeRisk: -3, healAmount: 5, defenseBoost: 2, log: '서늘한 안개가 아군을 감싸 보호한다.' },
-      { id: 'water_bond',    name: '물결 교감',    axis: 'behavior',    category: 'capture',   power: 15, escapeRisk: 12, log: '부드러운 물결로 교감을 시도한다...' },
+      { id: 'rain_sound',    name: '빗소리',       axis: 'sound',       category: 'stimulate', power: 12, escapeRisk: 2,  log: '청각 자극으로 순화도를 올린다. 도주 위험 낮음.' },
+      { id: 'cool_mist',     name: '서늘한 안개',  axis: 'temperature', category: 'defend',    power: 10, escapeRisk: -3, healAmount: 5, defenseBoost: 2, log: '아군 체력 회복 + 방어력 상승. 도주 게이지도 감소.' },
+      { id: 'water_bond',    name: '물결 교감',    axis: 'behavior',    category: 'capture',   power: 15, escapeRisk: 12, log: '교감 시도. 순화도 높을수록 성공률 상승. 실패 시 도주 급상승!' },
     ],
   },
   {
@@ -48,9 +48,9 @@ export const ALLY_MONSTERS = [
     devolvedName: '꺼지지않는불씨',
     devolvedDesc: '손바닥 위에 올라오는 아주 작은 불씨',
     actions: [
-      { id: 'warm_aura',     name: '따뜻한 온기',    axis: 'temperature', category: 'stimulate', power: 12, escapeRisk: 2,  log: '포근한 온기가 살며시 전해진다.' },
-      { id: 'gentle_glow',   name: '은은한 존재감',  axis: 'behavior',    category: 'defend',    power: 8,  escapeRisk: -4, healAmount: 4, defenseBoost: 3, log: '은은한 빛으로 적의 경계심을 녹인다.' },
-      { id: 'fire_bond',     name: '불꽃 교감',      axis: 'temperature', category: 'capture',   power: 18, escapeRisk: 15, log: '따뜻한 불꽃으로 교감을 시도한다...' },
+      { id: 'warm_aura',     name: '따뜻한 온기',    axis: 'temperature', category: 'stimulate', power: 12, escapeRisk: 2,  log: '온도 자극으로 순화도를 올린다. 안정적인 기본 행동.' },
+      { id: 'gentle_glow',   name: '은은한 존재감',  axis: 'behavior',    category: 'defend',    power: 8,  escapeRisk: -4, healAmount: 4, defenseBoost: 3, log: '아군 체력 회복 + 적 공격 감소. 경계심을 낮춘다.' },
+      { id: 'fire_bond',     name: '불꽃 교감',      axis: 'temperature', category: 'capture',   power: 18, escapeRisk: 15, log: '강한 교감 시도. 높은 성공 보너스, 실패 시 도주 크게 상승.' },
     ],
   },
   {
@@ -67,9 +67,9 @@ export const ALLY_MONSTERS = [
     devolvedName: '씨앗눈',
     devolvedDesc: '눈처럼 작은 씨앗에서 눈이 반짝이는 존재',
     actions: [
-      { id: 'forest_scent',  name: '숲 냄새',       axis: 'smell',    category: 'stimulate', power: 12, escapeRisk: 2,  log: '은은한 숲 내음이 바람에 실려 온다.' },
-      { id: 'hide',          name: '숨기기',        axis: 'behavior', category: 'defend',    power: 6,  escapeRisk: -8, healAmount: 6, defenseBoost: 4, log: '풀잎 뒤에 숨어 위협을 줄이고 체력을 회복한다.' },
-      { id: 'grass_bond',    name: '부드러운 교감', axis: 'smell',    category: 'capture',   power: 14, escapeRisk: 10, log: '부드러운 향기로 교감을 시도한다...' },
+      { id: 'forest_scent',  name: '숲 냄새',       axis: 'smell',    category: 'stimulate', power: 12, escapeRisk: 2,  log: '후각 자극으로 순화도를 올린다. 낮은 도주 위험.' },
+      { id: 'hide',          name: '숨기기',        axis: 'behavior', category: 'defend',    power: 6,  escapeRisk: -8, healAmount: 6, defenseBoost: 4, log: '높은 체력 회복 + 강한 방어. 도주 게이지 크게 감소.' },
+      { id: 'grass_bond',    name: '부드러운 교감', axis: 'smell',    category: 'capture',   power: 14, escapeRisk: 10, log: '안정적인 교감 시도. 중간 위험, 중간 보상.' },
     ],
   },
   // ---- 추가 3마리 (탱커/힐러/딜러 역할) ----
@@ -87,9 +87,9 @@ export const ALLY_MONSTERS = [
     devolvedName: '수정알갱이',
     devolvedDesc: '투명하고 단단한 작은 구슬 같은 존재',
     actions: [
-      { id: 'crystal_hum',   name: '수정 울림',     axis: 'sound',    category: 'stimulate', power: 10, escapeRisk: 3,  log: '수정 껍질에서 맑은 울림이 퍼진다.' },
-      { id: 'crystal_guard', name: '수정 방벽',     axis: 'behavior', category: 'defend',    power: 4,  escapeRisk: -6, healAmount: 3, defenseBoost: 6, log: '단단한 수정 방벽으로 아군을 감싼다.' },
-      { id: 'crystal_bond',  name: '수정 교감',     axis: 'sound',    category: 'capture',   power: 12, escapeRisk: 10, log: '수정의 공명으로 교감을 시도한다...' },
+      { id: 'crystal_hum',   name: '수정 울림',     axis: 'sound',    category: 'stimulate', power: 10, escapeRisk: 3,  log: '청각 자극으로 순화도 상승. 약간의 도주 위험.' },
+      { id: 'crystal_guard', name: '수정 방벽',     axis: 'behavior', category: 'defend',    power: 4,  escapeRisk: -6, healAmount: 3, defenseBoost: 6, log: '최강 방어. 적 피해를 크게 줄인다. 도주도 감소.' },
+      { id: 'crystal_bond',  name: '수정 교감',     axis: 'sound',    category: 'capture',   power: 12, escapeRisk: 10, log: '교감 시도. 탱커답게 안정적인 중간 위험.' },
     ],
   },
   {
@@ -106,9 +106,9 @@ export const ALLY_MONSTERS = [
     devolvedName: '이끼솜',
     devolvedDesc: '폭신한 이끼 뭉치에서 눈이 깜빡이는 존재',
     actions: [
-      { id: 'moss_scent',    name: '이끼 향',       axis: 'smell',       category: 'stimulate', power: 11, escapeRisk: 1,  log: '촉촉한 이끼 향이 주변을 감싼다.' },
-      { id: 'moss_heal',     name: '이끼 치유',     axis: 'smell',       category: 'defend',    power: 3,  escapeRisk: -5, healAmount: 8, defenseBoost: 2, log: '이끼의 생명력으로 아군의 상처를 치유한다.' },
-      { id: 'moss_bond',     name: '이끼 교감',     axis: 'behavior',    category: 'capture',   power: 13, escapeRisk: 11, log: '부드러운 이끼를 내밀며 교감을 시도한다...' },
+      { id: 'moss_scent',    name: '이끼 향',       axis: 'smell',       category: 'stimulate', power: 11, escapeRisk: 1,  log: '후각 자극. 가장 안전한 순화 행동. 도주 거의 없음.' },
+      { id: 'moss_heal',     name: '이끼 치유',     axis: 'smell',       category: 'defend',    power: 3,  escapeRisk: -5, healAmount: 8, defenseBoost: 2, log: '최고 회복량. 아군 체력을 크게 채운다. 도주 감소.' },
+      { id: 'moss_bond',     name: '이끼 교감',     axis: 'behavior',    category: 'capture',   power: 13, escapeRisk: 11, log: '교감 시도. 중간 성공률, 실패 시 도주 상승.' },
     ],
   },
   {
@@ -125,9 +125,9 @@ export const ALLY_MONSTERS = [
     devolvedName: '전기콩',
     devolvedDesc: '찌릿찌릿한 작은 콩 모양의 존재',
     actions: [
-      { id: 'spark_crackle', name: '정전기 소리',   axis: 'sound',       category: 'stimulate', power: 15, escapeRisk: 5,  log: '찌릿찌릿한 정전기가 호기심을 자극한다.' },
-      { id: 'spark_calm',    name: '방전 안정',     axis: 'temperature', category: 'defend',    power: 5,  escapeRisk: -3, healAmount: 3, defenseBoost: 1, log: '잔잔한 방전으로 긴장을 완화시킨다.' },
-      { id: 'spark_bond',    name: '전격 교감',     axis: 'sound',       category: 'capture',   power: 20, escapeRisk: 18, log: '강렬한 전류로 교감을 시도한다...' },
+      { id: 'spark_crackle', name: '정전기 소리',   axis: 'sound',       category: 'stimulate', power: 15, escapeRisk: 5,  log: '최강 순화력. 높은 자극이지만 도주 위험도 높음.' },
+      { id: 'spark_calm',    name: '방전 안정',     axis: 'temperature', category: 'defend',    power: 5,  escapeRisk: -3, healAmount: 3, defenseBoost: 1, log: '약한 회복 + 약한 방어. 딜러의 임시 방어용.' },
+      { id: 'spark_bond',    name: '전격 교감',     axis: 'sound',       category: 'capture',   power: 20, escapeRisk: 18, log: '최고 성공 보너스! 대신 실패 시 도주 폭발. 올인 행동.' },
     ],
   },
 ];
@@ -148,7 +148,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '따뜻함에 조금 몸을 풀었다.', temp_bad: '추위에 털이 곤두선다.',
       smell_good: '코를 킁킁거리며 냄새를 맡는다.', smell_bad: '불쾌한 듯 코를 돌린다.',
       behav_good: '경계를 조금 풀었다.', behav_bad: '위협을 느끼고 이빨을 드러낸다.',
-      attack: '날카로운 발톱을 휘둘렀다!', calm: '...조용히 바닥에 엎드렸다.',
+      attack: '날카로운 발톱을 휘둘렀다!', calm: '조용히 바닥에 엎드렸다.',
     },
   },
   {
@@ -165,7 +165,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '서늘함에 날개가 느리게 펄럭인다.', temp_bad: '열기에 날개가 오그라든다.',
       smell_good: '꽃향기 쪽으로 더듬이가 향한다.', smell_bad: '강한 냄새에 날개를 감쌌다.',
       behav_good: '조용한 태도에 살짝 가까이 왔다.', behav_bad: '갑작스런 움직임에 높이 떴다.',
-      attack: '날카로운 비늘 가루를 뿌렸다!', calm: '...천천히 날개를 접고 내려앉았다.',
+      attack: '날카로운 비늘 가루를 뿌렸다!', calm: '천천히 날개를 접고 내려앉았다.',
     },
   },
   {
@@ -182,7 +182,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '따뜻함에 고개를 살짝 내밀었다.', temp_bad: '추위에 더 깊이 들어갔다.',
       smell_good: '이끼 냄새에 코를 벌름거린다.', smell_bad: '역한 냄새에 고개를 돌렸다.',
       behav_good: '느릿느릿 고개를 돌려 바라본다.', behav_bad: '등껍질로 완전히 숨었다.',
-      attack: '무거운 몸을 들이밀었다!', calm: '...편안히 고개를 내밀고 눈을 감았다.',
+      attack: '무거운 몸을 들이밀었다!', calm: '편안히 고개를 내밀고 눈을 감았다.',
     },
   },
   {
@@ -199,7 +199,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '따뜻한 곳에 몸을 웅크린다.', temp_bad: '차가움에 털을 곤두세운다.',
       smell_good: '냄새를 맡으며 고개를 갸웃.', smell_bad: '불쾌한 듯 하악 소리를 낸다.',
       behav_good: '경계하면서도 꼬리를 느리게 흔든다.', behav_bad: '등을 활처럼 굽히며 경계한다.',
-      attack: '그림자 발톱을 날렸다!', calm: '...그르릉, 작게 목을 울린다.',
+      attack: '그림자 발톱을 날렸다!', calm: '그르릉, 작게 목을 울린다.',
     },
   },
   {
@@ -216,7 +216,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '따뜻함에 코에서 하얀 김이 나온다.', temp_bad: '추위에 발굽으로 땅을 찬다.',
       smell_good: '숲 향기에 눈을 감고 들이마신다.', smell_bad: '강한 냄새에 고개를 들어 올린다.',
       behav_good: '조심스러운 태도에 발걸음을 멈추었다.', behav_bad: '경계하며 뒷걸음친다.',
-      attack: '수정 뿔에서 빛이 쏟아진다!', calm: '...천천히 고개를 숙이고 다가왔다.',
+      attack: '수정 뿔에서 빛이 쏟아진다!', calm: '천천히 고개를 숙이고 다가왔다.',
     },
   },
   {
@@ -233,7 +233,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '서늘함에 몸이 더 투명해졌다.', temp_bad: '열기에 불안하게 떨린다.',
       smell_good: '향기를 따라 천천히 떠온다.', smell_bad: '냄새에서 멀어지며 높이 떠올랐다.',
       behav_good: '가만히 있는 모습에 촉수를 늘어뜨렸다.', behav_bad: '급한 움직임에 전기가 스파크친다.',
-      attack: '촉수에서 미약한 전기가 흐른다!', calm: '...천천히 내려와 곁에 떠있다.',
+      attack: '촉수에서 미약한 전기가 흐른다!', calm: '천천히 내려와 곁에 떠있다.',
     },
   },
   {
@@ -250,7 +250,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '따뜻함에 강철 갈기가 눕는다.', temp_bad: '추위에 강철 갈기가 바짝 섰다.',
       smell_good: '숲 냄새에 코를 땅에 대고 킁킁거린다.', smell_bad: '자극적 냄새에 굉음을 내며 달려든다.',
       behav_good: '다가가지 않자 조금 안심한 듯하다.', behav_bad: '갑자기 다가오자 돌진 자세를 취한다.',
-      attack: '강철 갈기로 들이받았다!', calm: '...거친 숨을 내쉬며 옆으로 누웠다.',
+      attack: '강철 갈기로 들이받았다!', calm: '거친 숨을 내쉬며 옆으로 누웠다.',
     },
   },
   {
@@ -267,7 +267,7 @@ export const ENEMY_MONSTERS = [
       temp_good: '서늘함에 날개를 접고 매달렸다.', temp_bad: '열기에 불안하게 원을 그리며 난다.',
       smell_good: '향기를 따라 낮게 날았다.', smell_bad: '코를 찡그리며 높이 올라갔다.',
       behav_good: '가만히 있자 거꾸로 매달려 관찰한다.', behav_bad: '급한 동작에 날카롭게 울었다.',
-      attack: '초음파 파동을 내보냈다!', calm: '...날개를 접고 조용히 매달려 있다.',
+      attack: '초음파 파동을 내보냈다!', calm: '날개를 접고 조용히 매달려 있다.',
     },
   },
 ];
@@ -276,13 +276,13 @@ export const ENEMY_MONSTERS = [
 export const GENERIC_LOGS = {
   encounter: (name) => `야생 ${name}이(가) 나타났다!`,
   enemyAttack: (name, damage) => `${name}의 공격! ${damage}의 피해!`,
-  allyFaint: (name) => `${name}이(가) 기절했다...`,
-  allFaint: '모든 아군이 쓰러졌다... 게임 오버.',
+  allyFaint: (name) => `${name}이(가) 기절했다`,
+  allFaint: '모든 아군이 쓰러졌다 게임 오버.',
   enemyEscape: (name) => `${name}이(가) 도망쳤다!`,
   tamingSuccess: (name) => `${name}과(와)의 교감에 성공했다!`,
-  captureTooEarly: '아직 이르다... 순화가 더 필요하다.',
+  captureTooEarly: '아직 이르다 순화가 더 필요하다.',
   captureSuccess: (name) => `${name}이(가) 마음을 열었다!`,
-  captureFail: '교감에 실패했다... 도주 위험이 높아진다!',
+  captureFail: '교감에 실패했다 도주 위험이 높아진다!',
   defendEffect: (name) => `${name}이(가) 아군을 보호한다.`,
   healEffect: (name, amount) => `${name}이(가) 체력을 ${amount} 회복했다.`,
   xpGain: (name, xp) => `${name}: 경험치 +1 (${xp})`,

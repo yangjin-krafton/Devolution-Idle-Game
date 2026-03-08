@@ -179,13 +179,14 @@ export function renderAlly() {
   // 3v1 구조: renderAllyTabs에서 3마리 일괄 렌더링
 }
 
-export function renderAllyTabs(team, activeAllyIndex, combatState) {
+export function renderAllyTabs(team, aggroTargetIndex, combatState, enemyPower) {
   if (!refs.allySlots) return;
-  const sizes = [100, 120, 100];
+  const sizes = [88, 105, 88];
 
   for (let i = 0; i < refs.allySlots.length; i++) {
     const slot = refs.allySlots[i];
     slot.container.removeChildren();
+    slot._arrow = null;
 
     const ally = team[i];
     if (!ally) continue;
@@ -197,37 +198,30 @@ export function renderAllyTabs(team, activeAllyIndex, combatState) {
     if (ally.inEgg) m.alpha = 0.4;
     slot.container.addChild(m);
 
-    // Active ally indicator — bouncing arrow above HP bar
-    if (i === activeAllyIndex && combatState === 'active') {
-      const arrowY = -size * 0.6;
-      const arrow = new PIXI.Graphics();
-      // Cute rounded triangle pointing down (2x size)
-      arrow.moveTo(0, arrowY + 20)
-        .lineTo(-12, arrowY)
-        .quadraticCurveTo(-14, arrowY - 6, -8, arrowY - 6)
-        .lineTo(8, arrowY - 6)
-        .quadraticCurveTo(14, arrowY - 6, 12, arrowY)
-        .closePath()
-        .fill({ color: C.pink, alpha: 0.9 });
-      // Small dot on top
-      arrow.circle(0, arrowY - 10, 5).fill({ color: C.pinkLight });
-      slot.container.addChild(arrow);
-      slot._arrow = arrow;
-    }
-
-    // HP bar above head
+    // HP bar (머리 바로 위)
     const barW = size * 0.5;
-    const barY = -size * 0.4;
+    const barY = -size * 0.42;
     const hpRatio = ally.hp / ally.maxHp;
-    const hpColor = hpRatio > 0.3 ? C.hp : C.hpLow;
-    slot.container.addChild(cuteBar(-barW / 2, barY, barW, 6, hpRatio, hpColor));
+    slot.container.addChild(cuteBar(-barW / 2, barY, barW, 6, hpRatio, hpRatio > 0.3 ? C.hp : C.hpLow));
+
+    // 어그로 타겟 — 몬스터 머리 위에 ⚔️ + 예상 피해량
+    if (i === aggroTargetIndex && combatState === 'active' && ally.hp > 0) {
+      const dmg = enemyPower || 0;
+      const tag = lbl(`⚔️ ${dmg}`, 10, C.escape, true);
+      tag.anchor = { x: 0.5, y: 1 }; tag.x = 0; tag.y = -size * 0.52;
+      slot.container.addChild(tag);
+      slot._arrow = tag;
+    }
   }
 
-  // Keep allySprite ref pointing at center slot for VFX
   refs.allySprite = refs.allySlots[1].container;
 }
 
-// ---- Danmaku ----
+// ---- Danmaku (큐 방식 순차 출력) ----
+
+let logQueue = [];
+let logTimer = 0;
+let nextLane = 0;
 
 function spawnDanmaku(msg) {
   if (!refs.danmakuLayer) return;
@@ -241,20 +235,34 @@ function spawnDanmaku(msg) {
   }});
   t.alpha = 0.85;
 
-  const lanes = [10, 40, 70, 100, 130];
-  const lane = lanes[danmakuItems.length % lanes.length];
+  // 배틀필드 전체 높이 사용, 레인 간격 35px
+  const laneCount = Math.floor(340 / 35);
+  const lane = (nextLane % laneCount) * 35 + 8;
+  nextLane++;
   t.x = W + 10;
   t.y = lane;
 
   refs.danmakuLayer.addChild(t);
-  danmakuItems.push({ sprite: t, speed: 0.8 + Math.random() * 0.4 });
+  danmakuItems.push({ sprite: t, speed: 0.6 + Math.random() * 0.3 });
 }
 
 export function renderLogs(logs) {
   const newLogs = logs.slice(lastLogCount);
   lastLogCount = logs.length;
   for (const msg of newLogs) {
-    spawnDanmaku(msg);
+    logQueue.push(msg);
+  }
+}
+
+function processLogQueue() {
+  const now = Date.now();
+  if (logQueue.length === 0) return;
+  // 간격: 글자 수 기반 (긴 문장은 더 오래 표시)
+  const nextMsg = logQueue[0];
+  const interval = Math.max(500, Math.min(1200, nextMsg.length * 60));
+  if (now - logTimer >= interval) {
+    spawnDanmaku(logQueue.shift());
+    logTimer = now;
   }
 }
 
@@ -262,6 +270,8 @@ export function resetDanmaku() {
   if (refs.danmakuLayer) refs.danmakuLayer.removeChildren();
   danmakuItems = [];
   lastLogCount = 0;
+  logQueue = [];
+  logTimer = 0;
 }
 
 // ---- Background ----
@@ -374,6 +384,7 @@ export function triggerFaintVFX() { playFaintEffect(refs.allySprite); }
 // ---- Animation Tick ----
 
 export function tickBattleField(tick) {
+  processLogQueue();
   const bounce = Math.sin(tick * 3);
   if (refs.enemySprite && refs.enemyBaseY != null) {
     refs.enemySprite.y = refs.enemyBaseY + bounce * 4;

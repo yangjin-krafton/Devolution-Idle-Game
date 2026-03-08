@@ -32,8 +32,8 @@ export function initCombat() {
 export function getContainer() { return container; }
 
 // ---- Callbacks ----
-export function setCombatCallbacks({ action }) {
-  setActionCallbacks({ action });
+export function setCombatCallbacks({ action, confirm }) {
+  setActionCallbacks({ action, confirm });
 }
 
 // ---- Re-exports from battleFieldUI ----
