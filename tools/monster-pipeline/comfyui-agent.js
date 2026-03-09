@@ -21,8 +21,9 @@ async function loadWorkflow() {
 
 function buildWorkflow(prompt, seed) {
   const wf = JSON.parse(JSON.stringify(baseWorkflow));
-  // 노드 50: 프롬프트 설정
-  wf['50'].inputs.text = prompt;
+  // 노드 50: 프롬프트 설정 (좌측 전면 방향 강제)
+  const directionSuffix = ', facing left, front three-quarter view, looking at viewer';
+  wf['50'].inputs.text = prompt + directionSuffix;
   // 노드 49: 시드 변경으로 배리에이션 생성
   wf['49'].inputs.seed = seed;
   // denoise를 높여서 더 다양한 결과
