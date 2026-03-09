@@ -586,7 +586,7 @@ MVP에서 반드시 확인해야 할 질문은 아래와 같습니다.
 │ Concept Agent│────▶│ ComfyUI Agent│────▶│ Review Agent │────▶│  Candidate   │
 │  (Qwen LLM)  │     │ (이미지 생성) │     │ (비전 심사)  │     │   Bundle     │
 └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-   컨셉+스킬+            형태별 10장           베스트 선택          candidates/
+   컨셉+스킬+            형태별 8장            베스트 선택          candidates/
    퇴화 트리 생성         이미지 생성           (단계별 기준)        폴더에 저장
 ```
 
@@ -596,7 +596,7 @@ MVP에서 반드시 확인해야 할 질문은 아래와 같습니다.
 |----------|------|------|
 | **Concept Agent** | qwen3.5-35b-a3b (텍스트) | 몬스터 컨셉 생성: 이름, 설명, 감각 타입, 성격, 스탯, 스킬 3개×3 변종, 퇴화 트리, 적 반응 텍스트, 이미지 프롬프트 |
 | **ComfyUI Agent** | z_image_turbo (이미지) | ComfyUI 워크플로우로 512×512 이미지 생성, 자동 배경 제거 포함 |
-| **Review Agent** | qwen3.5-35b-a3b (비전) | 단계별 심사 기준으로 베스트 이미지 선택 |
+| **Review Agent** | qwen3.5-35b-a3b (비전) | 1:1 토너먼트 방식(8→4→2→1)으로 베스트 이미지 선택 |
 | **Integration Tool** | qwen3.5-35b-a3b (텍스트) | 선택한 후보를 data.js 형식의 코드로 변환 + 에셋 복사 |
 
 ### 퇴화 트리 구조
@@ -632,7 +632,7 @@ MVP에서 반드시 확인해야 할 질문은 아래와 같습니다.
 # 프로젝트 루트에서 실행
 cd D:\Weeks\Devolution-Idle-Game
 
-# 몬스터 1종 생성 (컨셉+스킬+이미지 10장/형태+비전 심사)
+# 몬스터 1종 생성 (컨셉+스킬+이미지 8장/형태+비전 심사)
 node tools/monster-pipeline/pipeline.js
 
 # 몬스터 3종 연속 생성
@@ -674,7 +674,7 @@ candidates/
     concept.json     ← 컨셉 전체 (스킬, 스탯, 퇴화 트리, 반응 텍스트)
     README.md        ← 사람이 읽기 좋은 요약
     selected/        ← AI가 선택한 베스트 이미지 (형태별 1장)
-    all_images/      ← 전체 후보 이미지 (비교용, 형태별 10장)
+    all_images/      ← 전체 후보 이미지 (비교용, 형태별 8장)
 ```
 
 ### 필요 서비스
@@ -689,7 +689,7 @@ candidates/
 `tools/monster-pipeline/config.js`에서 조정 가능:
 
 ```js
-IMAGES_PER_CONCEPT: 10,       // 형태당 이미지 수 (테스트 시 3으로 줄이기)
+IMAGES_PER_CONCEPT: 8,        // 형태당 이미지 수 (토너먼트용 2의 배수, 테스트 시 4로)
 DEVOLUTION_DEPTH_1_COUNT: 3,  // 퇴화1 변종 수
 DEVOLUTION_DEPTH_2_COUNT: 2,  // 퇴화1당 퇴화2 변종 수
 ```
