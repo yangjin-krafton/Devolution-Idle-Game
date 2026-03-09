@@ -84,7 +84,7 @@ async function callQwen(messages, temperature = 0.8) {
       model: CONFIG.TEXT_MODEL,
       messages,
       temperature,
-      max_tokens: 8192,
+      max_tokens: 16384,
     }),
   });
   if (!res.ok) throw new Error(`Qwen API error: ${res.status} ${await res.text()}`);
@@ -134,7 +134,30 @@ function extractJSON(text) {
     }
   }
 
-  if (lastBrace === -1) throw new Error('JSON 객체가 불완전합니다 (닫는 괄호 부족).');
+  if (lastBrace === -1) {
+    // 불완전한 JSON 복구 시도: 남은 괄호를 닫아줌
+    console.warn(`[extractJSON] JSON 불완전 (depth: ${depth}), 복구 시도...`);
+    let truncated = cleaned.substring(firstBrace);
+    // 마지막 불완전한 문자열/값 제거
+    truncated = truncated.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"]*$/, '');
+    truncated = truncated.replace(/,\s*\{[^}]*$/, '');
+    truncated = truncated.replace(/,\s*\[[^\]]*$/, '');
+    truncated = truncated.replace(/,\s*$/, '');
+    // 남은 depth만큼 괄호 닫기
+    for (let d = 0; d < depth; d++) {
+      // 배열 안이면 ] 먼저, 객체면 }
+      if (truncated.match(/\[\s*(\{[^}]*,?\s*)*$/)) {
+        truncated += ']}';
+      } else {
+        truncated += '}';
+      }
+    }
+    try {
+      return JSON.parse(truncated);
+    } catch (e) {
+      throw new Error(`JSON 복구 실패. max_tokens를 늘려보세요. 원본 마지막 200자:\n${text.substring(text.length - 200)}`);
+    }
+  }
 
   const jsonStr = cleaned.substring(firstBrace, lastBrace + 1);
   return JSON.parse(jsonStr);
