@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-03-09T10:42:39.249Z",
+  "base": {
+    "name_kr": "모래 사냥꾼",
+    "name_en": "dune_stalker",
+    "desc_kr": "붉은 모래와 바위 조각으로 이루어진 용 모양의 괴물, 날카로운 등뼈가 있음.",
+    "element": "earth_sand",
+    "sensoryType": [
+      "smell",
+      "behavior"
+    ],
+    "personality": "aggressive",
+    "image_prompt": "pokemon style creature, a tall serpentine monster made of swirling red sand with sharp rock spines and glowing orange eyes, desert dunes background, simple white background, full body, game sprite, transparent background, cute monster design",
+    "asset": {
+      "filename": "enemy_dune_stalker.png",
+      "path": "asset/monsters/enemy_dune_stalker.png",
+      "name_kr": "모래 사냥꾼",
+      "type": "base"
+    }
+  },
+  "devolutions_1": [
+    {
+      "name_kr": "모래 더미",
+      "name_en": "sand_mound",
+      "desc_kr": "몸이 둥글게 변하여 모래 공처럼 보이는 작은 괴물.",
+      "image_prompt": "pokemon style creature, a cute round ball made of soft red sand with tiny sparkling eyes and stubby legs, simple white background, full body, game sprite, transparent background, cute chibi monster",
+      "asset": {
+        "filename": "sand_mound.png",
+        "path": "asset/monsters/sand_mound.png",
+        "name_kr": "모래 더미",
+        "type": "devo1_0"
+      }
+    },
+    {
+      "name_kr": "바위 조각",
+      "name_en": "rock_chip",
+      "desc_kr": "단단한 작은 돌알이 되어 눈이 반짝이는 형태.",
+      "image_prompt": "pokemon style creature, a smooth heart-shaped stone pebble with small glowing eyes and tiny legs, simple white background, full body, game sprite, transparent background, cute chibi monster",
+      "asset": null
+    },
+    {
+      "name_kr": "먼지 방울",
+      "name_en": "dust_puff",
+      "desc_kr": "투명한 먼지 구름으로 변하여 바람에 날리는 귀여운 형태.",
+      "image_prompt": "pokemon style creature, a translucent cloud of brown dust with a cute face made of darker spots floating gently, simple white background, full body, game sprite, transparent background, cute chibi monster",
+      "asset": null
+    }
+  ],
+  "devolutions_2": [
+    {
+      "parent": "sand_mound",
+      "name_kr": "모래 알갱이",
+      "name_en": "mound_grain",
+      "desc_kr": "아주 작은 모래알 하나에 눈이 그려진 가장 작은 형태.",
+      "image_prompt": "pokemon style creature, a single tiny sand grain with a cute face painted on it, simple white background, full body, game sprite, transparent background, tiny adorable blob creature",
+      "asset": null
+    },
+    {
+      "parent": "sand_mound",
+      "name_kr": "모래 구슬",
+      "name_en": "mound_beat",
+      "desc_kr": "작고 단단해진 모래가 둥근 공 모양이 된 형태.",
+      "image_prompt": "pokemon style creature, a tiny hard sand bead with two large eyes and a smiling mouth, simple white background, full body, game sprite, transparent background, tiny adorable blob creature",
+      "asset": null
+    },
+    {
+      "parent": "rock_chip",
+      "name_kr": "바위 먼지",
+      "name_en": "chip_dust",
+      "desc_kr": "돌가루가 뭉쳐서 된 아주 작은 형태의 돌.",
+      "image_prompt": "pokemon style creature, a tiny cluster of mineral dust with glowing eyes, simple white background, full body, game sprite, transparent background, tiny adorable blob creature",
+      "asset": null
+    },
+    {
+      "parent": "rock_chip",
+      "name_kr": "자갈 파편",
+      "name_en": "chip_grit",
+      "desc_kr": "작은 돌 조각이 귀여운 톱니 모양으로 변한 형태.",
+      "image_prompt": "pokemon style creature, a tiny jagged stone chip with cute eyes and teeth, simple white background, full body, game sprite, transparent background, tiny adorable blob creature",
+      "asset": null
+    },
+    {
+      "parent": "dust_puff",
+      "name_kr": "공기 입자",
+      "name_en": "puff_particle",
+      "desc_kr": "매우 작은 먼지 입자가 눈으로 표현된 형태.",
+      "image_prompt": "pokemon style creature, a single floating dust particle with two tiny eyes looking curious, simple white background, full body, game sprite, transparent background, tiny adorable blob creature",
+      "asset": null
+    },
+    {
+      "parent": "dust_puff",
+      "name_kr": "먼지 꽃",
+      "name_en": "puff_flower",
+      "desc_kr": "모래 먼지가 작은 꽃잎처럼 퍼진 가장 귀여운 형태.",
+      "image_prompt": "pokemon style creature, a tiny burst of dust forming soft flower petals with a cute center face, simple white background, full body, game sprite, transparent background, tiny adorable blob creature",
+      "asset": null
+    }
+  ]
+}

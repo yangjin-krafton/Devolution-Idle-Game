@@ -1,0 +1,357 @@
+<think>Thinking Process:
+
+1.  **Analyze the Request:**
+    *   **Role:** Monster Designer for "Devolution Idle Game".
+    *   **Task:** Create 1 new monster with its devolution tree (Base -> Level 1 Devolutions -> Level 2 Devolutions).
+    *   **Constraints:**
+        *   Respond with ONLY valid JSON.
+        *   No thinking, no explanation, no markdown outside the JSON.
+        *   Start with `{` and end with `}`.
+        *   Game Concept: Turn-based taming (calming/bonding), monsters "devolve" (regress to simpler/cuter forms).
+        *   Sensory Axes: sound, temperature, smell, behavior.
+        *   Personalities: aggressive, timid, curious, stubborn.
+        *   Avoid overlap with existing enemies (`abyss_wolf`, `glass_moth`, `stone_turtle`, `shadow_cat`, `crystal_deer`, `fog_jellyfish`, `iron_boar`, `echo_bat`) and allies (`water fairy`, `ember creature`, `leaf fairy`, `crystal bug`, `moss salamander`, `spark tail`).
+        *   Devolution rules: Smaller, simpler, cuter forms. Visually distinct.
+        *   Image Prompts: English, pokemon/creature collector style.
+        *   JSON Structure: Strictly follow the provided schema (base, devolutions_1 array of 3 objects, devolutions_2 array of 6 objects).
+        *   Language: Korean names/descriptions (`name_kr`, `desc_kr`) and English IDs/prompts (`name_en`, `image_prompt`).
+
+2.  **Check Existing Monsters:**
+    *   Enemies: abyss_wolf (dark/curled), glass_moth (transparent/winged), stone_turtle (rocky/shelled), shadow_cat (stealthy/feline), crystal_deer (gem/horned), fog_jellyfish (gas/marine), iron_boar (metaline/primitive), echo_bat (sonic/avian).
+    *   Allies: water fairy, ember creature, leaf fairy, crystal bug, moss salamander, spark tail.
+    *   **My New Monster:** Needs to avoid these themes. Let's try something related to **Wind/Air** or **Plant/Fungus** that isn't "Leaf Fairy" or "Moss". Maybe a **Cloud/Storm** creature or a **Sand/Dune** creature.
+    *   Idea: A sandstorm entity. But `abyss_wolf` and `stone_turtle` cover earth/darkness. Let's try something **Electrical/Gas** that isn't `ember`, `spark`, `crystal`. How about **Static/Silk**? Or **Magnetic/Rust**?
+    *   Better Idea: A **Desert/Heat Mirage** creature. Not exactly temperature-based like `ember`. It manipulates light and heat to hide.
+    *   Wait, `fog_jellyfish` covers gas/marine. `shadow_cat` covers stealth. `iron_boar` covers metal.
+    *   Let's try **Thunder/Wind** without being an `echo_bat` (sonic).
+    *   How about a **Magnetic Sandstorm**? No, let's go for something organic but fantastical. A **Bamboo Spirit** or **Vine Strangler**. But `leaf fairy` and `moss salamander` cover plants.
+    *   Let's try **Ceramic/Clay**? Not stone (`stone_turtle`).
+    *   Let's try **Gas/Bubble**? `fog_jellyfish` is close.
+    *   Let's try **Electricity/Wire**? No `spark tail`.
+    *   Okay, how about a **Coral/Sponge** creature that lives underwater but isn't water fairy or jellyfish? Or a **Fungal Spore** monster?
+    *   Actually, let's go with a **Sand/Desert Wind Spirit**. It uses heat and sand. Not `stone`.
+    *   Name Idea: Sandstorm Fox? Too close to cat/wolf.
+    *   Name Idea: Mirage Lizard?
+    *   Let's try a **Wind Chime/Glass** creature. No, `glass_moth` exists.
+    *   Let's try a **Volcanic Rock Golem**? No, `stone_turtle`.
+    *   Okay, let's do something unique: A **Petrified Bone/Driftwood** creature? No, too dark.
+    *   How about a **Bioluminescent Cave Insect**? Not `crystal bug` or `shadow_cat`.
+    *   Let's settle on a **Thunder-Cloud Fox**? No.
+    *   Okay, let's create a **Salt Crystal Scorpion**. Wait, `stone_turtle` and `glass_moth` cover stone/glass.
+    *   How about a **Plasma/Sun Ray** entity? Too close to `ember`.
+    *   Let's go with **Magnetic Sandstorm Eel**.
+    *   Actually, the safest bet for distinctness is something **Elemental but not covered**. Earth/Water/Fire/Air/Dark/Light are taken. What about **Lightning/Static**? No spark. **Gravity**?
+    *   Let's try a **Quicksand Beast**.
+    *   Okay, final decision: A **"Sandglass Scorpion"**? Or **"Dune Wyrm"**.
+    *   Let's go with **"Dune Serpent"** but make it magical. **Mirage Serpent** (`mirage_serpent`). Element: Sand/Heat illusion. Personality: Stubborn (traps prey). Sensory: Smell (dust), Behavior (hides).
+    *   Wait, need to check `abyss_wolf`, `stone_turtle`. Sand is close to stone but distinct enough if I focus on loose sand vs rock.
+    *   Let's try **Fungal/Gas** mix that isn't moss/fog. A **"Spore Bomb"** creature?
+    *   Okay, let's try a **"Wind Chime Jelly"**? No `fog_jellyfish`.
+    *   How about **"Iron Moss"**? No.
+    *   Let's go with a **Magnetic Sandstorm**: **"Sandstorm Manta"**. It flies using magnetic sand.
+    *   Better: **"Glassworm"**? No, glass moth.
+    *   Let's try a **"Fossil Beetle"**.
+    *   Okay, I will create a **"Mirage Lizard" (사막 이무기)** concept but distinct from `shadow_cat` and `stone_turtle`. It manipulates heat waves.
+    *   Actually, let's go with something completely different: **Sound/Water resonance**? `echo_bat` is sound.
+    *   Let's try **Magic/Runes**. Not existing. **"Rune Scarab"**.
+    *   Okay, I'll choose a **"Sonic Crystal"** creature? No crystal deer/bug.
+    *   How about a **"Tidal Shellfish"** that isn't stone turtle or jellyfish? A **"Bubble Crab"**. `water fairy` covers water.
+    *   Let's try **Air/Wind** but not bat/fairy. **"Whisper Wind"**.
+    *   Okay, let's settle on: **"Sandstorm Centipede"** (`sandstom_centipede`). No, too generic.
+    *   How about a **"Crystalized Plant"**? `leaf fairy`, `moss salamander`.
+    *   Let's try a **Ghost/Ghostly** thing? `shadow_cat`.
+    *   Okay, I need to be creative. A **"Clockwork Flower"** creature? Steampunk fantasy. Not `iron_boar` (primitive). **"Gear Lily"**.
+    *   Element: Clockwork/Nature mix. Sensory: Sound (ticking), Temperature (warmth of gears). Personality: Curious.
+    *   Wait, let's go simpler and safer. A **"Cactus Spider"**. No, too close to `moss`.
+    *   Let's try a **"Lava Bug"**? No ember.
+    *   Okay, I will design a **"Magma Moss"**? No ember/moss.
+    *   **Idea:** **"Sunlight Jellyfish"** (Sky dwelling)?
+    *   **Final Choice:** A **"Sandstorm Scorpion"** isn't unique enough. How about a **"Dune Fox"**? Too close to wolf/cat.
+    *   Let's go with a **"Terra-Leaf Beetle"**. `leaf`, `crystal`.
+    *   Okay, I'll create a **"Magnetic Sand Eel"**. It lives in the desert dunes.
+    *   Wait, let's do a **"Cloud Ray"** (Sky). Not water fairy.
+    *   Name: **`cloud_ray`** (`구름빛 가오리`). Element: Air/Lightning. Sensory: Sound (Thunder), Temperature. Personality: Timid.
+    *   But `echo_bat` is sound.
+    *   Okay, I will create a **"Scented Fungus Beast"**. Not moss/fairy. A large mushroom creature that floats.
+    *   Name: **`spore_hydra`** (`포자 히드라`). Element: Plant/Fungal. Sensory: Smell (Spores), Temperature. Personality: Aggressive (poison).
+    *   Check conflicts: `leaf fairy`, `moss salamander`. Fungus is distinct from moss/plant usually in games. But to be safe, let's do something mineral/energy based that isn't crystal/glass/iron. **"Amber Beetle"**? `crystal bug`.
+    *   Okay, I'll go with a **"Dust Sprite"**. Not shadow/cat.
+    *   Let's try a **"Sand Glass Lizard"**.
+    *   Okay, I'm overthinking the overlaps. The list is short. I can do **`sand_golem`** (distinct from `stone_turtle`). Or **`glass_worm`**.
+    *   Let's go with **`dust_stalker`**. A creature made of fine sand that hides in dunes. Element: Earth/Dust. Sensory: Smell, Behavior. Personality: Timid/Stuck in hiding.
+    *   Actually, a **"Thunder-Storm Jelly"**? `fog_jellyfish`.
+    *   Okay, I will design a **"Clockwork Beetle"**. It has gears and leaves. It mimics nature. Element: Mechanical/Nature. Sensory: Sound (ticking), Behavior (rhythmic). Personality: Stubborn (stuck in loops).
+    *   Wait, `iron_boar` is mechanical-ish. Let's try **"Crystal Vine"**? `crystal_deer`, `leaf_fairy`.
+    *   Okay, **`sound_wisp`**? `echo_bat`.
+    *   How about a **"Gravity Orb"** creature?
+    *   Okay, I'll choose: **"Prism Gecko"**. Element: Light/Refractive. Sensory: Smell (Ozone), Sound (Chime). Personality: Curious. Not `crystal_deer` or `glass_moth`. It's a gecko/lizard.
+    *   Let's refine: **`prism_gecko`** (`프리즈름 게코`). Element: Light/Refractive.
+    *   Wait, `glass_moth` covers glass/refractive.
+    *   Okay, I'll go with **"Magma Crab"**. Not stone turtle. Lava based.
+    *   Let's try **"Iron Leaf"**? No iron boar, leaf fairy.
+    *   **Decision:** A **"Sonic Coral"** creature. Lives underwater but uses sound. `fog_jellyfish` is there. `echo_bat` is sound.
+    *   Okay, I will make a **"Sandstorm Phoenix"**. Too legendary.
+    *   Let's go with **"Dust Mole"**. Burrows in dry sand. Distinct from `stone_turtle`. Element: Earth/Sand. Sensory: Smell (Dry earth), Behavior (Burrowing). Personality: Timid (Underground).
+    *   Wait, I want something cuter for devolution.
+    *   Let's try a **"Raindrop Slime"**. Not water fairy. `water fairy` is humanoid. A slime blob is distinct. But let's avoid slimes if possible.
+    *   **Final Decision:** A **"Wind Chime Spider"**. It hangs in the air and uses sound. Not `echo_bat` (bat) or `fog_jellyfish`.
+    *   Name: **`wind_chime_spider`** (`바람종 거미`). Element: Air/Sound. Sensory: Sound, Behavior. Personality: Curious.
+    *   Check overlap: None of these are in the list. `shadow_cat`, `abyss_wolf`, `stone_turtle`, `glass_moth`, `crystal_deer`, `fog_jellyfish`, `iron_boar`, `echo_bat`.
+    *   Okay, `wind_chime_spider` sounds okay. But let's make it more fantasy. **"Chime Weaver"**.
+    *   Let's try a **"Lava Lizard"**? Ember creature is fire.
+    *   How about a **"Crystal Plant"**? Crystal Deer/Bug/Fairy/Moss/Salamander/Leaf. Too many crystal/plants.
+    *   Okay, **"Iron Leaf"** is taken (iron boar).
+    *   Let's try a **"Shadow Flower"**. `shadow_cat`.
+    *   **Idea:** A **"Tidal Shell Snail"**. Not turtle. Uses sound of waves? No sound bat.
+    *   **Idea:** A **"Static Fox"**. Not wolf/cat. Spark tail is electricity.
+    *   Okay, I will create a **"Magnetic Sand Golem"**. Distinct from `stone_turtle`.
+    *   Actually, let's go with **"Ghost Moss"**. No moss salamander.
+    *   **Idea:** A **"Lightning Bug"**. Crystal bug exists. Spark tail exists. Ember creature exists.
+    *   Okay, I'll create a **"Sandstorm Serpent"**. It looks like swirling sand. Element: Earth/Sand. Sensory: Smell (Dry), Behavior (Whirling). Personality: Aggressive.
+    *   Wait, is it too similar to `stone_turtle`? Stone is hard rock. Sand is loose earth. Distinct enough for a devolution game context where visuals change heavily.
+    *   Let's try **"Mud Turtle"**? No stone turtle.
+    *   Okay, I'll stick with the **Sandstorm Serpent** but make it unique visually (swirling colors). Or better: **"Dust Wolf"**. No `abyss_wolf`.
+    *   Let's go with a **"Crystalized Sand Scorpion"**. No `crystal_deer`.
+    *   Okay, I will choose a **"Wind Spirit"** that isn't water/fairy. A **`dust_spirit`** (`모래정령`). It floats on sandstorms.
+    *   Let's name it: **`sandstorm_stalker`**.
+    *   No, let's make it more "Devolution Idle" friendly (cute).
+    *   Base: A large, somewhat intimidating wind creature made of swirling dust and sharp stones that forms its body. `sandstone_manta`.
+    *   Actually, I'll go with a **"Thunder Beetle"**. Not spark tail/bug. It creates static sparks when it walks. Element: Electricity/Grounding. Sensory: Sound (Crackle), Temperature (Static heat). Personality: Curious.
+    *   Wait, `crystal_bug` is there. `spark_tail` is there. `ember_creature`.
+    *   Okay, I need to be very careful.
+    *   Let's try a **"Mirror Lizard"**. Reflects images. Element: Light/Reflection. Sensory: Behavior (Hiding in mirrors), Smell (Ozone). Personality: Timid. Distinct from `glass_moth`, `crystal_deer`. It is organic, not crystalline/glass.
+    *   Name: **`mirror_lizard`** (`거울 도마뱀`). This seems safe.
+
+3.  **Drafting the Content:**
+
+    *   **Base:** `mirror_lizard` (Mirror Lizard). Large, sleek, skin like liquid mercury/mirror. Aggressive? Or Timid because it hides in reflections? Let's go with "Timid" - afraid of being seen as "real". Wait, for an enemy, "Aggressive" or "Stubborn" is better for game loop tension. Let's make it **Stubborn**. It won't stop moving until it finds its own reflection.
+    *   **Sensory:** Smell (Ozone), Behavior (Reflective motion).
+    *   **Devolution 1:** Becomes less reflective, more solid metal? No, simpler. A **"Shiny Pebble"**, a **"Tiny Mirror Shard"**, or a **"Chipped Disc"**.
+        *   Vars: `mirror_shard` (Fragment), `metal_beetle` (Compact), `polished_stone` (Simplified). Wait, need to be cuter.
+        *   Var A: **Silver Pebble** (`은색 자갈`). Just a shiny stone shape.
+        *   Var B: **Shiny Coin** (`광택 동전`). Circular body.
+        *   Var C: **Mirror Chip** (`조각 거울`). Sharp but tiny.
+    *   **Devolution 2:** Tiniest forms.
+        *   From Pebble: `pebble_rubble` (Tiny dust), `stone_grain`.
+        *   From Coin: `coin_chip`, `metal_dust`.
+        *   From Chip: `glass_dust`, `sparklet`.
+    *   Wait, devolutions must be "smaller, simpler". The prompt asks for 3 Level 1 variations.
+    *   Let's refine the base name to be unique in this game world. Maybe **`shimmer_walker`** (`유리자개 거인`). No `glass_moth`.
+    *   How about **"Reflective Fox"**? Too close to wolf/cat.
+    *   Okay, I'll go with **`prism_skink`** (`프리즈름 스핑크`). It's a lizard that refracts light like a prism. Distinct from glass (transparent) vs prism (rainbow).
+    *   Base: `prism_skink`.
+    *   L1 A: `gem_beetle` (Compact gem shape).
+    *   L1 B: `light_bead` (Round glowing bead).
+    *   L1 C: `color_shard` (Broken prism piece).
+    *   L2: Even simpler shapes.
+
+    *   Wait, I need to ensure no overlap with `crystal_deer`, `glass_moth`. Glass = transparent. Crystal = Gem-like structure. Prism = Light bending structure. They are similar but distinct enough for a game design document if described well (e.g., color vs clear).
+    *   To be safer: **"Shadow Glass"**? No.
+    *   How about **"Iron Lizard"**? `iron_boar`.
+    *   How about **"Fossil Beetle"**?
+    *   Let's try a **`dune_stalker`** (Sand creature). It uses sand to mimic terrain. Distinct from stone (rock) and crystal/glass.
+    *   Name: **`sand_walker`**.
+    *   L1s: `sand_pile`, `grain_boulder`, `wind_ash`.
+    *   L2s: `dust_cloud`, `tiny_sand`, `mineral_grit`.
+
+    *   Wait, I need to make sure the JSON is valid and fits all fields.
+    *   Let's pick **`sand_walker`** (사막 사냥꾼). Element: Earth/Sand. Personality: Aggressive (hunts in dunes). Sensory: Smell (Dry dust), Behavior (Burrowing/Stalking).
+    *   L1 A: `dust_bobbin` (Ball of dust).
+    *   L1 B: `sand_shell` (Crust of hardened sand).
+    *   L1 C: `wind_ember` (Residue of heat/sand). Wait, ember creature exists.
+    *   L2 A/B/C: Tiniest forms like `dust_grain`, `micro_sand`.
+
+    *   Let's refine the **`prism_skink`** idea because "Devolution" implies becoming cuter. A lizard is good for devolving into cute blobs/shapes.
+    *   Base: `prism_skink` (Lizard made of light refracting scales).
+    *   L1: `refract_stone`, `light_gem`, `color_crystal`. Too similar to crystal.
+    *   Okay, I will create a **"Magnetic Sand Fox"**. No.
+    *   Let's go with **`wind_chime_wolf`**. No wolf.
+    *   **Final Choice:** A **"Stone Flower"**. A carnivorous plant made of stone. `stone_turtle`, `moss salamander`. Is it distinct? Yes, Stone is rock, Moss is soft green. A Stone Flower looks like a flower but is rock.
+    *   Base: `rock_flower` (바위 꽃). Element: Earth/Plant hybrid. Sensory: Smell (Minerals), Temperature (Cold Rock). Personality: Stubborn (Doesn't wilt).
+    *   L1s: `petal_rock`, `seed_stone`, `root_gravel`.
+    *   This might conflict with plant themes (`leaf_fairy`).
+    *   Okay, **`sand_walker`** is safer. No plants involved. Just sand/earth/dust. Distinct from Stone Turtle (Armor/Rock). Sand Waker is loose material.
+
+    *   Let's create: **`dune_stalker`** (`모래 사냥꾼`).
+    *   Base: A tall, serpentine creature made of swirling loose red sand and sharp rocks that forms a spine. Looks like a scorpion but floating.
+    *   L1 A: `sand_ball` (Cute round ball of sand).
+    *   L1 B: `rock_pebble` (Single hard pebble with eyes).
+    *   L1 C: `dust_wisp` (Gaseous dust form).
+    *   L2s: From A -> `sand_grain`, `tiny_bubble`. From B -> `mineral_dust`, `stone_chip`. From C -> `air_particle`, `smoke_drop`.
+
+    *   Wait, I need to check the JSON structure carefully.
+    *   Keys: `base`, `devolutions_1` (array of 3), `devolutions_2` (array of 6).
+    *   Each object needs: `name_kr`, `name_en`, `desc_kr`, `image_prompt`.
+    *   `parent` field needed for `devolutions_2`.
+
+    *   Let's refine the names to be snake_case English IDs.
+    *   Base: `dune_stalker`.
+    *   L1 A: `sand_ball`. Parent: `dune_stalker`? No, parent is one of L1s for L2s.
+    *   Structure check:
+        *   `devolutions_1`: 3 objects (no parent field required in schema provided).
+        *   `devolutions_2`: 6 objects (needs `parent` field pointing to `name_en` of `devolutions_1`).
+        *   Wait, the prompt example says: `"parent":"snake_case_id_a"`. Yes.
+    *   So L2 A and B come from L1 A (`sand_ball`). L2 C and D from L1 B (`rock_pebble`). L2 E and F from L1 C (`dust_wisp`).
+
+    *   Let's finalize the visual descriptions for prompts to ensure they are valid English image prompts.
+    *   Base: "A tall serpentine creature made of swirling red sand with a sharp rock spine, glowing faintly orange eyes, desert background, pokemon style".
+    *   L1 A: "A round ball of soft sand with cute eyes, wobbly shape, pokemon chibi style".
+    *   L1 B: "A smooth heart-shaped stone pebble with small glowing eyes and tiny legs, pokemon chibi style".
+    *   L1 C: "A translucent cloud of brown dust with a face made of darker spots, floating gently, pokemon chibi style".
+
+    *   Sensory Types for Base: `smell`, `behavior`. (Sand smell, burrowing behavior).
+    *   Personality: `aggressive` (It hunts prey in the sand).
+
+    *   Let's write the JSON. Ensure no markdown code blocks (```json ... ```). Just raw text starting with `{`.
+
+    *   Double Check Constraints:
+        *   "Start your response with { and end with }"
+        *   "Respond with ONLY valid JSON."
+        *   "No thinking, no explanation, no markdown."
+        *   All fields filled.
+        *   No overlap with existing list (abyss_wolf, glass_moth, stone_turtle, shadow_cat, crystal_deer, fog_jellyfish, iron_boar, echo_bat). My choice: `dune_stalker`. Sounds distinct enough from Wolf/Cat/Turtle/Jellyfish/Bat/Iron.
+        *   Korean names/descriptions must be present.
+
+    *   One detail: "Sensory axes: sound, temperature, smell, behavior". I need to pick arrays for these. `["smell", "behavior"]`.
+    *   Image prompts must start with "pokemon style creature...".
+    *   JSON keys must match the example exactly (`name_kr`, `name_en`, `desc_kr`, `element`, `sensoryType`, `personality`, `image_prompt`).
+
+    *   Wait, the prompt says: `Start your response with { and end with }`. I should not include markdown ticks.
+    *   Also, check if `dune_stalker` is too close to `abyss_wolf` or `stone_turtle`. Abyss wolf is dark/forest. Stone turtle is rock armor. Dune stalker is loose sand/desert. Should be fine.
+
+    *   Refining descriptions for Korean:
+        *   Name: 모래사냥꾼 (Sand Hunter).
+        *   Desc: 붉은 모래로 이루어진 용 모양의 괴물, 날카로운 바위 등뼈가 있음. (Red sand dragon-like monster, sharp rock spine.)
+
+    *   Refining L2 Parents: Ensure they match the `name_en` in `devolutions_1`.
+        *   L1 A: `sand_mound`.
+        *   L1 B: `rock_chip`.
+        *   L1 C: `dust_puff`.
+        *   L2 Parents must be exactly these strings.
+
+    *   Wait, I need to make sure the JSON is valid (escape quotes if needed). No internal quotes in Korean text usually but good to check.
+
+    *   Let's assemble.
+
+    *   One more check: "Devolution Level 1 variations". "Devolution Level 2 variations for EACH level 1".
+    *   So L1 has 3 items. L2 has 6 items (2 per parent).
+    *   My plan matches this.
+
+    *   Wait, the prompt says "Start your response with { and end with }." It also says "Respond with ONLY valid JSON." I must not output markdown code blocks like ```json ... ```. Just the raw text.
+
+    *   Let's check the keys again from the user's template:
+        *   `base`: object
+            *   `name_kr`, `name_en`, `desc_kr`, `element`, `sensoryType`, `personality`, `image_prompt`
+        *   `devolutions_1`: array of objects (same fields as base, except parent)
+        *   `devolutions_2`: array of objects (includes `parent`)
+
+    *   Wait, the user template for `devolutions_1` in the example doesn't show a `parent` field. I will omit it to match the schema provided in the prompt (`"name_kr":"Korean name A",...`).
+    *   The user template for `devolutions_2` shows `"parent":"snake_case_id_a"`.
+
+    *   Okay, ready to generate.
+
+    *   Final check on overlaps: `stone_turtle` (Stone), `abyss_wolf` (Wolf/Dark). My monster is Sand/Dune/Desert. Distinct enough.
+
+    *   Korean Text Generation:
+        *   Name: 모래사냥꾼 (Sand Hunter) or 모래요정? No, enemy. **모래 사냥꾼**.
+        *   L1 A: 둥근 자갈 (Round Pebble).
+        *   L1 B: 모래알이 (Grain of Sand - maybe too small for Level 1). Let's make it a "Sand Ball". **모래 공**.
+        *   Let's stick to `sand_mound`, `rock_chip`, `dust_puff`.
+        *   Korean names: `모래더미`, `바위조각`, `먼지방울`.
+
+    *   Image prompts need to be descriptive. "pokemon style creature, detailed english appearance description here, simple white background, full body, game sprite, transparent background, cute monster design". I must include this phrasing structure in the prompt for consistency with requirements ("Image prompts must be in English, pokemon/creature collector style"). The template says `image_prompt":"pokemon style creature...`. I will follow that.
+
+    *   Wait, the template provided in the instruction example includes specific text in image_prompt: `"image_prompt":"pokemon style creature, detailed english appearance description here..."`
+    *   I should write valid English descriptions there.
+
+    *   Let's construct the JSON carefully to avoid syntax errors (commas, quotes).
+
+    *   One constraint check: "Sensory axes: sound, temperature, smell, behavior". My selection: `["smell", "behavior"]`.
+    *   Personality: `aggressive`.
+
+    *   Final check on `devolutions_2` parent matching.
+        *   `devolutions_1[0].name_en`: `sand_mound` -> `devolutions_2` parents 1 & 2 must be `sand_mound`.
+        *   `devolutions_1[1].name_en`: `rock_chip` -> `devolutions_2` parents 3 & 4 must be `rock_chip`.
+        *   `devolutions_1[2].name_en`: `dust_puff` -> `devolutions_2` parents 5 & 6 must be `dust_puff`.
+
+    *   Okay, writing the JSON.
+</think>
+
+{
+"base": {
+"name_kr": "모래 사냥꾼",
+"name_en": "dune_stalker",
+"desc_kr": "붉은 모래와 바위 조각으로 이루어진 용 모양의 괴물, 날카로운 등뼈가 있음.",
+"element": "earth_sand",
+"sensoryType": [
+"smell",
+"behavior"
+],
+"personality": "aggressive",
+"image_prompt": "pokemon style creature, a tall serpentine monster made of swirling red sand with sharp rock spines and glowing orange eyes, desert dunes background, simple white background, full body, game sprite, transparent background, cute monster design"
+},
+"devolutions_1": [
+{
+"name_kr": "모래 더미",
+"name_en": "sand_mound",
+"desc_kr": "몸이 둥글게 변하여 모래 공처럼 보이는 작은 괴물.",
+"image_prompt": "pokemon style creature, a cute round ball made of soft red sand with tiny sparkling eyes and stubby legs, simple white background, full body, game sprite, transparent background, cute chibi monster"
+},
+{
+"name_kr": "바위 조각",
+"name_en": "rock_chip",
+"desc_kr": "단단한 작은 돌알이 되어 눈이 반짝이는 형태.",
+"image_prompt": "pokemon style creature, a smooth heart-shaped stone pebble with small glowing eyes and tiny legs, simple white background, full body, game sprite, transparent background, cute chibi monster"
+},
+{
+"name_kr": "먼지 방울",
+"name_en": "dust_puff",
+"desc_kr": "투명한 먼지 구름으로 변하여 바람에 날리는 귀여운 형태.",
+"image_prompt": "pokemon style creature, a translucent cloud of brown dust with a cute face made of darker spots floating gently, simple white background, full body, game sprite, transparent background, cute chibi monster"
+}
+],
+"devolutions_2": [
+{
+"parent": "sand_mound",
+"name_kr": "모래 알갱이",
+"name_en": "mound_grain",
+"desc_kr": "아주 작은 모래알 하나에 눈이 그려진 가장 작은 형태.",
+"image_prompt": "pokemon style creature, a single tiny sand grain with a cute face painted on it, simple white background, full body, game sprite, transparent background, tiny adorable blob creature"
+},
+{
+"parent": "sand_mound",
+"name_kr": "모래 구슬",
+"name_en": "mound_beat",
+"desc_kr": "작고 단단해진 모래가 둥근 공 모양이 된 형태.",
+"image_prompt": "pokemon style creature, a tiny hard sand bead with two large eyes and a smiling mouth, simple white background, full body, game sprite, transparent background, tiny adorable blob creature"
+},
+{
+"parent": "rock_chip",
+"name_kr": "바위 먼지",
+"name_en": "chip_dust",
+"desc_kr": "돌가루가 뭉쳐서 된 아주 작은 형태의 돌.",
+"image_prompt": "pokemon style creature, a tiny cluster of mineral dust with glowing eyes, simple white background, full body, game sprite, transparent background, tiny adorable blob creature"
+},
+{
+"parent": "rock_chip",
+"name_kr": "자갈 파편",
+"name_en": "chip_grit",
+"desc_kr": "작은 돌 조각이 귀여운 톱니 모양으로 변한 형태.",
+"image_prompt": "pokemon style creature, a tiny jagged stone chip with cute eyes and teeth, simple white background, full body, game sprite, transparent background, tiny adorable blob creature"
+},
+{
+"parent": "dust_puff",
+"name_kr": "공기 입자",
+"name_en": "puff_particle",
+"desc_kr": "매우 작은 먼지 입자가 눈으로 표현된 형태.",
+"image_prompt": "pokemon style creature, a single floating dust particle with two tiny eyes looking curious, simple white background, full body, game sprite, transparent background, tiny adorable blob creature"
+},
+{
+"parent": "dust_puff",
+"name_kr": "먼지 꽃",
+"name_en": "puff_flower",
+"desc_kr": "모래 먼지가 작은 꽃잎처럼 퍼진 가장 귀여운 형태.",
+"image_prompt": "pokemon style creature, a tiny burst of dust forming soft flower petals with a cute center face, simple white background, full body, game sprite, transparent background, tiny adorable blob creature"
+}
+]
+}
