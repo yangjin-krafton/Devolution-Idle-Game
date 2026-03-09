@@ -18,7 +18,7 @@ async function callVision(messages) {
       model: CONFIG.VISION_MODEL,
       messages,
       temperature: 0.3,
-      max_tokens: 512,
+      max_tokens: 2048,
     }),
   });
   if (!res.ok) throw new Error(`Vision API error: ${res.status} ${await res.text()}`);
@@ -55,13 +55,15 @@ async function compareTwo(imgA, imgB, type, name_en, matchLabel) {
   const content = [
     {
       type: 'text',
-      text: `게임 몬스터 스프라이트 1:1 비교 심사.
+      text: `You are a game sprite judge. Compare Image 1 and Image 2.
 
-몬스터: ${name_en}
+Monster: ${name_en}
 ${getReviewCriteria(type)}
 
-이미지 1과 이미지 2 중 하나만 선택하세요.
-반드시 JSON으로만 응답: {"winner": 1 또는 2, "reason": "이유"}`,
+Pick ONE winner. Reply with ONLY this exact format, nothing else:
+WINNER: 1
+or
+WINNER: 2`,
     },
     { type: 'text', text: '\n--- 이미지 1 ---' },
     { type: 'image_url', image_url: { url: `data:image/png;base64,${imageToBase64(first)}` } },
@@ -87,27 +89,60 @@ ${getReviewCriteria(type)}
       .replace(/<\/?no_think>/g, '')
       .trim();
 
-    const match = cleaned.match(/\{[\s\S]*?\}/);
-    if (match) {
-      const result = JSON.parse(match[0]);
-      const pickedNum = result.winner; // 1 or 2
-
-      // 순서 복원: swapped면 1=B,2=A / 아니면 1=A,2=B
-      let winner;
-      if (pickedNum === 1) {
-        winner = swapped ? imgB : imgA;
-      } else {
-        winner = swapped ? imgA : imgB;
-      }
-
-      console.log(`    ${matchLabel}: 이미지${imgA.index} vs 이미지${imgB.index} → 승자: 이미지${winner.index} (${result.reason})`);
-      return winner;
+    // 방법 1: JSON 파싱 시도
+    const jsonMatch = cleaned.match(/\{[\s\S]*?\}/);
+    if (jsonMatch) {
+      try {
+        const result = JSON.parse(jsonMatch[0]);
+        const pickedNum = result.winner;
+        let winner;
+        if (pickedNum === 1) {
+          winner = swapped ? imgB : imgA;
+        } else {
+          winner = swapped ? imgA : imgB;
+        }
+        console.log(`    ${matchLabel}: 이미지${imgA.index} vs 이미지${imgB.index} → 승자: 이미지${winner.index} (${result.reason})`);
+        return winner;
+      } catch {}
     }
+
+    // 방법 2: 텍스트에서 승자 번호 추출 (다양한 패턴)
+    const winnerPatterns = [
+      /WINNER:\s*(\d)/i,
+      /winner[:\s]*(\d)/i,
+      /pick[:\s]*(?:image\s*)?(\d)/i,
+      /choose[:\s]*(?:image\s*)?(\d)/i,
+      /select[:\s]*(?:image\s*)?(\d)/i,
+      /image\s*(\d)\s*(?:is|wins|the winner|is better|is the better)/i,
+      /(?:선택|승자)[:\s]*(?:이미지\s*)?(\d)/i,
+      /Therefore,?\s*Image\s*(\d)/i,
+      /\bImage\s*(\d)\s*(?:is\s+)?(?:the\s+)?(?:winner|better|best|fits|more)/i,
+      /\bImage\s*(\d)\s+(?:fits|wins|better|more)/i,
+      /(?:go with|prefer)\s*(?:image\s*)?(\d)/i,
+    ];
+
+    for (const pattern of winnerPatterns) {
+      const textMatch = cleaned.match(pattern);
+      if (textMatch) {
+        const pickedNum = parseInt(textMatch[1]);
+        if (pickedNum === 1 || pickedNum === 2) {
+          let winner;
+          if (pickedNum === 1) {
+            winner = swapped ? imgB : imgA;
+          } else {
+            winner = swapped ? imgA : imgB;
+          }
+          console.log(`    ${matchLabel}: 이미지${imgA.index} vs 이미지${imgB.index} → 승자: 이미지${winner.index} (텍스트 추출)`);
+          return winner;
+        }
+      }
+    }
+
   } catch (err) {
     console.error(`    ${matchLabel} 심사 에러: ${err.message}`);
   }
 
-  // 파싱 실패 시 랜덤 선택 (편향 방지)
+  // 최종 폴백: 랜덤 선택
   const fallback = Math.random() > 0.5 ? imgA : imgB;
   console.log(`    ${matchLabel}: 파싱 실패 → 랜덤 선택: 이미지${fallback.index}`);
   return fallback;
