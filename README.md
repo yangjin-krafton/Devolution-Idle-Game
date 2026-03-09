@@ -632,20 +632,27 @@ MVP에서 반드시 확인해야 할 질문은 아래와 같습니다.
 # 프로젝트 루트에서 실행
 cd D:\Weeks\Devolution-Idle-Game
 
-# 몬스터 1종 생성 (컨셉+스킬+이미지 8장/형태+비전 심사)
+# roster 순차 실행 (중단 후 이어서 가능)
 node tools/monster-pipeline/pipeline.js
 
-# 몬스터 3종 연속 생성
-node tools/monster-pipeline/pipeline.js --count 3
+# 특정 번호만 실행
+node tools/monster-pipeline/pipeline.js --only 3
 
-# 컨셉만 생성 (이미지 없이 빠르게 확인)
-node tools/monster-pipeline/pipeline.js --dry-run
+# 특정 번호부터 시작
+node tools/monster-pipeline/pipeline.js --from 5
 
-# 이미지 심사 건너뛰기 (각 형태 첫번째 이미지 자동 선택)
+# 이미지 심사 건너뛰기
 node tools/monster-pipeline/pipeline.js --skip-review
 
-# 테스트 모드 (base + 퇴화1 하나만)
-node tools/monster-pipeline/pipeline.js --test
+# 진행 상황 확인
+node tools/monster-pipeline/pipeline.js --status
+
+# 진행 기록 초기화
+node tools/monster-pipeline/pipeline.js --reset
+
+# Watchdog: 자동 재시작 모니터 (에러/hang 시 자동 복구)
+node tools/monster-pipeline/watchdog.js
+node tools/monster-pipeline/watchdog.js --timeout 300 --max-retries 3
 ```
 
 ### 후보 심사 및 게임 통합
