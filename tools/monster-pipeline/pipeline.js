@@ -25,7 +25,7 @@ import { generateMonsterConcept } from './concept-agent.js';
 import { generateImages } from './comfyui-agent.js';
 import { reviewAndSelectBest } from './review-agent.js';
 import { CONFIG } from './config.js';
-import { mkdir, writeFile, copyFile } from 'fs/promises';
+import { mkdir, writeFile, copyFile, rm } from 'fs/promises';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -81,6 +81,14 @@ async function saveCandidateBundle(concept, selectedImages, allImages) {
   // 4. 요약 README 생성
   const readme = generateReadme(concept, selectedImages);
   await writeFile(resolve(candidateDir, 'README.md'), readme, 'utf-8');
+
+  // 5. temp/ 정리
+  const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
+  try {
+    await rm(tempDir, { recursive: true, force: true });
+    await mkdir(tempDir, { recursive: true });
+    console.log(`[Candidate] temp/ 정리 완료`);
+  } catch {}
 
   console.log(`[Candidate] 후보 저장 완료: candidates/${dirName}/`);
   return dirName;
