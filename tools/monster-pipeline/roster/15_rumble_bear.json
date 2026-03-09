@@ -1,0 +1,83 @@
+{
+  "id": 15,
+  "wild": {
+    "name_en": "rumble_bear",
+    "name_kr": "진동 곰",
+    "desc_kr": "발걸음마다 땅이 울리는 거대한 산악 곰",
+    "sensoryType": [
+      "sound",
+      "behavior"
+    ],
+    "personality": "stubborn",
+    "habitat": "cave",
+    "attackPower": 8,
+    "tamingThreshold": 80,
+    "escapeThreshold": 105,
+    "hp": 34,
+    "stats": {
+      "gentleness": 6,
+      "empathy": 3,
+      "resilience": 6,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "북소리곰",
+      "name_en": "drum_bear",
+      "desc_kr": "배를 두드려 리듬을 만드는 힘센 곰",
+      "role": "attacker",
+      "hp": 30,
+      "stats": {
+        "gentleness": 11,
+        "empathy": 2,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture"
+    },
+    {
+      "name_kr": "포옹곰",
+      "name_en": "hug_bear",
+      "desc_kr": "따뜻한 포옹으로 아군을 보호하는 곰",
+      "role": "tank",
+      "hp": 38,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 3,
+        "resilience": 13,
+        "agility": 2
+      },
+      "skillFocus": "behavior-defend / sound-defend / behavior-capture"
+    },
+    {
+      "name_kr": "자장곰",
+      "name_en": "lullaby_bear",
+      "desc_kr": "자장가 같은 저음으로 적을 진정시키는 곰",
+      "role": "support",
+      "hp": 32,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 10,
+        "resilience": 4,
+        "agility": 2
+      },
+      "skillFocus": "sound-defend(heal) / behavior-defend(heal) / sound-capture"
+    },
+    {
+      "name_kr": "돌진곰",
+      "name_en": "rush_bear",
+      "desc_kr": "맹돌진으로 적에게 압도적 존재감을 보여주는 곰",
+      "role": "speedster",
+      "hp": 26,
+      "stats": {
+        "gentleness": 5,
+        "empathy": 3,
+        "resilience": 3,
+        "agility": 9
+      },
+      "skillFocus": "behavior-stimulate / sound-stimulate / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

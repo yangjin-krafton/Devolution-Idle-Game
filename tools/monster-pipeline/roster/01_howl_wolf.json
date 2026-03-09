@@ -1,0 +1,68 @@
+{
+  "id": 1,
+  "wild": {
+    "name_en": "howl_wolf",
+    "name_kr": "울부짖는 늑대",
+    "desc_kr": "달빛 아래 울부짖으며 음파로 사냥하는 어둠의 늑대",
+    "sensoryType": [
+      "sound"
+    ],
+    "personality": "aggressive",
+    "habitat": "forest",
+    "attackPower": 7,
+    "tamingThreshold": 75,
+    "escapeThreshold": 95,
+    "hp": 26,
+    "stats": {
+      "gentleness": 7,
+      "empathy": 4,
+      "resilience": 4,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "달울림",
+      "name_en": "moon_howler",
+      "desc_kr": "울음이 아군을 격려하는 전장의 노래꾼",
+      "role": "attacker",
+      "hp": 24,
+      "stats": {
+        "gentleness": 12,
+        "empathy": 3,
+        "resilience": 3,
+        "agility": 2
+      },
+      "skillFocus": "sound-stimulate / sound-capture / behavior-defend"
+    },
+    {
+      "name_kr": "수호늑대",
+      "name_en": "guard_wolf",
+      "desc_kr": "울음소리로 적의 접근을 막는 방어의 늑대",
+      "role": "tank",
+      "hp": 32,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 3,
+        "resilience": 11,
+        "agility": 2
+      },
+      "skillFocus": "sound-defend / behavior-defend / sound-capture"
+    },
+    {
+      "name_kr": "질풍늑대",
+      "name_en": "gale_wolf",
+      "desc_kr": "바람처럼 빠르게 달려 적을 압박하는 늑대",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 5,
+        "empathy": 4,
+        "resilience": 2,
+        "agility": 9
+      },
+      "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

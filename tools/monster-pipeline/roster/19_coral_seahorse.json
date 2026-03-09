@@ -1,0 +1,55 @@
+{
+  "id": 19,
+  "wild": {
+    "name_en": "coral_seahorse",
+    "name_kr": "산호 해마",
+    "desc_kr": "산호처럼 화려하고 물 온도로 감정을 표현하는 해마",
+    "sensoryType": [
+      "temperature",
+      "smell"
+    ],
+    "personality": "timid",
+    "habitat": "sea",
+    "attackPower": 4,
+    "tamingThreshold": 52,
+    "escapeThreshold": 68,
+    "hp": 20,
+    "stats": {
+      "gentleness": 7,
+      "empathy": 5,
+      "resilience": 3,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "온도해마",
+      "name_en": "thermo_horse",
+      "desc_kr": "몸 색깔로 온도를 전달해 적을 매혹시키는 해마",
+      "role": "attacker",
+      "hp": 20,
+      "stats": {
+        "gentleness": 12,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 3
+      },
+      "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+    },
+    {
+      "name_kr": "치유해마",
+      "name_en": "heal_horse",
+      "desc_kr": "따뜻한 물로 아군의 상처를 씻어주는 해마",
+      "role": "support",
+      "hp": 24,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 11,
+        "resilience": 3,
+        "agility": 3
+      },
+      "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

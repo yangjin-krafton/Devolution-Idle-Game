@@ -1,0 +1,68 @@
+{
+  "id": 8,
+  "wild": {
+    "name_en": "vine_spider",
+    "name_kr": "덩굴 거미",
+    "desc_kr": "냄새나는 덩굴로 거미줄을 치고 먹이를 기다리는 거미",
+    "sensoryType": [
+      "smell"
+    ],
+    "personality": "timid",
+    "habitat": "forest",
+    "attackPower": 4,
+    "tamingThreshold": 58,
+    "escapeThreshold": 75,
+    "hp": 30,
+    "stats": {
+      "gentleness": 3,
+      "empathy": 5,
+      "resilience": 7,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "꽃거미",
+      "name_en": "bloom_spider",
+      "desc_kr": "꽃향기 나는 실을 짜서 아군을 보호하는 거미",
+      "role": "tank",
+      "hp": 32,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 3,
+        "resilience": 12,
+        "agility": 3
+      },
+      "skillFocus": "smell-defend(heal) / smell-stimulate / behavior-capture"
+    },
+    {
+      "name_kr": "실뿜이",
+      "name_en": "silk_spinner",
+      "desc_kr": "빠르게 실을 뿜어 적을 묶는 거미",
+      "role": "speedster",
+      "hp": 24,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 4,
+        "resilience": 3,
+        "agility": 9
+      },
+      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+    },
+    {
+      "name_kr": "약초거미",
+      "name_en": "herb_spider",
+      "desc_kr": "거미줄에 약초 성분을 섞어 아군을 치유하는 거미",
+      "role": "support",
+      "hp": 28,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 9,
+        "resilience": 5,
+        "agility": 3
+      },
+      "skillFocus": "smell-defend(heal) / behavior-defend / smell-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

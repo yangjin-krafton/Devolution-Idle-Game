@@ -36,24 +36,37 @@ async function listCandidates() {
   console.log('╚══════════════════════════════════════════════════╝\n');
 
   for (const dir of dirs.sort()) {
-    const conceptPath = resolve(CANDIDATES_DIR, dir, 'concept.json');
     try {
-      const concept = JSON.parse(await readFile(conceptPath, 'utf-8'));
-      const b = concept.base;
+      // roster.json 또는 concept.json 에서 정보 읽기
+      let name_kr, name_en, desc_kr, personality, sensoryType, devo1Names;
+      const rosterPath = resolve(CANDIDATES_DIR, dir, 'roster.json');
+      const conceptPath = resolve(CANDIDATES_DIR, dir, 'concept.json');
+
+      try {
+        const roster = JSON.parse(await readFile(rosterPath, 'utf-8'));
+        const w = roster.wild;
+        name_kr = w.name_kr; name_en = w.name_en; desc_kr = w.desc_kr;
+        personality = w.personality; sensoryType = w.sensoryType;
+        devo1Names = roster.devo1?.map(d => `${d.name_kr}[${d.role}]`).join(', ') || '?';
+      } catch {
+        const concept = JSON.parse(await readFile(conceptPath, 'utf-8'));
+        const b = concept.base;
+        name_kr = b.name_kr; name_en = b.name_en; desc_kr = b.desc_kr;
+        personality = b.personality; sensoryType = b.sensoryType;
+        devo1Names = concept.devolutions_1?.map(d => d.name_kr).join(', ') || '?';
+      }
+
       const selectedDir = resolve(CANDIDATES_DIR, dir, 'selected');
       let imageCount = 0;
-      try {
-        imageCount = (await readdir(selectedDir)).length;
-      } catch {}
+      try { imageCount = (await readdir(selectedDir)).length; } catch {}
 
-      const devo1Names = concept.devolutions_1?.map(d => d.name_kr).join(', ') || '?';
       console.log(`  📁 ${dir}`);
-      console.log(`     ${b.name_kr} (${b.name_en}) — ${b.desc_kr}`);
-      console.log(`     성격: ${b.personality} | 감각: ${b.sensoryType?.join('+')} | 이미지: ${imageCount}장`);
+      console.log(`     ${name_kr} (${name_en}) — ${desc_kr}`);
+      console.log(`     성격: ${personality} | 감각: ${sensoryType?.join('+')} | 이미지: ${imageCount}장`);
       console.log(`     퇴화1: ${devo1Names}`);
       console.log();
     } catch {
-      console.log(`  📁 ${dir} (concept.json 없음)`);
+      console.log(`  📁 ${dir} (데이터 없음)`);
       console.log();
     }
   }

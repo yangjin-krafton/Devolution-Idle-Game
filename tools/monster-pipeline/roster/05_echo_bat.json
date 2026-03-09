@@ -1,0 +1,54 @@
+{
+  "id": 5,
+  "wild": {
+    "name_en": "echo_bat",
+    "name_kr": "초음파 박쥐",
+    "desc_kr": "초음파를 울려 동굴 전체를 지배하는 거대 박쥐",
+    "sensoryType": [
+      "sound"
+    ],
+    "personality": "timid",
+    "habitat": "cave",
+    "attackPower": 4,
+    "tamingThreshold": 55,
+    "escapeThreshold": 70,
+    "hp": 20,
+    "stats": {
+      "gentleness": 5,
+      "empathy": 6,
+      "resilience": 2,
+      "agility": 7
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "노래박쥐",
+      "name_en": "song_bat",
+      "desc_kr": "초음파가 아름다운 멜로디로 변한 박쥐",
+      "role": "support",
+      "hp": 22,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 10,
+        "resilience": 2,
+        "agility": 5
+      },
+      "skillFocus": "sound-stimulate / sound-capture / smell-defend(heal)"
+    },
+    {
+      "name_kr": "질풍박쥐",
+      "name_en": "swift_bat",
+      "desc_kr": "누구보다 빠르게 날아 적을 압박하는 박쥐",
+      "role": "speedster",
+      "hp": 18,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 11
+      },
+      "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

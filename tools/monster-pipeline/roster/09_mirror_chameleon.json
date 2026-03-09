@@ -1,0 +1,54 @@
+{
+  "id": 9,
+  "wild": {
+    "name_en": "mirror_chameleon",
+    "name_kr": "거울 카멜레온",
+    "desc_kr": "몸을 투명하게 바꿔 상대의 행동을 관찰하는 카멜레온",
+    "sensoryType": [
+      "behavior"
+    ],
+    "personality": "curious",
+    "habitat": "forest",
+    "attackPower": 4,
+    "tamingThreshold": 55,
+    "escapeThreshold": 70,
+    "hp": 25,
+    "stats": {
+      "gentleness": 5,
+      "empathy": 7,
+      "resilience": 4,
+      "agility": 4
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "빛도마뱀",
+      "name_en": "prism_lizard",
+      "desc_kr": "빛을 반사해 아군의 스킬을 증폭시키는 도마뱀",
+      "role": "support",
+      "hp": 24,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 12,
+        "resilience": 2,
+        "agility": 3
+      },
+      "skillFocus": "behavior-stimulate / behavior-capture / temperature-defend(heal)"
+    },
+    {
+      "name_kr": "위장도마뱀",
+      "name_en": "camo_lizard",
+      "desc_kr": "완벽한 위장으로 적의 공격을 피하는 도마뱀",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 4,
+        "resilience": 2,
+        "agility": 10
+      },
+      "skillFocus": "behavior-stimulate / behavior-defend / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

@@ -1,0 +1,69 @@
+{
+  "id": 22,
+  "wild": {
+    "name_en": "thunder_eel",
+    "name_kr": "번개 장어",
+    "desc_kr": "몸에서 전기를 뿜어 물속 모든 것을 마비시키는 장어",
+    "sensoryType": [
+      "sound",
+      "temperature"
+    ],
+    "personality": "timid",
+    "habitat": "sea",
+    "attackPower": 5,
+    "tamingThreshold": 58,
+    "escapeThreshold": 72,
+    "hp": 22,
+    "stats": {
+      "gentleness": 8,
+      "empathy": 4,
+      "resilience": 3,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "불꽃장어",
+      "name_en": "spark_eel",
+      "desc_kr": "전기가 따뜻한 빛으로 변해 아군을 비추는 장어",
+      "role": "attacker",
+      "hp": 20,
+      "stats": {
+        "gentleness": 14,
+        "empathy": 2,
+        "resilience": 2,
+        "agility": 2
+      },
+      "skillFocus": "sound-stimulate / temperature-stimulate / sound-capture"
+    },
+    {
+      "name_kr": "전기뱀장어",
+      "name_en": "volt_eel",
+      "desc_kr": "전기 충격으로 적을 놀라게 하는 장어",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 5,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 10
+      },
+      "skillFocus": "sound-stimulate / behavior-stimulate / temperature-capture"
+    },
+    {
+      "name_kr": "치유장어",
+      "name_en": "heal_eel",
+      "desc_kr": "약한 전류로 아군의 근육을 풀어주는 장어",
+      "role": "support",
+      "hp": 24,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 10,
+        "resilience": 3,
+        "agility": 4
+      },
+      "skillFocus": "temperature-defend(heal) / sound-defend / temperature-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

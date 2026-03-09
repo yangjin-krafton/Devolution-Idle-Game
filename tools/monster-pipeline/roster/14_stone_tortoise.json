@@ -1,0 +1,82 @@
+{
+  "id": 14,
+  "wild": {
+    "name_en": "stone_tortoise",
+    "name_kr": "바위 거북",
+    "desc_kr": "등에 이끼가 자란 거대한 고대 거북",
+    "sensoryType": [
+      "temperature"
+    ],
+    "personality": "stubborn",
+    "habitat": "cave",
+    "attackPower": 8,
+    "tamingThreshold": 82,
+    "escapeThreshold": 115,
+    "hp": 40,
+    "stats": {
+      "gentleness": 3,
+      "empathy": 3,
+      "resilience": 9,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "이끼거북",
+      "name_en": "moss_turtle",
+      "desc_kr": "등의 이끼에서 약초가 자라나는 치유 거북",
+      "role": "tank",
+      "hp": 42,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 2,
+        "resilience": 14,
+        "agility": 2
+      },
+      "skillFocus": "temperature-defend / smell-defend / temperature-capture"
+    },
+    {
+      "name_kr": "온천거북",
+      "name_en": "spa_turtle",
+      "desc_kr": "따뜻한 등에서 치유의 김이 올라오는 거북",
+      "role": "support",
+      "hp": 36,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 10,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+    },
+    {
+      "name_kr": "화석거북",
+      "name_en": "fossil_turtle",
+      "desc_kr": "고대의 힘으로 강렬한 소리를 울리는 거북",
+      "role": "attacker",
+      "hp": 32,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 2,
+        "resilience": 6,
+        "agility": 2
+      },
+      "skillFocus": "temperature-stimulate / sound-stimulate / temperature-capture"
+    },
+    {
+      "name_kr": "지진거북",
+      "name_en": "quake_turtle",
+      "desc_kr": "무거운 발걸음으로 지면을 흔드는 거북",
+      "role": "speedster",
+      "hp": 30,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 3,
+        "resilience": 4,
+        "agility": 9
+      },
+      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

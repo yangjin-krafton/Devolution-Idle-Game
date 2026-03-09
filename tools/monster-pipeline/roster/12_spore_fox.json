@@ -1,0 +1,55 @@
+{
+  "id": 12,
+  "wild": {
+    "name_en": "spore_fox",
+    "name_kr": "포자 여우",
+    "desc_kr": "꼬리에서 환각 포자를 뿌리며 장난치는 여우",
+    "sensoryType": [
+      "smell",
+      "behavior"
+    ],
+    "personality": "curious",
+    "habitat": "forest",
+    "attackPower": 4,
+    "tamingThreshold": 55,
+    "escapeThreshold": 70,
+    "hp": 22,
+    "stats": {
+      "gentleness": 6,
+      "empathy": 5,
+      "resilience": 3,
+      "agility": 6
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "향여우",
+      "name_en": "scent_fox",
+      "desc_kr": "달콤한 향기로 적의 경계를 풀어버리는 여우",
+      "role": "attacker",
+      "hp": 22,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 5
+      },
+      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+    },
+    {
+      "name_kr": "안개여우",
+      "name_en": "mist_fox",
+      "desc_kr": "포자 안개로 아군을 숨겨주는 여우",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 4,
+        "resilience": 2,
+        "agility": 10
+      },
+      "skillFocus": "behavior-stimulate / behavior-defend / smell-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

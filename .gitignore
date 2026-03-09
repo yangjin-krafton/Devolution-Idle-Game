@@ -5,3 +5,4 @@ Thumbs.db
 # Monster pipeline temp/candidate files
 tools/monster-pipeline/temp/
 tools/monster-pipeline/candidates/
+tools/monster-pipeline/progress.json

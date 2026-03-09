@@ -1,0 +1,69 @@
+{
+  "id": 21,
+  "wild": {
+    "name_en": "swamp_leech",
+    "name_kr": "늪지 거머리",
+    "desc_kr": "거대한 몸에서 독한 점액을 흘리는 늪의 포식자",
+    "sensoryType": [
+      "smell",
+      "behavior"
+    ],
+    "personality": "stubborn",
+    "habitat": "swamp",
+    "attackPower": 5,
+    "tamingThreshold": 75,
+    "escapeThreshold": 105,
+    "hp": 30,
+    "stats": {
+      "gentleness": 4,
+      "empathy": 6,
+      "resilience": 6,
+      "agility": 4
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "약초거머리",
+      "name_en": "herb_leech",
+      "desc_kr": "점액이 치유 효과를 가진 약초 성분으로 변한 거머리",
+      "role": "support",
+      "hp": 28,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 10,
+        "resilience": 5,
+        "agility": 3
+      },
+      "skillFocus": "smell-defend(heal) / behavior-defend(heal) / smell-capture"
+    },
+    {
+      "name_kr": "철갑거머리",
+      "name_en": "armored_leech",
+      "desc_kr": "단단한 점액이 갑옷이 된 거머리",
+      "role": "tank",
+      "hp": 36,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 3,
+        "resilience": 12,
+        "agility": 3
+      },
+      "skillFocus": "behavior-defend / smell-defend / smell-capture"
+    },
+    {
+      "name_kr": "흡수거머리",
+      "name_en": "drain_leech",
+      "desc_kr": "적의 에너지를 흡수해 순화도를 올리는 거머리",
+      "role": "attacker",
+      "hp": 26,
+      "stats": {
+        "gentleness": 9,
+        "empathy": 4,
+        "resilience": 4,
+        "agility": 3
+      },
+      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

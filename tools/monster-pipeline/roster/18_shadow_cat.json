@@ -1,0 +1,55 @@
+{
+  "id": 18,
+  "wild": {
+    "name_en": "shadow_cat",
+    "name_kr": "그림자 고양이",
+    "desc_kr": "그림자처럼 일렁이며 호기심 가득한 눈으로 관찰하는 고양이",
+    "sensoryType": [
+      "behavior",
+      "temperature"
+    ],
+    "personality": "curious",
+    "habitat": "cave",
+    "attackPower": 5,
+    "tamingThreshold": 55,
+    "escapeThreshold": 70,
+    "hp": 22,
+    "stats": {
+      "gentleness": 5,
+      "empathy": 5,
+      "resilience": 3,
+      "agility": 7
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "달빛고양이",
+      "name_en": "moon_cat",
+      "desc_kr": "달빛처럼 은은하게 빛나며 빠르게 움직이는 고양이",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 4,
+        "resilience": 2,
+        "agility": 11
+      },
+      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+    },
+    {
+      "name_kr": "그늘고양이",
+      "name_en": "shade_cat",
+      "desc_kr": "그림자에 숨어 아군을 치유하는 고양이",
+      "role": "support",
+      "hp": 24,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 10,
+        "resilience": 4,
+        "agility": 3
+      },
+      "skillFocus": "behavior-defend(heal) / temperature-defend / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

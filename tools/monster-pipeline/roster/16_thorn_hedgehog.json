@@ -1,0 +1,68 @@
+{
+  "id": 16,
+  "wild": {
+    "name_en": "thorn_hedgehog",
+    "name_kr": "가시 고슴도치",
+    "desc_kr": "독가시를 세우고 냄새로 영역을 표시하는 고슴도치",
+    "sensoryType": [
+      "smell"
+    ],
+    "personality": "stubborn",
+    "habitat": "forest",
+    "attackPower": 6,
+    "tamingThreshold": 72,
+    "escapeThreshold": 100,
+    "hp": 32,
+    "stats": {
+      "gentleness": 4,
+      "empathy": 3,
+      "resilience": 8,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "꽃가시",
+      "name_en": "bloom_hedge",
+      "desc_kr": "가시 끝에 작은 꽃이 피어난 고슴도치",
+      "role": "tank",
+      "hp": 34,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 2,
+        "resilience": 13,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend / behavior-defend / smell-capture"
+    },
+    {
+      "name_kr": "향가시",
+      "name_en": "scent_hedge",
+      "desc_kr": "가시에서 달콤한 향이 나는 고슴도치",
+      "role": "attacker",
+      "hp": 28,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 3,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+    },
+    {
+      "name_kr": "약가시",
+      "name_en": "cure_hedge",
+      "desc_kr": "약초 가시로 아군을 치유하는 고슴도치",
+      "role": "support",
+      "hp": 30,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 9,
+        "resilience": 6,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend(heal) / smell-stimulate / smell-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

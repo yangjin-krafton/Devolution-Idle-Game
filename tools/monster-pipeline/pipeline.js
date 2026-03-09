@@ -1,76 +1,137 @@
 #!/usr/bin/env node
 // ============================================================
-// Monster Generation Pipeline — 총괄 오케스트레이터
+// Monster Generation Pipeline v3 — roster 기반 순차 실행
 // ============================================================
 //
-// 파이프라인 흐름:
-//   1. [Concept Agent]     Qwen으로 몬스터 컨셉+스킬+퇴화 트리 생성
-//   2. [ComfyUI Agent]     각 형태별 N장 이미지 생성
-//   3. [Review Agent]      Vision 모델로 베스트 이미지 자동 선택
-//   4. candidates/ 폴더에 결과 저장 (수동 심사용)
+// roster/*.json 파일을 순차적으로 처리하며 진행 상태를 기록합니다.
+// 중단 후 재실행하면 마지막 완료 지점부터 이어서 진행합니다.
 //
 // 사용법:
-//   node pipeline.js                # 몬스터 1종 생성 → candidates/
-//   node pipeline.js --count 3      # 몬스터 3종 생성
-//   node pipeline.js --dry-run      # 컨셉만 생성 (이미지 X)
-//   node pipeline.js --skip-review  # 이미지 심사 건너뛰기
-//   node pipeline.js --test         # base + 퇴화1 하나만 테스트
-//
-// 후보 심사:
-//   node integrate.js --list        # 후보 목록 조회
-//   node integrate.js --pick <id>   # 선택한 후보를 게임에 통합
+//   node pipeline.js              # roster 순차 실행 (이어서)
+//   node pipeline.js --from 5     # 5번부터 시작
+//   node pipeline.js --only 3     # 3번만 실행
+//   node pipeline.js --skip-review # 이미지 심사 건너뛰기
+//   node pipeline.js --reset      # 진행 기록 초기화
+//   node pipeline.js --status     # 현재 진행 상황 확인
 // ============================================================
 
 import { generateMonsterConcept } from './concept-agent.js';
 import { generateImages } from './comfyui-agent.js';
 import { reviewAndSelectBest } from './review-agent.js';
 import { CONFIG } from './config.js';
-import { mkdir, writeFile, copyFile, rm } from 'fs/promises';
+import { mkdir, writeFile, copyFile, rm, readFile, readdir } from 'fs/promises';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROSTER_DIR = resolve(__dirname, 'roster');
+const PROGRESS_FILE = resolve(__dirname, 'progress.json');
 
-// CLI 인수 파싱
+// ── CLI 인수 ──
 const args = process.argv.slice(2);
 const flags = {
-  count: 1,
-  dryRun: args.includes('--dry-run'),
   skipReview: args.includes('--skip-review'),
-  test: args.includes('--test'),
+  reset: args.includes('--reset'),
+  status: args.includes('--status'),
+  from: null,
+  only: null,
 };
-const countIdx = args.indexOf('--count');
-if (countIdx !== -1 && args[countIdx + 1]) {
-  flags.count = parseInt(args[countIdx + 1], 10);
+const fromIdx = args.indexOf('--from');
+if (fromIdx !== -1 && args[fromIdx + 1]) flags.from = parseInt(args[fromIdx + 1], 10);
+const onlyIdx = args.indexOf('--only');
+if (onlyIdx !== -1 && args[onlyIdx + 1]) flags.only = parseInt(args[onlyIdx + 1], 10);
+
+// ── 진행 기록 ──
+async function loadProgress() {
+  try {
+    const raw = await readFile(PROGRESS_FILE, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return { lastCompleted: 0, completed: [], failed: [], startedAt: null };
+  }
+}
+
+async function saveProgress(progress) {
+  await writeFile(PROGRESS_FILE, JSON.stringify(progress, null, 2), 'utf-8');
+}
+
+// ── roster 파일 로드 ──
+async function loadRosterFiles() {
+  const files = (await readdir(ROSTER_DIR))
+    .filter(f => f.endsWith('.json'))
+    .sort();
+  const roster = [];
+  for (const f of files) {
+    const data = JSON.parse(await readFile(resolve(ROSTER_DIR, f), 'utf-8'));
+    roster.push({ filename: f, data });
+  }
+  return roster;
+}
+
+// ── roster 데이터로 이미지 프롬프트 폼 생성 ──
+function buildFormsFromRoster(rosterEntry) {
+  const { wild, devo1, devo2_per_devo1 } = rosterEntry;
+  const forms = [];
+
+  // 야생 (base)
+  forms.push({
+    name_en: wild.name_en,
+    name_kr: wild.name_kr,
+    type: 'base',
+    image_prompt: null, // concept-agent가 생성
+  });
+
+  // 퇴화1 각 변종
+  devo1.forEach((d, i) => {
+    forms.push({
+      name_en: d.name_en,
+      name_kr: d.name_kr,
+      type: `devo1_${i}`,
+      image_prompt: null,
+    });
+
+    // 퇴화2 (각 퇴화1당 devo2_per_devo1개)
+    for (let j = 0; j < devo2_per_devo1; j++) {
+      forms.push({
+        name_en: `${d.name_en}_baby${j + 1}`,
+        name_kr: `${d.name_kr} 아기${j + 1}`,
+        type: `devo2_${i}_${j}`,
+        parent_devo1: d.name_en,
+        image_prompt: null,
+      });
+    }
+  });
+
+  return forms;
 }
 
 function timestamp() {
   return new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
 }
 
-async function saveCandidateBundle(concept, selectedImages, allImages) {
-  const ts = timestamp();
-  const dirName = `${ts}_${concept.base.name_en}`;
+// ── 후보 번들 저장 ──
+async function saveCandidateBundle(rosterId, rosterData, conceptData, selectedImages, allImages) {
+  const num = String(rosterId).padStart(2, '0');
+  const dirName = `${num}_${rosterData.wild.name_en}`;
   const candidateDir = resolve(__dirname, CONFIG.CANDIDATES_DIR, dirName);
   await mkdir(candidateDir, { recursive: true });
   await mkdir(resolve(candidateDir, 'selected'), { recursive: true });
   await mkdir(resolve(candidateDir, 'all_images'), { recursive: true });
 
-  // 1. 컨셉 JSON (스킬 포함) 저장
-  await writeFile(
-    resolve(candidateDir, 'concept.json'),
-    JSON.stringify(concept, null, 2),
-    'utf-8'
-  );
+  // 1. roster 원본 + 생성된 컨셉 저장
+  await writeFile(resolve(candidateDir, 'roster.json'), JSON.stringify(rosterData, null, 2), 'utf-8');
+  if (conceptData) {
+    await writeFile(resolve(candidateDir, 'concept.json'), JSON.stringify(conceptData, null, 2), 'utf-8');
+  }
 
-  // 2. 선택된 이미지를 selected/ 에 복사
+  // 2. 선택된 이미지
   for (const { form, winner } of selectedImages) {
     if (!winner) continue;
     const filename = `${form.type}_${form.name_en}.png`;
     await copyFile(winner.path, resolve(candidateDir, 'selected', filename));
   }
 
-  // 3. 전체 이미지를 all_images/ 에 복사 (비교용)
+  // 3. 전체 이미지
   for (const { form, result } of allImages) {
     for (const img of result.images) {
       const filename = `${form.type}_${form.name_en}_${img.index}.png`;
@@ -78,157 +139,186 @@ async function saveCandidateBundle(concept, selectedImages, allImages) {
     }
   }
 
-  // 4. 요약 README 생성
-  const readme = generateReadme(concept, selectedImages);
+  // 4. README
+  const readme = generateReadme(rosterId, rosterData, conceptData, selectedImages);
   await writeFile(resolve(candidateDir, 'README.md'), readme, 'utf-8');
 
-  // 5. temp/ 정리
+  // 5. temp 정리
   const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
   try {
     await rm(tempDir, { recursive: true, force: true });
     await mkdir(tempDir, { recursive: true });
-    console.log(`[Candidate] temp/ 정리 완료`);
   } catch {}
 
-  console.log(`[Candidate] 후보 저장 완료: candidates/${dirName}/`);
+  console.log(`[Save] candidates/${dirName}/`);
   return dirName;
 }
 
-function generateReadme(concept, selectedImages) {
-  const b = concept.base;
-  let md = `# ${b.name_kr} (${b.name_en})\n\n`;
-  md += `> ${b.desc_kr}\n\n`;
-  md += `- 성격: ${b.personality}\n`;
-  md += `- 감각: ${b.sensoryType.join(', ')}\n`;
-  md += `- 공격력: ${b.attackPower} | 순화 임계: ${b.tamingThreshold} | 도주 임계: ${b.escapeThreshold}\n\n`;
+function generateReadme(id, roster, concept, selectedImages) {
+  const w = roster.wild;
+  let md = `# #${id} ${w.name_kr} (${w.name_en})\n\n`;
+  md += `> ${w.desc_kr}\n\n`;
+  md += `| 항목 | 값 |\n|------|----|\n`;
+  md += `| 감각 | ${w.sensoryType.join(', ')} |\n`;
+  md += `| 성격 | ${w.personality} |\n`;
+  md += `| 서식지 | ${w.habitat} |\n`;
+  md += `| 공격력 | ${w.attackPower} |\n`;
+  md += `| 순화 임계 | ${w.tamingThreshold} |\n`;
+  md += `| 도주 임계 | ${w.escapeThreshold} |\n`;
+  md += `| HP | ${w.hp} |\n\n`;
 
-  md += `## 퇴화 트리\n\n`;
-  md += `\`\`\`\n`;
-  md += `${b.name_kr} (적)\n`;
-  for (const d1 of concept.devolutions_1) {
-    md += `  └─ ${d1.name_kr} (아군, HP:${d1.hp})\n`;
-    if (d1.actions) {
-      for (const a of d1.actions) {
-        md += `      [${a.category}] ${a.name} (${a.axis}) pow:${a.power} esc:${a.escapeRisk} pp:${a.pp}\n`;
-      }
-    }
-    const children = concept.devolutions_2.filter(d2 => d2.parent === d1.name_en);
-    for (const d2 of children) {
-      md += `      └─ ${d2.name_kr}\n`;
-    }
+  md += `## 퇴화 트리\n\n\`\`\`\n`;
+  md += `${w.name_kr} (야생)\n`;
+  for (const d1 of roster.devo1) {
+    md += `  └─ ${d1.name_kr} [${d1.role}] HP:${d1.hp}\n`;
+    md += `     스킬: ${d1.skillFocus}\n`;
   }
   md += `\`\`\`\n\n`;
 
-  md += `## 선택된 이미지\n\n`;
-  md += `\`selected/\` 폴더에서 확인\n\n`;
-  md += `## 전체 후보 이미지\n\n`;
-  md += `\`all_images/\` 폴더에서 비교 가능\n\n`;
-
-  md += `## 적 반응\n\n`;
-  if (b.reactions) {
-    for (const [key, val] of Object.entries(b.reactions)) {
-      md += `- **${key}**: ${val}\n`;
-    }
-  }
-
-  md += `\n---\n생성일: ${new Date().toISOString()}\n`;
+  md += `## 선택된 이미지\n\n\`selected/\` 폴더 확인\n\n`;
+  md += `---\n생성일: ${new Date().toISOString()}\n`;
   return md;
 }
 
+// ── 메인 파이프라인 ──
 async function runPipeline() {
+  const roster = await loadRosterFiles();
+  const progress = await loadProgress();
+
+  // --reset
+  if (flags.reset) {
+    await saveProgress({ lastCompleted: 0, completed: [], failed: [], startedAt: null });
+    console.log('진행 기록 초기화 완료.');
+    return;
+  }
+
+  // --status
+  if (flags.status) {
+    console.log('\n╔══════════════════════════════════════════════════════╗');
+    console.log('║          Monster Pipeline 진행 상황                  ║');
+    console.log('╚══════════════════════════════════════════════════════╝\n');
+    console.log(`  총 roster:     ${roster.length}종`);
+    console.log(`  마지막 완료:   #${progress.lastCompleted}`);
+    console.log(`  완료:          ${progress.completed?.length || 0}종 [${(progress.completed || []).join(', ')}]`);
+    console.log(`  실패:          ${progress.failed?.length || 0}종 [${(progress.failed || []).join(', ')}]`);
+    console.log(`  남은:          ${roster.length - (progress.completed?.length || 0)}종`);
+    if (progress.startedAt) console.log(`  시작:          ${progress.startedAt}`);
+    console.log();
+
+    for (const { filename, data } of roster) {
+      const id = data.id;
+      const done = (progress.completed || []).includes(id);
+      const fail = (progress.failed || []).includes(id);
+      const icon = done ? '✓' : fail ? '✗' : '·';
+      console.log(`  ${icon} #${String(id).padStart(2, '0')} ${data.wild.name_kr} (${data.wild.name_en}) [${data.wild.personality}/${data.wild.sensoryType.join('+')}] devo1:${data.devo1.length}종`);
+    }
+    console.log();
+    return;
+  }
+
+  // 실행할 목록 결정
+  let toProcess = [];
+  if (flags.only) {
+    const entry = roster.find(r => r.data.id === flags.only);
+    if (!entry) { console.error(`roster #${flags.only} 없음`); return; }
+    toProcess = [entry];
+  } else {
+    const startFrom = flags.from || (progress.lastCompleted + 1);
+    toProcess = roster.filter(r => r.data.id >= startFrom);
+  }
+
+  if (toProcess.length === 0) {
+    console.log('처리할 몬스터가 없습니다. --status로 확인하거나 --reset으로 초기화하세요.');
+    return;
+  }
+
+  if (!progress.startedAt) progress.startedAt = new Date().toISOString();
+
   console.log('╔══════════════════════════════════════════════════════╗');
-  console.log('║     Monster Generation Pipeline v2                  ║');
-  console.log('║     (후보 폴더 시스템 + 스킬 포함)                  ║');
+  console.log('║     Monster Generation Pipeline v3                  ║');
+  console.log('║     (roster 기반 순차 실행)                         ║');
   console.log('╠══════════════════════════════════════════════════════╣');
-  console.log(`║  Model:    ${CONFIG.TEXT_MODEL.padEnd(40)}║`);
-  console.log(`║  ComfyUI:  ${CONFIG.COMFYUI_URL.padEnd(40)}║`);
-  console.log(`║  Images:   ${String(CONFIG.IMAGES_PER_CONCEPT + '/form').padEnd(40)}║`);
-  console.log(`║  Count:    ${String(flags.count).padEnd(40)}║`);
-  console.log(`║  Mode:     ${(flags.dryRun ? 'dry-run' : flags.test ? 'test' : 'full').padEnd(40)}║`);
+  console.log(`║  Model:      ${CONFIG.TEXT_MODEL.padEnd(38)}║`);
+  console.log(`║  ComfyUI:    ${CONFIG.COMFYUI_URL.padEnd(38)}║`);
+  console.log(`║  Images:     ${String(CONFIG.IMAGES_PER_CONCEPT + '/form').padEnd(38)}║`);
+  console.log(`║  처리 대상:  ${String(toProcess.length + '종 (#' + toProcess[0].data.id + '~#' + toProcess[toProcess.length-1].data.id + ')').padEnd(38)}║`);
+  console.log(`║  마지막완료: ${String('#' + progress.lastCompleted).padEnd(38)}║`);
+  console.log(`║  Skip Review:${String(flags.skipReview).padEnd(38)}║`);
   console.log('╚══════════════════════════════════════════════════════╝');
   console.log();
 
   await mkdir(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true });
   await mkdir(resolve(__dirname, CONFIG.CANDIDATES_DIR), { recursive: true });
 
-  const results = [];
+  for (const { filename, data: rosterData } of toProcess) {
+    const id = rosterData.id;
+    const w = rosterData.wild;
 
-  for (let m = 0; m < flags.count; m++) {
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`  몬스터 ${m + 1}/${flags.count} 생성 시작`);
+    console.log(`  #${String(id).padStart(2, '0')} ${w.name_kr} (${w.name_en})`);
+    console.log(`  ${w.personality} | ${w.sensoryType.join('+')} | ${w.habitat} | devo1: ${rosterData.devo1.length}종`);
     console.log(`${'='.repeat(60)}\n`);
 
     try {
-      // ── Step 1: 컨셉+스킬 생성 ──
-      const { concept, allForms } = await generateMonsterConcept();
-
-      if (flags.dryRun) {
-        // dry-run에서도 candidates에 컨셉 저장
-        const ts = timestamp();
-        const dirName = `${ts}_${concept.base.name_en}`;
-        const candidateDir = resolve(__dirname, CONFIG.CANDIDATES_DIR, dirName);
-        await mkdir(candidateDir, { recursive: true });
-        await writeFile(resolve(candidateDir, 'concept.json'), JSON.stringify(concept, null, 2), 'utf-8');
-        const readme = generateReadme(concept, []);
-        await writeFile(resolve(candidateDir, 'README.md'), readme, 'utf-8');
-        console.log(`[Dry Run] 컨셉 저장: candidates/${dirName}/`);
-        results.push({ concept, status: 'dry-run', dir: dirName });
-        continue;
-      }
+      // ── Step 1: LLM으로 컨셉 보강 (이미지 프롬프트 + 스킬 + 반응 텍스트) ──
+      console.log('[Step 1] LLM 컨셉 보강 (이미지 프롬프트 + 스킬 + 반응)...');
+      const { concept, allForms } = await generateMonsterConcept(rosterData);
 
       // ── Step 2: 이미지 생성 ──
-      const formsToProcess = flags.test ? allForms.slice(0, 2) : allForms;
-      console.log(`\n[Pipeline] ${formsToProcess.length}개 형태 이미지 생성 시작...${flags.test ? ' (테스트)' : ''}`);
-
+      console.log(`\n[Step 2] ${allForms.length}개 형태 이미지 생성...`);
       const allImageResults = [];
-      for (const form of formsToProcess) {
+      for (const form of allForms) {
         const result = await generateImages(form);
         allImageResults.push({ form, result });
       }
 
       // ── Step 3: 이미지 심사 ──
-      console.log(`\n[Pipeline] 이미지 심사 시작...`);
+      console.log(`\n[Step 3] 이미지 토너먼트 심사...`);
       const selectedImages = [];
-
       for (const { form, result } of allImageResults) {
         let winner;
         if (flags.skipReview) {
           winner = result.images[0] || null;
-          if (winner) console.log(`[Skip Review] "${form.name_en}" 첫번째 이미지 선택`);
+          if (winner) console.log(`  [Skip] "${form.name_en}" 첫번째 이미지`);
         } else {
           winner = await reviewAndSelectBest(result, concept);
         }
         selectedImages.push({ form, winner });
       }
 
-      // ── Step 4: candidates/ 에 번들 저장 ──
-      const dirName = await saveCandidateBundle(concept, selectedImages, allImageResults);
+      // ── Step 4: 후보 저장 ──
+      console.log(`\n[Step 4] 후보 저장...`);
+      const dirName = await saveCandidateBundle(id, rosterData, concept, selectedImages, allImageResults);
 
-      results.push({ concept, status: 'complete', dir: dirName });
-      console.log(`\n✓ ${concept.base.name_kr} → candidates/${dirName}/`);
+      // ── 진행 기록 ──
+      if (!progress.completed) progress.completed = [];
+      if (!progress.completed.includes(id)) progress.completed.push(id);
+      progress.lastCompleted = id;
+      await saveProgress(progress);
+
+      console.log(`\n✓ #${String(id).padStart(2, '0')} ${w.name_kr} 완료 → candidates/${dirName}/`);
 
     } catch (err) {
-      console.error(`\n✗ 몬스터 ${m + 1} 생성 실패: ${err.message}`);
+      console.error(`\n✗ #${String(id).padStart(2, '0')} ${w.name_kr} 실패: ${err.message}`);
       console.error(err.stack);
-      results.push({ status: 'error', error: err.message });
+
+      if (!progress.failed) progress.failed = [];
+      if (!progress.failed.includes(id)) progress.failed.push(id);
+      await saveProgress(progress);
     }
   }
 
   // ── 최종 요약 ──
+  const finalProgress = await loadProgress();
   console.log(`\n${'='.repeat(60)}`);
   console.log('  파이프라인 완료 요약');
   console.log(`${'='.repeat(60)}`);
-  for (const r of results) {
-    if (r.status === 'complete') {
-      console.log(`  ✓ ${r.concept.base.name_kr} → candidates/${r.dir}/`);
-    } else if (r.status === 'dry-run') {
-      console.log(`  ~ ${r.concept.base.name_kr} (dry-run) → candidates/${r.dir}/`);
-    } else {
-      console.log(`  ✗ 에러: ${r.error}`);
-    }
-  }
-  console.log(`\n후보 심사: node integrate.js --list`);
-  console.log(`게임 통합: node integrate.js --pick <후보폴더명>\n`);
+  console.log(`  완료: ${finalProgress.completed?.length || 0}/${roster.length}`);
+  console.log(`  실패: ${finalProgress.failed?.length || 0}종`);
+  console.log(`  다음: #${finalProgress.lastCompleted + 1}`);
+  console.log(`\n진행 확인:  node pipeline.js --status`);
+  console.log(`이어서 실행: node pipeline.js`);
+  console.log(`후보 심사:  node integrate.js --list\n`);
 }
 
 runPipeline().catch(err => {

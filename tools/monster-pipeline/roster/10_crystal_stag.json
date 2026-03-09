@@ -1,0 +1,69 @@
+{
+  "id": 10,
+  "wild": {
+    "name_en": "crystal_stag",
+    "name_kr": "수정 사슴",
+    "desc_kr": "수정 뿔에서 맑은 소리가 울려퍼지는 기품 있는 사슴",
+    "sensoryType": [
+      "sound",
+      "smell"
+    ],
+    "personality": "curious",
+    "habitat": "forest",
+    "attackPower": 5,
+    "tamingThreshold": 65,
+    "escapeThreshold": 75,
+    "hp": 26,
+    "stats": {
+      "gentleness": 7,
+      "empathy": 5,
+      "resilience": 4,
+      "agility": 4
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "종소리사슴",
+      "name_en": "bell_stag",
+      "desc_kr": "뿔에서 맑은 종소리가 울려 적을 매혹시키는 사슴",
+      "role": "attacker",
+      "hp": 24,
+      "stats": {
+        "gentleness": 12,
+        "empathy": 3,
+        "resilience": 3,
+        "agility": 2
+      },
+      "skillFocus": "sound-stimulate / smell-stimulate / sound-capture"
+    },
+    {
+      "name_kr": "숲지기사슴",
+      "name_en": "forest_stag",
+      "desc_kr": "숲의 향기로 아군을 치유하는 수호 사슴",
+      "role": "support",
+      "hp": 26,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 10,
+        "resilience": 4,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend(heal) / sound-stimulate / smell-capture"
+    },
+    {
+      "name_kr": "수정갑사슴",
+      "name_en": "crystal_armor_stag",
+      "desc_kr": "수정 뿔로 아군을 감싸는 방어의 사슴",
+      "role": "tank",
+      "hp": 32,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 3,
+        "resilience": 11,
+        "agility": 3
+      },
+      "skillFocus": "sound-defend / smell-defend / sound-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

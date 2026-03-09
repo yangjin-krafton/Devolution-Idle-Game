@@ -1,0 +1,83 @@
+{
+  "id": 13,
+  "wild": {
+    "name_en": "iron_boar",
+    "name_kr": "강철 멧돼지",
+    "desc_kr": "강철처럼 단단한 갈기를 세우고 돌진하는 멧돼지",
+    "sensoryType": [
+      "smell",
+      "temperature"
+    ],
+    "personality": "stubborn",
+    "habitat": "cave",
+    "attackPower": 9,
+    "tamingThreshold": 85,
+    "escapeThreshold": 120,
+    "hp": 38,
+    "stats": {
+      "gentleness": 3,
+      "empathy": 3,
+      "resilience": 9,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "철등멧돼지",
+      "name_en": "iron_shield_boar",
+      "desc_kr": "강철 등으로 아군을 지키는 든든한 방패",
+      "role": "tank",
+      "hp": 40,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 2,
+        "resilience": 14,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend / temperature-defend / behavior-capture"
+    },
+    {
+      "name_kr": "화염멧돼지",
+      "name_en": "blaze_boar",
+      "desc_kr": "뜨거운 갈기로 순화도를 올리는 공격형",
+      "role": "attacker",
+      "hp": 30,
+      "stats": {
+        "gentleness": 11,
+        "empathy": 2,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+    },
+    {
+      "name_kr": "약초멧돼지",
+      "name_en": "herb_boar",
+      "desc_kr": "갈기에서 약초 향이 나는 치유의 멧돼지",
+      "role": "support",
+      "hp": 34,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 9,
+        "resilience": 6,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend(heal) / temperature-defend(heal) / smell-capture"
+    },
+    {
+      "name_kr": "돌진멧돼지",
+      "name_en": "charge_boar",
+      "desc_kr": "맹렬한 돌진으로 적에게 압박을 주는 멧돼지",
+      "role": "speedster",
+      "hp": 28,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 3,
+        "resilience": 4,
+        "agility": 9
+      },
+      "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

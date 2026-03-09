@@ -163,12 +163,49 @@ function extractJSON(text) {
   return JSON.parse(jsonStr);
 }
 
-export async function generateMonsterConcept() {
-  console.log('[Concept Agent] 몬스터 컨셉+스킬 생성 중...');
+// roster 데이터를 기반으로 LLM에게 보강 요청 (이미지 프롬프트 + 스킬 + 반응 텍스트)
+function buildRosterPrompt(rosterData) {
+  const w = rosterData.wild;
+  const d1List = rosterData.devo1;
+  const d2Count = rosterData.devo2_per_devo1;
+
+  return `Based on this pre-defined monster roster, generate the complete game data with image prompts, skills, and reaction texts.
+
+ROSTER DATA:
+- Wild: ${w.name_kr} (${w.name_en}) - ${w.desc_kr}
+- Sensory: ${w.sensoryType.join(', ')} | Personality: ${w.personality} | Habitat: ${w.habitat}
+- Stats: gentleness ${w.stats.gentleness}, empathy ${w.stats.empathy}, resilience ${w.stats.resilience}, agility ${w.stats.agility}
+- HP: ${w.hp} | Attack: ${w.attackPower} | Taming: ${w.tamingThreshold} | Escape: ${w.escapeThreshold}
+
+Devo1 variants (${d1List.length}):
+${d1List.map((d, i) => `  ${i}: ${d.name_kr} (${d.name_en}) [${d.role}] HP:${d.hp} - ${d.desc_kr}
+     Stats: G${d.stats.gentleness} E${d.stats.empathy} R${d.stats.resilience} A${d.stats.agility}
+     Skills: ${d.skillFocus}`).join('\n')}
+
+Each devo1 gets ${d2Count} devo2 baby forms.
+
+Generate JSON with:
+1. base: wild form with image_prompt and reactions (Korean)
+2. devolutions_1: each with image_prompt + 3 actions (stimulate/defend/capture with axis/power/pp/effects)
+3. devolutions_2: ${d1List.length * d2Count} baby forms with name_kr, name_en, desc_kr, image_prompt
+
+{"base":{"name_en":"${w.name_en}","name_kr":"${w.name_kr}","desc_kr":"${w.desc_kr}","sensoryType":${JSON.stringify(w.sensoryType)},"personality":"${w.personality}","attackPower":${w.attackPower},"tamingThreshold":${w.tamingThreshold},"escapeThreshold":${w.escapeThreshold},"hp":${w.hp},"stats":${JSON.stringify(w.stats)},"image_prompt":"pokemon official art style, ken sugimori style, [FILL detailed fierce appearance for ${w.name_kr}], menacing dark pokemon, sharp features, bold outlines, cel-shaded, vibrant colors, dark color palette, simple white background, full body, facing left, front three-quarter view, game sprite, transparent background","reactions":{"sound_good":"FILL Korean","sound_bad":"FILL Korean","temp_good":"FILL Korean","temp_bad":"FILL Korean","smell_good":"FILL Korean","smell_bad":"FILL Korean","behav_good":"FILL Korean","behav_bad":"FILL Korean","attack":"FILL Korean!","calm":"FILL Korean."}},"devolutions_1":[FILL each devo1 with image_prompt + actions array of 3 skills],"devolutions_2":[FILL ${d1List.length * d2Count} baby forms]}`;
+}
+
+export async function generateMonsterConcept(rosterData) {
+  const isRosterMode = !!rosterData;
+  console.log(`[Concept Agent] ${isRosterMode ? 'roster 기반' : '랜덤'} 컨셉 보강 중...`);
+
+  let userPrompt;
+  if (isRosterMode) {
+    userPrompt = buildRosterPrompt(rosterData);
+  } else {
+    userPrompt = GENERATE_PROMPT;
+  }
 
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: GENERATE_PROMPT },
+    { role: 'user', content: userPrompt },
   ];
 
   const raw = await callQwen(messages);
@@ -177,35 +214,34 @@ export async function generateMonsterConcept() {
   const concept = extractJSON(raw);
 
   // 검증
-  if (!concept.base || !concept.devolutions_1 || !concept.devolutions_2) {
-    throw new Error('컨셉 JSON 구조가 올바르지 않습니다.');
-  }
-  if (concept.devolutions_1.length !== CONFIG.DEVOLUTION_DEPTH_1_COUNT) {
-    console.warn(`[Concept Agent] 퇴화1이 ${concept.devolutions_1.length}개 (기대: ${CONFIG.DEVOLUTION_DEPTH_1_COUNT})`);
+  if (!concept.base) {
+    throw new Error('컨셉 JSON에 base가 없습니다.');
   }
 
   // 스킬 검증
-  for (const devo of concept.devolutions_1) {
-    if (!devo.actions || devo.actions.length !== 3) {
-      console.warn(`[Concept Agent] ${devo.name_en}: 스킬 ${devo.actions?.length || 0}개 (기대: 3)`);
+  if (concept.devolutions_1) {
+    for (const devo of concept.devolutions_1) {
+      if (!devo.actions || devo.actions.length !== 3) {
+        console.warn(`[Concept Agent] ${devo.name_en || '?'}: 스킬 ${devo.actions?.length || 0}개 (기대: 3)`);
+      }
     }
   }
 
-  // 모든 이미지 프롬프트 목록 수집
+  // 모든 이미지 프롬프트 폼 수집
   const allForms = [
     { ...concept.base, type: 'base' },
-    ...concept.devolutions_1.map((d, i) => ({ ...d, type: `devo1_${i}` })),
-    ...concept.devolutions_2.map((d, i) => ({ ...d, type: `devo2_${i}` })),
+    ...(concept.devolutions_1 || []).map((d, i) => ({ ...d, type: `devo1_${i}` })),
+    ...(concept.devolutions_2 || []).map((d, i) => ({ ...d, type: `devo2_${i}` })),
   ];
 
   console.log(`[Concept Agent] 컨셉 완료: ${concept.base.name_kr}`);
-  console.log(`  - 기본형: ${concept.base.name_kr} (${concept.base.name_en}) [${concept.base.personality}, ${concept.base.sensoryType}]`);
-  concept.devolutions_1.forEach((d, i) => {
-    console.log(`  - 퇴화1-${String.fromCharCode(65 + i)}: ${d.name_kr} (${d.name_en}) HP:${d.hp}`);
+  console.log(`  - 기본형: ${concept.base.name_kr} (${concept.base.name_en})`);
+  (concept.devolutions_1 || []).forEach((d, i) => {
+    console.log(`  - 퇴화1-${String.fromCharCode(65 + i)}: ${d.name_kr || '?'} (${d.name_en || '?'})`);
     d.actions?.forEach(a => console.log(`      [${a.category}] ${a.name} (${a.axis}) pow:${a.power} esc:${a.escapeRisk} pp:${a.pp}`));
   });
-  concept.devolutions_2.forEach((d, i) =>
-    console.log(`  - 퇴화2-${i}: ${d.name_kr} (${d.name_en}) ← ${d.parent}`)
+  (concept.devolutions_2 || []).forEach((d, i) =>
+    console.log(`  - 퇴화2-${i}: ${d.name_kr || '?'} (${d.name_en || '?'}) ← ${d.parent || '?'}`)
   );
 
   return { concept, allForms };

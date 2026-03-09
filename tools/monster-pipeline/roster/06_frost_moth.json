@@ -1,0 +1,54 @@
+{
+  "id": 6,
+  "wild": {
+    "name_en": "frost_moth",
+    "name_kr": "서리 나방",
+    "desc_kr": "날개에 서리가 내려앉은 투명한 거대 나방",
+    "sensoryType": [
+      "temperature"
+    ],
+    "personality": "timid",
+    "habitat": "sky",
+    "attackPower": 3,
+    "tamingThreshold": 50,
+    "escapeThreshold": 65,
+    "hp": 22,
+    "stats": {
+      "gentleness": 4,
+      "empathy": 7,
+      "resilience": 5,
+      "agility": 4
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "눈꽃나방",
+      "name_en": "snowflake_moth",
+      "desc_kr": "서리가 눈꽃으로 변해 아군을 지키는 나방",
+      "role": "support",
+      "hp": 24,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 12,
+        "resilience": 3,
+        "agility": 3
+      },
+      "skillFocus": "temperature-defend(heal) / temperature-stimulate / behavior-capture"
+    },
+    {
+      "name_kr": "얼음나방",
+      "name_en": "ice_moth",
+      "desc_kr": "차가운 바람으로 적의 움직임을 늦추는 나방",
+      "role": "tank",
+      "hp": 28,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 4,
+        "resilience": 10,
+        "agility": 3
+      },
+      "skillFocus": "temperature-defend / temperature-stimulate / temperature-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

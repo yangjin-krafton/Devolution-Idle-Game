@@ -1,0 +1,69 @@
+{
+  "id": 17,
+  "wild": {
+    "name_en": "storm_hawk",
+    "name_kr": "폭풍 매",
+    "desc_kr": "날개짓으로 폭풍을 일으키는 하늘의 사냥꾼",
+    "sensoryType": [
+      "sound",
+      "temperature"
+    ],
+    "personality": "aggressive",
+    "habitat": "sky",
+    "attackPower": 6,
+    "tamingThreshold": 72,
+    "escapeThreshold": 80,
+    "hp": 22,
+    "stats": {
+      "gentleness": 6,
+      "empathy": 4,
+      "resilience": 3,
+      "agility": 7
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "바람매",
+      "name_en": "wind_hawk",
+      "desc_kr": "부드러운 바람을 일으켜 적을 매혹시키는 매",
+      "role": "attacker",
+      "hp": 22,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 5
+      },
+      "skillFocus": "sound-stimulate / temperature-stimulate / sound-capture"
+    },
+    {
+      "name_kr": "급강하매",
+      "name_en": "dive_hawk",
+      "desc_kr": "번개처럼 빠른 급강하로 적에게 충격을 주는 매",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 5,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 10
+      },
+      "skillFocus": "behavior-stimulate / sound-stimulate / sound-capture"
+    },
+    {
+      "name_kr": "둥지매",
+      "name_en": "nest_hawk",
+      "desc_kr": "날개로 아군을 감싸 보호하는 매",
+      "role": "support",
+      "hp": 24,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 9,
+        "resilience": 4,
+        "agility": 4
+      },
+      "skillFocus": "sound-defend(heal) / temperature-defend / sound-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

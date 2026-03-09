@@ -1,0 +1,55 @@
+{
+  "id": 7,
+  "wild": {
+    "name_en": "mist_jellyfish",
+    "name_kr": "안개 해파리",
+    "desc_kr": "공중에 떠다니며 촉수에서 차가운 안개를 뿜는 해파리",
+    "sensoryType": [
+      "smell",
+      "temperature"
+    ],
+    "personality": "timid",
+    "habitat": "sea",
+    "attackPower": 3,
+    "tamingThreshold": 50,
+    "escapeThreshold": 65,
+    "hp": 24,
+    "stats": {
+      "gentleness": 5,
+      "empathy": 7,
+      "resilience": 5,
+      "agility": 3
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "이슬해파리",
+      "name_en": "dew_jelly",
+      "desc_kr": "이슬방울을 머금은 치유의 해파리",
+      "role": "support",
+      "hp": 26,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 11,
+        "resilience": 4,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend(heal) / temperature-stimulate / smell-capture"
+    },
+    {
+      "name_kr": "독촉수",
+      "name_en": "toxic_jelly",
+      "desc_kr": "독촉수로 적의 도주를 억제하는 해파리",
+      "role": "attacker",
+      "hp": 22,
+      "stats": {
+        "gentleness": 9,
+        "empathy": 4,
+        "resilience": 4,
+        "agility": 3
+      },
+      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

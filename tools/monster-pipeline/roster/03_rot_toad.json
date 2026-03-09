@@ -1,0 +1,68 @@
+{
+  "id": 3,
+  "wild": {
+    "name_en": "rot_toad",
+    "name_kr": "썩은향 두꺼비",
+    "desc_kr": "독한 냄새를 뿜어 접근하는 모든 것을 내쫓는 거대 두꺼비",
+    "sensoryType": [
+      "smell"
+    ],
+    "personality": "aggressive",
+    "habitat": "swamp",
+    "attackPower": 7,
+    "tamingThreshold": 78,
+    "escapeThreshold": 110,
+    "hp": 35,
+    "stats": {
+      "gentleness": 4,
+      "empathy": 3,
+      "resilience": 8,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "향기두꺼비",
+      "name_en": "aroma_toad",
+      "desc_kr": "독기가 약초 향으로 변한 치유의 두꺼비",
+      "role": "tank",
+      "hp": 36,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 3,
+        "resilience": 12,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend(heal) / smell-stimulate / behavior-capture"
+    },
+    {
+      "name_kr": "독안개",
+      "name_en": "toxin_mist",
+      "desc_kr": "독을 역이용해 적의 도주를 막는 전략가",
+      "role": "support",
+      "hp": 30,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 9,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "smell-stimulate / smell-defend / smell-capture"
+    },
+    {
+      "name_kr": "맹독두꺼비",
+      "name_en": "venom_toad",
+      "desc_kr": "강렬한 냄새로 순화도를 급격히 올리는 공격형",
+      "role": "attacker",
+      "hp": 28,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 3,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

@@ -1,0 +1,54 @@
+{
+  "id": 23,
+  "wild": {
+    "name_en": "smoke_weasel",
+    "name_kr": "연기 족제비",
+    "desc_kr": "연기처럼 사라졌다 나타나며 혼란을 주는 족제비",
+    "sensoryType": [
+      "behavior"
+    ],
+    "personality": "timid",
+    "habitat": "volcano",
+    "attackPower": 4,
+    "tamingThreshold": 52,
+    "escapeThreshold": 65,
+    "hp": 20,
+    "stats": {
+      "gentleness": 5,
+      "empathy": 5,
+      "resilience": 2,
+      "agility": 8
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "안개족제비",
+      "name_en": "fog_weasel",
+      "desc_kr": "부드러운 안개로 아군을 숨겨주는 족제비",
+      "role": "speedster",
+      "hp": 18,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 12
+      },
+      "skillFocus": "behavior-defend / behavior-stimulate / behavior-capture"
+    },
+    {
+      "name_kr": "그림자족제비",
+      "name_en": "shadow_weasel",
+      "desc_kr": "그림자를 조종해 적을 혼란시키는 족제비",
+      "role": "attacker",
+      "hp": 20,
+      "stats": {
+        "gentleness": 9,
+        "empathy": 4,
+        "resilience": 2,
+        "agility": 5
+      },
+      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

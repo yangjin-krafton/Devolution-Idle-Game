@@ -1,0 +1,68 @@
+{
+  "id": 4,
+  "wild": {
+    "name_en": "stalker_mantis",
+    "name_kr": "그림자 사마귀",
+    "desc_kr": "소리 없이 접근해 한순간에 덮치는 거대한 사마귀",
+    "sensoryType": [
+      "behavior"
+    ],
+    "personality": "aggressive",
+    "habitat": "forest",
+    "attackPower": 6,
+    "tamingThreshold": 70,
+    "escapeThreshold": 80,
+    "hp": 22,
+    "stats": {
+      "gentleness": 5,
+      "empathy": 5,
+      "resilience": 2,
+      "agility": 8
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "춤사마귀",
+      "name_en": "dance_mantis",
+      "desc_kr": "위협 대신 춤으로 소통하는 우아한 사마귀",
+      "role": "speedster",
+      "hp": 20,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 3,
+        "resilience": 2,
+        "agility": 12
+      },
+      "skillFocus": "behavior-stimulate / behavior-capture / sound-defend"
+    },
+    {
+      "name_kr": "꽃사마귀",
+      "name_en": "flower_mantis",
+      "desc_kr": "꽃잎 같은 팔로 적을 유인하는 사마귀",
+      "role": "attacker",
+      "hp": 22,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 4,
+        "resilience": 2,
+        "agility": 4
+      },
+      "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+    },
+    {
+      "name_kr": "갑옷사마귀",
+      "name_en": "armor_mantis",
+      "desc_kr": "단단한 외골격으로 아군을 지키는 사마귀",
+      "role": "tank",
+      "hp": 30,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 3,
+        "resilience": 10,
+        "agility": 4
+      },
+      "skillFocus": "behavior-defend / sound-defend / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

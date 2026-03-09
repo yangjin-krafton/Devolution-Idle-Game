@@ -1,0 +1,83 @@
+{
+  "id": 24,
+  "wild": {
+    "name_en": "moss_golem",
+    "name_kr": "이끼 골렘",
+    "desc_kr": "오래된 이끼와 바위로 이루어진 거대한 골렘",
+    "sensoryType": [
+      "smell",
+      "sound"
+    ],
+    "personality": "stubborn",
+    "habitat": "swamp",
+    "attackPower": 7,
+    "tamingThreshold": 82,
+    "escapeThreshold": 115,
+    "hp": 42,
+    "stats": {
+      "gentleness": 3,
+      "empathy": 3,
+      "resilience": 9,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "숲골렘",
+      "name_en": "grove_golem",
+      "desc_kr": "이끼에서 새싹이 자라나는 수호의 골렘",
+      "role": "tank",
+      "hp": 44,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 2,
+        "resilience": 14,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend / sound-defend / smell-capture"
+    },
+    {
+      "name_kr": "울림골렘",
+      "name_en": "echo_golem",
+      "desc_kr": "몸을 울려 강한 소리 자극을 주는 골렘",
+      "role": "attacker",
+      "hp": 36,
+      "stats": {
+        "gentleness": 11,
+        "empathy": 2,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "sound-stimulate / smell-stimulate / sound-capture"
+    },
+    {
+      "name_kr": "치유골렘",
+      "name_en": "heal_golem",
+      "desc_kr": "이끼에서 약효 성분이 스며나오는 골렘",
+      "role": "support",
+      "hp": 38,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 9,
+        "resilience": 6,
+        "agility": 2
+      },
+      "skillFocus": "smell-defend(heal) / sound-defend(heal) / smell-capture"
+    },
+    {
+      "name_kr": "지진골렘",
+      "name_en": "quake_golem",
+      "desc_kr": "무거운 걸음으로 지면을 흔들어 적을 제압하는 골렘",
+      "role": "speedster",
+      "hp": 32,
+      "stats": {
+        "gentleness": 4,
+        "empathy": 3,
+        "resilience": 4,
+        "agility": 9
+      },
+      "skillFocus": "behavior-stimulate / sound-stimulate / behavior-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}

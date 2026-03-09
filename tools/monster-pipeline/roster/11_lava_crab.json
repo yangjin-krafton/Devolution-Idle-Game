@@ -1,0 +1,69 @@
+{
+  "id": 11,
+  "wild": {
+    "name_en": "lava_crab",
+    "name_kr": "용암 집게",
+    "desc_kr": "뜨거운 집게로 바위를 녹이는 화산 지대의 게",
+    "sensoryType": [
+      "temperature",
+      "behavior"
+    ],
+    "personality": "curious",
+    "habitat": "volcano",
+    "attackPower": 5,
+    "tamingThreshold": 60,
+    "escapeThreshold": 85,
+    "hp": 34,
+    "stats": {
+      "gentleness": 4,
+      "empathy": 4,
+      "resilience": 7,
+      "agility": 5
+    }
+  },
+  "devo1": [
+    {
+      "name_kr": "온천게",
+      "name_en": "hotspring_crab",
+      "desc_kr": "집게에서 따뜻한 물이 나오는 온화한 게",
+      "role": "tank",
+      "hp": 36,
+      "stats": {
+        "gentleness": 2,
+        "empathy": 3,
+        "resilience": 13,
+        "agility": 2
+      },
+      "skillFocus": "temperature-defend(heal) / behavior-defend / temperature-capture"
+    },
+    {
+      "name_kr": "화염집게",
+      "name_en": "flame_claw",
+      "desc_kr": "불타는 집게로 강렬한 자극을 주는 게",
+      "role": "attacker",
+      "hp": 28,
+      "stats": {
+        "gentleness": 10,
+        "empathy": 3,
+        "resilience": 5,
+        "agility": 2
+      },
+      "skillFocus": "temperature-stimulate / behavior-stimulate / temperature-capture"
+    },
+    {
+      "name_kr": "조력게",
+      "name_en": "tide_crab",
+      "desc_kr": "물과 열을 조절해 아군을 돕는 서포터 게",
+      "role": "support",
+      "hp": 30,
+      "stats": {
+        "gentleness": 3,
+        "empathy": 9,
+        "resilience": 5,
+        "agility": 3
+      },
+      "skillFocus": "temperature-defend(heal) / behavior-stimulate / temperature-capture"
+    }
+  ],
+  "devo2_per_devo1": 2
+}
