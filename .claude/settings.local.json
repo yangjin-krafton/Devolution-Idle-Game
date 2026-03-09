@@ -70,7 +70,8 @@
       "Bash(sed -i \"s/{ x: W \\\\* 0.85, y: 275, size: 95 },    \\\\/\\\\/ 우/{ x: W * 0.90, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(위쪽, 적 옆 포위\\)/\" src/ui/battleFieldUI.js)",
       "Bash(sed -i \"s/{ x: W \\\\* 0.10, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(위쪽, 적 옆 포위\\)/{ x: W * 0.18, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(적 옆 포위\\)/\" \"f:/Workspace/Devolution-Idle-Game/src/ui/battleFieldUI.js\")",
       "Bash(sed -i \"s/{ x: W \\\\* 0.90, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(위쪽, 적 옆 포위\\)/{ x: W * 0.82, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(적 옆 포위\\)/\" \"f:/Workspace/Devolution-Idle-Game/src/ui/battleFieldUI.js\")",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(rm:*)"
     ],
     "additionalDirectories": [
       "\\tmp"
