@@ -629,22 +629,23 @@ MVP에서 반드시 확인해야 할 질문은 아래와 같습니다.
 ### 사용법
 
 ```bash
-cd tools/monster-pipeline
+# 프로젝트 루트에서 실행
+cd D:\Weeks\Devolution-Idle-Game
 
 # 몬스터 1종 생성 (컨셉+스킬+이미지 10장/형태+비전 심사)
-node pipeline.js
+node tools/monster-pipeline/pipeline.js
 
 # 몬스터 3종 연속 생성
-node pipeline.js --count 3
+node tools/monster-pipeline/pipeline.js --count 3
 
 # 컨셉만 생성 (이미지 없이 빠르게 확인)
-node pipeline.js --dry-run
+node tools/monster-pipeline/pipeline.js --dry-run
 
 # 이미지 심사 건너뛰기 (각 형태 첫번째 이미지 자동 선택)
-node pipeline.js --skip-review
+node tools/monster-pipeline/pipeline.js --skip-review
 
 # 테스트 모드 (base + 퇴화1 하나만)
-node pipeline.js --test
+node tools/monster-pipeline/pipeline.js --test
 ```
 
 ### 후보 심사 및 게임 통합
@@ -653,16 +654,16 @@ node pipeline.js --test
 
 ```bash
 # 후보 목록 조회
-node integrate.js --list
+node tools/monster-pipeline/integrate.js --list
 
 # 후보 상세 보기 (스킬, 스탯, 반응 텍스트 전체)
-node integrate.js --show <폴더명>
+node tools/monster-pipeline/integrate.js --show <폴더명>
 
 # LLM으로 data.js 통합 코드 생성
-node integrate.js --pick <폴더명>
+node tools/monster-pipeline/integrate.js --pick <폴더명>
 
 # 에셋 복사 + 통합 코드 생성 (실제 적용)
-node integrate.js --pick <폴더명> --apply
+node tools/monster-pipeline/integrate.js --pick <폴더명> --apply
 ```
 
 ### 후보 폴더 구조
