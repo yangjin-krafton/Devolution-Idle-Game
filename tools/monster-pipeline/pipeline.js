@@ -9,6 +9,8 @@
 //   node pipeline.js              # roster 순차 실행 (이어서)
 //   node pipeline.js --from 5     # 5번부터 시작
 //   node pipeline.js --only 3     # 3번만 실행
+//   node pipeline.js --free       # 자율 주제 (roster 없이 랜덤 생성)
+//   node pipeline.js --free --count 5  # 자율 주제 5마리
 //   node pipeline.js --skip-review # 이미지 심사 건너뛰기
 //   node pipeline.js --reset      # 진행 기록 초기화
 //   node pipeline.js --status     # 현재 진행 상황 확인
@@ -38,8 +40,10 @@ const flags = {
   skipReview: args.includes('--skip-review'),
   reset: args.includes('--reset'),
   status: args.includes('--status'),
+  free: args.includes('--free'),
   from: getArgInt('--from', null),
   only: getArgInt('--only', null),
+  count: getArgInt('--count', 1),     // --free 모드에서 생성할 마리 수
   silenceSec: getArgInt('--silence', 300), // 무응답 N초 후 hang 판단
   maxRetries: getArgInt('--max-retries', 3),
 };
@@ -177,7 +181,99 @@ function generateReadme(id, roster, concept, selectedImages) {
   return md;
 }
 
-// ── 1종 처리 ──
+// ── 자율 주제 후보 저장 ──
+async function saveFreeCandidateBundle(seqNum, conceptData, selectedImages, allImages) {
+  const name = conceptData.base.name_en || `free_${seqNum}`;
+  const num = String(seqNum).padStart(2, '0');
+  const dirName = `free_${num}_${name}`;
+  const candidateDir = resolve(__dirname, CONFIG.CANDIDATES_DIR, dirName);
+  await mkdir(candidateDir, { recursive: true });
+  await mkdir(resolve(candidateDir, 'selected'), { recursive: true });
+  await mkdir(resolve(candidateDir, 'all_images'), { recursive: true });
+
+  await writeFile(resolve(candidateDir, 'concept.json'), JSON.stringify(conceptData, null, 2), 'utf-8');
+
+  for (const { form, winner } of selectedImages) {
+    if (!winner) continue;
+    const filename = `${form.type}_${form.name_en}.png`;
+    await copyFile(winner.path, resolve(candidateDir, 'selected', filename));
+  }
+
+  for (const { form, result } of allImages) {
+    for (const img of result.images) {
+      const filename = `${form.type}_${form.name_en}_${img.index}.png`;
+      await copyFile(img.path, resolve(candidateDir, 'all_images', filename));
+    }
+  }
+
+  // 간단한 README
+  const b = conceptData.base;
+  let md = `# ${b.name_kr} (${b.name_en}) — 자율 생성\n\n`;
+  md += `> ${b.desc_kr}\n\n`;
+  md += `| 항목 | 값 |\n|------|----|\n`;
+  md += `| 감각 | ${b.sensoryType?.join(', ') || '?'} |\n`;
+  md += `| 성격 | ${b.personality || '?'} |\n\n`;
+  md += `## 퇴화 트리\n\n`;
+  md += `\`\`\`\n${b.name_kr} (야생)\n`;
+  for (const d1 of (conceptData.devolutions_1 || [])) {
+    md += `  └─ ${d1.name_kr}\n`;
+  }
+  md += `\`\`\`\n\n---\n생성일: ${new Date().toISOString()}\n`;
+  await writeFile(resolve(candidateDir, 'README.md'), md, 'utf-8');
+
+  // temp 정리
+  const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
+  try { await rm(tempDir, { recursive: true, force: true }); await mkdir(tempDir, { recursive: true }); } catch {}
+
+  log(`후보 저장: candidates/${dirName}/`);
+  return dirName;
+}
+
+// ── 자율 주제 1종 처리 ──
+async function processOneFree(seqNum) {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`  [Free #${seqNum}] 자율 주제 몬스터 생성`);
+  console.log(`${'='.repeat(60)}\n`);
+
+  startSilenceWatch(`Free #${seqNum}`);
+
+  // Step 1: LLM 랜덤 컨셉 생성
+  log('[Step 1/4] LLM 랜덤 컨셉 생성...');
+  const { concept, allForms } = await generateMonsterConcept(null);
+
+  // Step 2: 이미지 생성
+  log(`[Step 2/4] ${allForms.length}개 형태 이미지 생성...`);
+  const allImageResults = [];
+  for (const form of allForms) {
+    const result = await generateImages(form);
+    allImageResults.push({ form, result });
+  }
+
+  // Step 3: 이미지 심사
+  log(`[Step 3/4] 토너먼트 심사...`);
+  const selectedImages = [];
+  for (const { form, result } of allImageResults) {
+    let winner;
+    if (flags.skipReview) {
+      winner = result.images[0] || null;
+      if (winner) log(`  [Skip] "${form.name_en}" 첫번째 이미지`);
+    } else {
+      winner = await reviewAndSelectBest(result, concept);
+    }
+    selectedImages.push({ form, winner });
+  }
+
+  stopSilenceWatch();
+
+  // Step 4: 저장
+  log(`[Step 4/4] 후보 저장...`);
+  const dirName = await saveFreeCandidateBundle(seqNum, concept, selectedImages, allImageResults);
+
+  log(`✓ Free #${seqNum} ${concept.base.name_kr} 완료 → candidates/${dirName}/`);
+  return concept;
+}
+
+// ── 1종 처리 (roster) ──
 async function processOne(rosterEntry, progress) {
   const { data: rosterData } = rosterEntry;
   const id = rosterData.id;
@@ -262,6 +358,65 @@ async function runPipeline() {
       console.log(`  ${icon} #${String(id).padStart(2, '0')} ${data.wild.name_kr} (${data.wild.name_en}) [${data.wild.personality}/${data.wild.sensoryType.join('+')}] devo1:${data.devo1.length}종`);
     }
     console.log();
+    return;
+  }
+
+  // ── 자율 주제 모드 ──
+  if (flags.free) {
+    console.log('╔══════════════════════════════════════════════════════╗');
+    console.log('║     Monster Generation Pipeline v3 — FREE MODE      ║');
+    console.log('║     (자율 주제 · roster 없이 랜덤 생성)             ║');
+    console.log('╠══════════════════════════════════════════════════════╣');
+    console.log(`║  Model:       ${CONFIG.TEXT_MODEL.padEnd(37)}║`);
+    console.log(`║  ComfyUI:     ${CONFIG.COMFYUI_URL.padEnd(37)}║`);
+    console.log(`║  Images:      ${String(CONFIG.IMAGES_PER_CONCEPT + '/form').padEnd(37)}║`);
+    console.log(`║  생성 수:     ${String(flags.count + '마리').padEnd(37)}║`);
+    console.log(`║  Silence:     ${String(flags.silenceSec + '초 무응답=hang').padEnd(37)}║`);
+    console.log(`║  Max Retries: ${String(flags.maxRetries + '회/몬스터').padEnd(37)}║`);
+    console.log(`║  Skip Review: ${String(flags.skipReview).padEnd(37)}║`);
+    console.log('╚══════════════════════════════════════════════════════╝');
+    console.log();
+
+    await mkdir(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true });
+    await mkdir(resolve(__dirname, CONFIG.CANDIDATES_DIR), { recursive: true });
+
+    // 기존 free 후보 수를 세서 시퀀스 번호 결정
+    const { readdir: rd } = await import('fs/promises');
+    const existingFree = (await rd(resolve(__dirname, CONFIG.CANDIDATES_DIR)))
+      .filter(d => d.startsWith('free_')).length;
+
+    for (let i = 0; i < flags.count; i++) {
+      const seqNum = existingFree + i + 1;
+      let success = false;
+      let retries = 0;
+
+      while (!success && retries < flags.maxRetries) {
+        if (retries > 0) {
+          log(`재시도 ${retries + 1}/${flags.maxRetries}: Free #${seqNum} (5초 대기...)`);
+          await new Promise(r => setTimeout(r, 5000));
+        }
+        try {
+          await processOneFree(seqNum);
+          success = true;
+        } catch (err) {
+          stopSilenceWatch();
+          retries++;
+          log(`✗ Free #${seqNum} 에러: ${err.message}`);
+          try {
+            const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
+            await rm(tempDir, { recursive: true, force: true });
+            await mkdir(tempDir, { recursive: true });
+          } catch {}
+        }
+      }
+      if (!success) {
+        log(`✗ Free #${seqNum} — ${flags.maxRetries}회 실패, 건너뛰기`);
+      }
+    }
+
+    console.log(`\n${'='.repeat(60)}`);
+    console.log('  자율 주제 파이프라인 완료');
+    console.log(`${'='.repeat(60)}\n`);
     return;
   }
 

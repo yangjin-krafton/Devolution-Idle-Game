@@ -24,6 +24,7 @@ const PROGRESS_FILE = resolve(__dirname, 'progress.json');
 
 // pipeline.js에 전달할 인수 (watchdog 자체 인수 제외)
 const pipelineArgs = process.argv.slice(2);
+const isFreeMode = pipelineArgs.includes('--free');
 
 function log(msg) {
   const ts = new Date().toISOString().substring(11, 19);
@@ -53,6 +54,34 @@ function runPipeline() {
 }
 
 async function main() {
+  if (isFreeMode) {
+    // ── 자율 주제 모드: --count만큼 반복, hang/에러 시 재시작 ──
+    log(`Watchdog 시작 — FREE MODE (args: ${pipelineArgs.join(' ')})`);
+
+    let round = 0;
+    while (true) {
+      round++;
+      log(`[Free] pipeline.js 실행 (round ${round})`);
+      const code = await runPipeline();
+
+      if (code === 0) {
+        // 정상 종료 — --count만큼 완료
+        log(`[Free] round ${round} 정상 종료.`);
+        break;
+      } else if (code === 99) {
+        log('[Free] hang 감지 (exit 99) — 3초 후 재시작...');
+        await new Promise(r => setTimeout(r, 3000));
+      } else {
+        log(`[Free] 에러 종료 (code: ${code}) — 5초 후 재시작...`);
+        await new Promise(r => setTimeout(r, 5000));
+      }
+    }
+
+    log(`[Free] 자율 주제 watchdog 완료 (${round} rounds)`);
+    return;
+  }
+
+  // ── roster 모드 (기존) ──
   const totalRoster = await getTotalRoster();
   log(`Watchdog 시작 (roster: ${totalRoster}종, args: ${pipelineArgs.join(' ') || 'none'})`);
 
