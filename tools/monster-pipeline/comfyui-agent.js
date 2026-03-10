@@ -19,11 +19,41 @@ async function loadWorkflow() {
   return baseWorkflow;
 }
 
+// 다수 객체/캐릭터 시트를 유발하는 키워드 제거
+function sanitizePrompt(prompt) {
+  // 캐릭터 시트/도감/다수 유발 키워드 제거
+  const removePatterns = [
+    /\bchibi\b/gi,
+    /\bbaby pokemon\b/gi,
+    /\bbaby\b/gi,
+    /\bkawaii\b/gi,
+    /\bcharacter sheet\b/gi,
+    /\breference sheet\b/gi,
+    /\bmultiple views\b/gi,
+    /\bmultiple poses\b/gi,
+    /\bexpression sheet\b/gi,
+    /\bturnaround\b/gi,
+    // 부정 설명 제거 (모델에게 역효과)
+    /,?\s*no\s+\w+(\s+\w+)*/gi,
+    /,?\s*not\s+a\s+\w+/gi,
+    /,?\s*without\s+\w+/gi,
+  ];
+  let cleaned = prompt;
+  for (const pat of removePatterns) {
+    cleaned = cleaned.replace(pat, '');
+  }
+  // 연속 콤마/공백 정리
+  cleaned = cleaned.replace(/,\s*,/g, ',').replace(/\s{2,}/g, ' ').trim();
+  return cleaned;
+}
+
 function buildWorkflow(prompt, seed) {
   const wf = JSON.parse(JSON.stringify(baseWorkflow));
-  // 노드 50: 프롬프트 설정 (좌측 전면 방향 강제)
-  const directionSuffix = ', pokemon official art, ken sugimori style, cel-shaded, bold outlines, facing left, front three-quarter view, looking at viewer';
-  wf['50'].inputs.text = prompt + directionSuffix;
+  // 프롬프트 정제 (다수 객체 유발 키워드 제거)
+  const cleanedPrompt = sanitizePrompt(prompt);
+  // 노드 50: 프롬프트 설정 (좌측 전면 방향 + 단일 객체 강제)
+  const directionSuffix = ', pokemon official art, ken sugimori style, cel-shaded, bold outlines, facing left, front three-quarter view, looking at viewer, solo, single creature, one full body character, white background, simple clean background';
+  wf['50'].inputs.text = cleanedPrompt + directionSuffix;
   // 노드 49: 시드 변경으로 배리에이션 생성
   wf['49'].inputs.seed = seed;
   // denoise를 높여서 더 다양한 결과

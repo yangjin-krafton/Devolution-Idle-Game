@@ -67,7 +67,7 @@
       "cfg": 1,
       "sampler_name": "ddim",
       "scheduler": "ddim_uniform",
-      "denoise": 0.5,
+      "denoise": 1.0,
       "model": [
         "95",
         0

@@ -14,6 +14,10 @@
 //   node pipeline.js --skip-review # 이미지 심사 건너뛰기
 //   node pipeline.js --reset      # 진행 기록 초기화
 //   node pipeline.js --status     # 현재 진행 상황 확인
+//   node pipeline.js --wild-only     # 기존 후보의 야생(base) 이미지만 재생성
+//   node pipeline.js --wild-only --only 3  # 3번만 야생 재생성
+//   node pipeline.js --wild-only --from 5  # 5번부터 야생 재생성
+//   node pipeline.js --wild-only --wild-prompt  # LLM으로 야생 프롬프트도 재생성
 //   node pipeline.js --silence 300  # 무응답 타임아웃 초 (기본 300 = 5분)
 //   node pipeline.js --max-retries 3 # 같은 번호 최대 재시도 (기본 3)
 // ============================================================
@@ -41,6 +45,8 @@ const flags = {
   reset: args.includes('--reset'),
   status: args.includes('--status'),
   free: args.includes('--free'),
+  wildOnly: args.includes('--wild-only'),
+  wildPrompt: args.includes('--wild-prompt'),
   from: getArgInt('--from', null),
   only: getArgInt('--only', null),
   count: getArgInt('--count', 1),     // --free 모드에서 생성할 마리 수
@@ -326,6 +332,175 @@ async function processOne(rosterEntry, progress) {
   log(`✓ #${String(id).padStart(2, '0')} ${w.name_kr} 완료 → candidates/${dirName}/`);
 }
 
+// ── 야생 프롬프트 복잡도 강화 ──
+const WILD_COMPLEXITY_BOOST = [
+  'many body parts excessive anatomy',
+  'multiple eyes four to eight eyes',
+  'six or more legs extra limbs multiple arms',
+  'multiple wings layered wings',
+  'multiple tails branching tails',
+  'many horns many spikes growing from head back shoulders',
+  'multiple fangs extra mouths excessive teeth rows',
+  'many fins many tendrils flowing appendages',
+  'dark saturated color palette intimidating presence',
+  'maximum body part count chaotic wild creature',
+].join(', ');
+
+function enhanceWildPrompt(originalPrompt) {
+  // 이미 강화된 프롬프트인지 확인
+  if (originalPrompt.includes('maximum visual complexity')) {
+    return originalPrompt;
+  }
+  // 'menacing dark pokemon' 앞에 복잡도 요소 삽입
+  const insertPoint = originalPrompt.indexOf('menacing dark pokemon');
+  if (insertPoint !== -1) {
+    return originalPrompt.substring(0, insertPoint)
+      + WILD_COMPLEXITY_BOOST + ', '
+      + originalPrompt.substring(insertPoint);
+  }
+  // fallback: 프롬프트 앞에 추가
+  return originalPrompt + ', ' + WILD_COMPLEXITY_BOOST;
+}
+
+// ── 야생 전용 LLM 프롬프트 재생성 ──
+async function regenerateWildPrompt(rosterData) {
+  const { generateMonsterConcept } = await import('./concept-agent.js');
+  log('[Wild Regen] LLM으로 야생 프롬프트 재생성 중...');
+  const { concept } = await generateMonsterConcept(rosterData);
+  return concept.base.image_prompt;
+}
+
+// ── 야생(base) 이미지만 재생성 ──
+async function runWildOnly(roster) {
+  // 대상 결정
+  let targets = [];
+  if (flags.only) {
+    const entry = roster.find(r => r.data.id === flags.only);
+    if (!entry) { console.error(`roster #${flags.only} 없음`); return; }
+    targets = [entry];
+  } else if (flags.from) {
+    targets = roster.filter(r => r.data.id >= flags.from);
+  } else {
+    targets = roster;
+  }
+
+  console.log('╔══════════════════════════════════════════════════════╗');
+  console.log('║     Monster Pipeline — WILD-ONLY 이미지 재생성     ║');
+  console.log('╠══════════════════════════════════════════════════════╣');
+  console.log(`║  대상:        ${String(targets.length + '종').padEnd(37)}║`);
+  console.log(`║  LLM 재생성:  ${String(flags.wildPrompt ? '예 (--wild-prompt)' : '아니오 (프롬프트 강화만)').padEnd(37)}║`);
+  console.log(`║  Skip Review: ${String(flags.skipReview).padEnd(37)}║`);
+  console.log(`║  Silence:     ${String(flags.silenceSec + '초').padEnd(37)}║`);
+  console.log('╚══════════════════════════════════════════════════════╝');
+  console.log();
+
+  await mkdir(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true });
+
+  for (const entry of targets) {
+    const id = entry.data.id;
+    const w = entry.data.wild;
+    const num = String(id).padStart(2, '0');
+    const dirName = `${num}_${w.name_en}`;
+    const candidateDir = resolve(__dirname, CONFIG.CANDIDATES_DIR, dirName);
+
+    console.log(`\n${'─'.repeat(50)}`);
+    console.log(`  #${num} ${w.name_kr} (${w.name_en}) — 야생 이미지 재생성`);
+    console.log(`${'─'.repeat(50)}`);
+
+    startSilenceWatch(`Wild #${id} ${w.name_en}`);
+
+    try {
+      // concept.json 로드
+      let concept;
+      try {
+        concept = JSON.parse(await readFile(resolve(candidateDir, 'concept.json'), 'utf-8'));
+      } catch {
+        log(`⚠ candidates/${dirName}/concept.json 없음, 건너뛰기`);
+        stopSilenceWatch();
+        continue;
+      }
+
+      // 야생 프롬프트 결정
+      let wildPrompt;
+      if (flags.wildPrompt) {
+        // LLM으로 새 프롬프트 생성
+        wildPrompt = await regenerateWildPrompt(entry.data);
+        log(`[Wild] LLM 새 프롬프트: ${wildPrompt.substring(0, 80)}...`);
+      } else {
+        // 기존 프롬프트 강화
+        wildPrompt = enhanceWildPrompt(concept.base.image_prompt);
+        log(`[Wild] 프롬프트 강화 완료`);
+      }
+
+      // concept.json 업데이트
+      concept.base.image_prompt = wildPrompt;
+      await writeFile(resolve(candidateDir, 'concept.json'), JSON.stringify(concept, null, 2), 'utf-8');
+
+      // base form 준비
+      const baseForm = {
+        name_en: concept.base.name_en,
+        image_prompt: wildPrompt,
+        type: 'base',
+      };
+
+      // 이미지 생성
+      log(`[Wild] ${CONFIG.IMAGES_PER_CONCEPT}장 이미지 생성 중...`);
+      const result = await generateImages(baseForm);
+
+      // 이미지 심사
+      let winner;
+      if (flags.skipReview) {
+        winner = result.images[0] || null;
+        if (winner) log(`  [Skip] 첫번째 이미지 선택`);
+      } else {
+        log(`[Wild] 토너먼트 심사...`);
+        winner = await reviewAndSelectBest(result, concept);
+      }
+
+      // 기존 base 이미지 교체
+      if (winner) {
+        const selectedDir = resolve(candidateDir, 'selected');
+        await mkdir(selectedDir, { recursive: true });
+        const baseName = `base_${concept.base.name_en}.png`;
+        await copyFile(winner.path, resolve(selectedDir, baseName));
+        log(`  ✓ selected/${baseName} 교체 완료`);
+      }
+
+      // all_images에 새 base 이미지 추가 (기존 base 이미지 덮어쓰기)
+      const allImgDir = resolve(candidateDir, 'all_images');
+      await mkdir(allImgDir, { recursive: true });
+      for (const img of result.images) {
+        const filename = `base_${concept.base.name_en}_${img.index}.png`;
+        await copyFile(img.path, resolve(allImgDir, filename));
+      }
+
+      // temp 정리
+      try {
+        const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
+        await rm(tempDir, { recursive: true, force: true });
+        await mkdir(tempDir, { recursive: true });
+      } catch {}
+
+      stopSilenceWatch();
+      log(`✓ #${num} ${w.name_kr} 야생 이미지 재생성 완료`);
+
+    } catch (err) {
+      stopSilenceWatch();
+      log(`✗ #${num} ${w.name_kr} 에러: ${err.message}`);
+      // temp 정리
+      try {
+        const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
+        await rm(tempDir, { recursive: true, force: true });
+        await mkdir(tempDir, { recursive: true });
+      } catch {}
+    }
+  }
+
+  console.log(`\n${'='.repeat(50)}`);
+  console.log('  야생 이미지 재생성 완료');
+  console.log(`${'='.repeat(50)}\n`);
+}
+
 // ── 메인 ──
 async function runPipeline() {
   const roster = await loadRosterFiles();
@@ -358,6 +533,12 @@ async function runPipeline() {
       console.log(`  ${icon} #${String(id).padStart(2, '0')} ${data.wild.name_kr} (${data.wild.name_en}) [${data.wild.personality}/${data.wild.sensoryType.join('+')}] devo1:${data.devo1.length}종`);
     }
     console.log();
+    return;
+  }
+
+  // ── 야생(base) 이미지만 재생성 모드 ──
+  if (flags.wildOnly) {
+    await runWildOnly(roster);
     return;
   }
 
