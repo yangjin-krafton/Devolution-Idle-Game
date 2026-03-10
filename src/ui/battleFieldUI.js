@@ -126,12 +126,20 @@ function buildDanmaku() {
 
 // ---- Dynamic Rendering ----
 
+const SENSORY_ICONS = {
+  sound: { icon: '🔊', label: '소리', color: 0x88bbff },
+  temperature: { icon: '🌡️', label: '온도', color: 0xffaa77 },
+  smell: { icon: '🌿', label: '냄새', color: 0x88cc88 },
+  behavior: { icon: '👁️', label: '행동', color: 0xccaaee },
+};
+
 export function renderEnemy(enemy) {
   refs.enemySprite.removeChildren();
   refs.enemySprite.addChild(monster(140, enemy.img));
 
   refs.enemyLevel = Math.max(1, Math.round(enemy.tamingThreshold / 10));
   refs._enemyName = enemy.name;
+  refs._enemySensory = enemy.sensoryType || [];
 
   _renderEnemyHud(0, 0);
 }
@@ -141,7 +149,9 @@ function _renderEnemyHud(tamingPct, escapePct) {
   refs.enemyHud.removeChildren();
 
   const hasEmotion = !!currentEmotion;
-  const pw = 200, ph = hasEmotion ? 82 : 68, bw = 120;
+  const hasSensory = refs._enemySensory && refs._enemySensory.length > 0;
+  const sensoryRowH = hasSensory ? 16 : 0;
+  const pw = 200, ph = (hasEmotion ? 82 : 68) + sensoryRowH, bw = 120;
   const mood = getMoodTag(tamingPct, escapePct);
 
   // 패널 배경 — 둥근 다크 카드
@@ -165,40 +175,62 @@ function _renderEnemyHud(tamingPct, escapePct) {
   moodL.anchor = { x: 0.5, y: 0.5 }; moodL.x = pw - 30; moodL.y = 13;
   refs.enemyHud.addChild(moodL);
 
-  // 2행: 💫 순화 바
-  refs.enemyHud.addChild(Object.assign(lbl('💫', 5, 0x00d4aa), { x: 8, y: 24 }));
+  // 2행 (NEW): 감각 타입 힌트 — 적이 민감한 감각을 보여줌
+  let rowOffset = 0;
+  if (hasSensory) {
+    rowOffset = sensoryRowH;
+    let sx = 10;
+    for (const sType of refs._enemySensory) {
+      const info = SENSORY_ICONS[sType];
+      if (!info) continue;
+      const pill = new PIXI.Graphics();
+      const pillW = 42;
+      pill.roundRect(sx, 22, pillW, 12, 6).fill({ color: info.color, alpha: 0.15 });
+      pill.roundRect(sx, 22, pillW, 12, 6).stroke({ color: info.color, width: 0.5, alpha: 0.4 });
+      refs.enemyHud.addChild(pill);
+      const sL = lbl(`${info.icon}${info.label}`, 4.5, info.color, true);
+      sL.anchor = { x: 0.5, y: 0.5 }; sL.x = sx + pillW / 2; sL.y = 28;
+      refs.enemyHud.addChild(sL);
+      sx += pillW + 4;
+    }
+  }
+
+  // 3행: 💫 순화 바
+  const tamY = 24 + rowOffset;
+  refs.enemyHud.addChild(Object.assign(lbl('💫', 5, 0x00d4aa), { x: 8, y: tamY }));
   const tamBar = new PIXI.Graphics();
-  tamBar.roundRect(24, 26, bw, 8, 4).fill({ color: 0x333355 });
-  if (tamingPct > 0) tamBar.roundRect(24, 26, Math.max(8, bw * tamingPct / 100), 8, 4).fill({ color: 0x00d4aa });
+  tamBar.roundRect(24, tamY + 2, bw, 8, 4).fill({ color: 0x333355 });
+  if (tamingPct > 0) tamBar.roundRect(24, tamY + 2, Math.max(8, bw * tamingPct / 100), 8, 4).fill({ color: 0x00d4aa });
   refs.enemyHud.addChild(tamBar);
   const tamL = lbl(tamingPct + '%', 5, 0xaaccbb, true);
-  tamL.x = 24 + bw + 4; tamL.y = 24;
+  tamL.x = 24 + bw + 4; tamL.y = tamY;
   refs.enemyHud.addChild(tamL);
 
-  // 3행: 💨 도주 바
-  refs.enemyHud.addChild(Object.assign(lbl('💨', 5, 0xff6b6b), { x: 8, y: 40 }));
+  // 4행: 💨 도주 바
+  const escY = 40 + rowOffset;
+  refs.enemyHud.addChild(Object.assign(lbl('💨', 5, 0xff6b6b), { x: 8, y: escY }));
   const escCol = escapePct >= 70 ? 0xff4444 : 0xff6b6b;
   const escBar = new PIXI.Graphics();
-  escBar.roundRect(24, 42, bw, 8, 4).fill({ color: 0x333355 });
-  if (escapePct > 0) escBar.roundRect(24, 42, Math.max(8, bw * escapePct / 100), 8, 4).fill({ color: escCol });
+  escBar.roundRect(24, escY + 2, bw, 8, 4).fill({ color: 0x333355 });
+  if (escapePct > 0) escBar.roundRect(24, escY + 2, Math.max(8, bw * escapePct / 100), 8, 4).fill({ color: escCol });
   refs.enemyHud.addChild(escBar);
   const escL = lbl(escapePct + '%', 5, escapePct >= 70 ? 0xff6666 : 0xccaaaa, true);
-  escL.x = 24 + bw + 4; escL.y = 40;
+  escL.x = 24 + bw + 4; escL.y = escY;
   refs.enemyHud.addChild(escL);
 
-  // 4행: 감정 상태 (있을 때만)
-  let bottomY = 55;
+  // 5행: 감정 상태 (있을 때만)
+  let bottomY = 55 + rowOffset;
   if (currentEmotion) {
     const emoText = `${currentEmotion.icon} ${currentEmotion.name}`;
     const turnsText = currentEmotion.turns > 0 ? ` (${currentEmotion.turnsLeft}턴)` : '';
     const emoPill = new PIXI.Graphics();
-    emoPill.roundRect(8, 55, pw - 16, 14, 7).fill({ color: currentEmotion.color, alpha: 0.15 });
-    emoPill.roundRect(8, 55, pw - 16, 14, 7).stroke({ color: currentEmotion.color, width: 0.5, alpha: 0.4 });
+    emoPill.roundRect(8, bottomY, pw - 16, 14, 7).fill({ color: currentEmotion.color, alpha: 0.15 });
+    emoPill.roundRect(8, bottomY, pw - 16, 14, 7).stroke({ color: currentEmotion.color, width: 0.5, alpha: 0.4 });
     refs.enemyHud.addChild(emoPill);
     const emoL = lbl(emoText + turnsText, 5, currentEmotion.color, true);
-    emoL.anchor = { x: 0.5, y: 0.5 }; emoL.x = pw / 2; emoL.y = 62;
+    emoL.anchor = { x: 0.5, y: 0.5 }; emoL.x = pw / 2; emoL.y = bottomY + 7;
     refs.enemyHud.addChild(emoL);
-    bottomY = 70;
+    bottomY += 15;
   }
 
   // 하단: 턴 번호

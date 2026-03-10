@@ -4,7 +4,7 @@
 
 import { GENERIC_LOGS, calcSensoryMod } from './data.js';
 import { createEmotionState, tryApplyEmotion, checkAutoEmotion, tickEmotion, getEmotionMods, EMOTIONS } from './emotion.js';
-import { decideEnemyAction, decideTargeting, calcEnemyDamage, calcAoeDamage } from './enemyAI.js';
+import { decideEnemyAction, decideTargeting, calcEnemyDamage, calcAoeDamage, PERSONALITY } from './enemyAI.js';
 import { statScale, previewAction as _previewAction } from './combatPreview.js';
 
 export class CombatSystem {
@@ -26,6 +26,11 @@ export class CombatSystem {
     this.aggro = {};
     this.team.forEach((_, i) => { this.aggro[i] = 0; });
     if (this.team.length > 1) this.aggro[1] = 5;
+
+    // 감각 둔화 추적 (같은 축 반복 사용 시 효율 저하)
+    this.axisUsage = { sound: 0, temperature: 0, smell: 0, behavior: 0 };
+    // 연속 행동 추적 (같은 행동 반복 시 패널티)
+    this.lastActions = {};
 
     this.log(GENERIC_LOGS.encounter(this.enemy.name));
   }
@@ -109,6 +114,10 @@ export class CombatSystem {
       this._turnEndPhase();
     }
 
+    // 연속 행동 추적 업데이트
+    for (const { allyIdx, actionIdx } of ordered) {
+      this.lastActions[allyIdx] = actionIdx;
+    }
     this.selectedActions = {};
   }
 
@@ -120,8 +129,21 @@ export class CombatSystem {
     const sensoryMod = calcSensoryMod(action.axis, this.enemy.sensoryType);
     const isGood = sensoryMod >= 1.0;
     const stat = ally.stats ? ally.stats.gentleness : 5;
-    const tamingGain = Math.round(action.power * sensoryMod * statScale(stat) * emotionMods.tamingMod);
+
+    // 감각 둔화: 같은 축 3회 초과 시 효율 저하
+    this.axisUsage[action.axis] = (this.axisUsage[action.axis] || 0) + 1;
+    const usage = this.axisUsage[action.axis];
+    const satMod = usage > 2 ? Math.max(0.4, 1.0 - (usage - 2) * 0.15) : 1.0;
+
+    // 연속 행동 패널티: 같은 아군이 같은 행동 반복 시
+    const allyIdx = this.team.indexOf(ally);
+    const repeatMod = (this.lastActions[allyIdx] === this.team[allyIdx]?.actions.indexOf(action)) ? 0.7 : 1.0;
+
+    const tamingGain = Math.round(action.power * sensoryMod * statScale(stat) * emotionMods.tamingMod * satMod * repeatMod);
     const escapeChange = Math.round(action.escapeRisk * (isGood ? 0.7 : 1.5) * emotionMods.escapeMod);
+
+    // 둔화 경고 로그
+    if (satMod < 1.0) this.log(`${action.axis === 'sound' ? '소리' : action.axis === 'temperature' ? '온도' : action.axis === 'smell' ? '냄새' : '행동'} 자극에 둔감해지고 있다...`);
 
     this.tamingGauge = Math.min(this.tamingGauge + tamingGain, this.enemy.tamingThreshold * 1.5);
     this.escapeGauge = Math.max(0, this.escapeGauge + escapeChange);
@@ -272,11 +294,17 @@ export class CombatSystem {
     }
   }
 
-  // 턴 종료 페이즈: 감정 틱 + 자동 감정 체크
+  // 턴 종료 페이즈: 자연 도주 + 감정 틱 + 자동 감정 체크
   _turnEndPhase() {
     const emotionMods = getEmotionMods(this.emotionState);
 
-    // 공포 시 매 턴 도주 증가
+    // 자연 도주 증가: 매 턴 적이 점점 불안해짐
+    const personality = PERSONALITY[this.enemy.personality] || PERSONALITY.curious;
+    const turnBonus = Math.min(3, Math.max(0, this.turn - 3)); // 턴 3 이후 +1씩, 최대 +3
+    const naturalEscape = personality.naturalEscape + turnBonus;
+    this.escapeGauge += naturalEscape;
+
+    // 공포 시 매 턴 도주 추가 증가
     if (emotionMods.escapePerTurn > 0) {
       this.escapeGauge += emotionMods.escapePerTurn;
     }

@@ -7,22 +7,22 @@ export const PERSONALITY = {
   aggressive: {
     id: 'aggressive', name: '공격적',
     attackMod: 1.3, rageChance: 0.4, calmResist: 0.5,
-    skipBase: 0, aoeMod: 1.3,
+    skipBase: 0, aoeMod: 1.3, naturalEscape: 4,
   },
   timid: {
     id: 'timid', name: '겁많은',
     attackMod: 0.8, rageChance: 0.1, calmResist: 0,
-    skipBase: 0.1, aoeMod: 0.5,
+    skipBase: 0.1, aoeMod: 0.5, naturalEscape: 5,
   },
   curious: {
     id: 'curious', name: '호기심',
     attackMod: 1.0, rageChance: 0.15, calmResist: 0,
-    skipBase: 0.25, aoeMod: 0.8,
+    skipBase: 0.25, aoeMod: 0.8, naturalEscape: 3,
   },
   stubborn: {
     id: 'stubborn', name: '완고',
     attackMod: 1.1, rageChance: 0.2, calmResist: 0.3,
-    skipBase: 0.05, aoeMod: 1.0,
+    skipBase: 0.05, aoeMod: 1.0, naturalEscape: 4,
   },
 };
 

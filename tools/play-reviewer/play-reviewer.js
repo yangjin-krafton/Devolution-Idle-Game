@@ -335,19 +335,20 @@ async function playBattle(page, battleNum, playLog) {
 
     // 턴 결과 기록
     const afterState = await getGameState(page);
+    const combatAfter = afterState.combat;
     battleEntry.turns.push({
       turn: turn + 1,
       actions: actions.map(a => `슬롯${a.ally}→행동${a.action}`).join(', '),
-      tamingAfter: afterState.combat?.tamingPercent,
-      escapeAfter: afterState.combat?.escapePercent,
-      combatState: afterState.combat?.state || afterState.screen,
+      tamingAfter: combatAfter?.tamingPercent ?? '—',
+      escapeAfter: combatAfter?.escapePercent ?? '—',
+      combatState: combatAfter?.state || afterState.screen,
     });
 
     // 전투 종료 체크
-    if (afterState.combat && afterState.combat.state !== 'active') {
-      battleEntry.result = afterState.combat.state;
-      console.log(`  [결과] ${afterState.combat.state}`);
-      await captureScreenshot(page, `battle${battleNum}_end_${afterState.combat.state}`);
+    if (!combatAfter || combatAfter.state !== 'active') {
+      battleEntry.result = combatAfter?.state || 'ended';
+      console.log(`  [결과] ${battleEntry.result}`);
+      await captureScreenshot(page, `battle${battleNum}_end_${battleEntry.result}`);
       break;
     }
   }
