@@ -4,12 +4,7 @@
 
 import { W, H, S, lbl } from './theme.js';
 import { monster } from './sprites.js';
-
-const CAT = {
-  stimulate: { label: '자극', icon: '💫', color: 0x00d4aa, dark: 0x009977 },
-  capture:   { label: '포획', icon: '🤝', color: 0xff6b6b, dark: 0xcc4444 },
-  defend:    { label: '수비', icon: '🛡️', color: 0x4dabf7, dark: 0x2b7fc4 },
-};
+import { buildSkillCard, SKILL_CAT } from './skillCard.js';
 
 let container, refs = {}, onAction = null, onConfirm = null;
 
@@ -95,7 +90,7 @@ export function renderActions(team, cr) {
 
     ally.actions.forEach((action, row) => {
       const x = cx + 4, y = headH + row * (cardH + gap);
-      const cW = colW - 12, rd = 10;
+      const cW = colW - 12;
       const isChosen = hasChosen && chosen === row;
       const isLocked = hasChosen && !isChosen;
 
@@ -103,8 +98,8 @@ export function renderActions(team, cr) {
       if (allChosen && !isChosen) {
         const btnCt = new PIXI.Container(); btnCt.x = x; btnCt.y = y;
         const btnBg = new PIXI.Graphics();
-        btnBg.roundRect(0, 0, cW, cardH, rd).fill({ color: 0x00d4aa });
-        btnBg.roundRect(0, 0, cW, cardH * 0.3, rd).fill({ color: 0xffffff, alpha: 0.1 });
+        btnBg.roundRect(0, 0, cW, cardH, 10).fill({ color: 0x00d4aa });
+        btnBg.roundRect(0, 0, cW, cardH * 0.3, 10).fill({ color: 0xffffff, alpha: 0.1 });
         btnCt.addChild(btnBg);
         const bL = lbl('▶ 확인', 11, 0x1a1a2e, true);
         bL.anchor = { x: 0.5, y: 0.5 }; bL.x = cW / 2; bL.y = cardH / 2;
@@ -115,88 +110,35 @@ export function renderActions(team, cr) {
         return;
       }
 
-      const ct = new PIXI.Container(); ct.x = x; ct.y = y;
-      const cat = CAT[action.category] || CAT.stimulate;
-      const a = isLocked ? 0.2 : 1;
-
-      // 카드 배경
-      const bg = new PIXI.Graphics();
-      bg.roundRect(0, 0, cW, cardH, rd).fill({ color: isChosen ? 0x2e2e48 : 0x262640, alpha: a });
-      // 좌측 타입 바
-      bg.roundRect(0, 4, 3, cardH - 8, 1.5).fill({ color: cat.color, alpha: 0.7 * a });
-      // 선택 시 테두리
-      if (isChosen) {
-        bg.roundRect(0, 0, cW, cardH, rd).stroke({ color: cat.color, width: 2 });
-      }
-      ct.addChild(bg);
-
-      // PP 부족 시 비활성화
-      const ppEmpty = action.pp != null && action.pp <= 0;
-      const cardAlpha = ppEmpty ? 0.25 : a;
-
-      // 1줄: 아이콘 + 계열 + 수치 + 상성
+      // Build preview header for combat
+      const cat = SKILL_CAT[action.category] || SKILL_CAT.stimulate;
       const preview = cr?._previews?.[c]?.[row];
-      let pwText = `${cat.icon} ${cat.label}`;
-      let effMarker = '';
+      let previewOpt = null;
       if (preview) {
+        let pwText = `${cat.icon}`;
+        let effMarker = '';
+        const catLabel = { stimulate: '자극', capture: '포획', defend: '수비' }[action.category] || action.category;
         if (preview.type === 'stimulate') {
-          pwText = `${cat.icon} ${cat.label} ${preview.taming}`;
+          pwText = `${cat.icon} ${catLabel} ${preview.taming}`;
           if (preview.effective === 'good') effMarker = ' ▲';
           else if (preview.effective === 'bad') effMarker = ' ▼';
         }
-        else if (preview.type === 'capture') pwText = `${cat.icon} ${cat.label} ${preview.chance}%`;
-        else if (preview.type === 'defend') pwText = `${cat.icon} ${cat.label} +${preview.heal}`;
-      }
-      // 상성 색상
-      const effColor = effMarker === ' ▲' ? 0x00ff88 : effMarker === ' ▼' ? 0xff4444 : cat.color;
-      const pw = lbl(pwText + effMarker, 6, effColor, true);
-      pw.x = 10; pw.y = 7; pw.alpha = cardAlpha;
-      ct.addChild(pw);
-
-      // PP 표시 — 우상단
-      if (action.pp != null) {
-        const ppColor = ppEmpty ? 0xff4444 : 0x8888aa;
-        const ppL = lbl(`${action.pp}/${action.maxPp}`, 5, ppColor, true);
-        ppL.anchor = { x: 1, y: 0 }; ppL.x = cW - 6; ppL.y = 7; ppL.alpha = cardAlpha;
-        ct.addChild(ppL);
+        else if (preview.type === 'capture') pwText = `${cat.icon} ${catLabel} ${preview.chance}%`;
+        else if (preview.type === 'defend') pwText = `${cat.icon} ${catLabel} +${preview.heal}`;
+        const effColor = effMarker === ' ▲' ? 0x00ff88 : effMarker === ' ▼' ? 0xff4444 : cat.c;
+        previewOpt = { text: (pwText + effMarker), effColor };
       }
 
-      // 순서 번호 — 미니 뱃지
-      if (isChosen && order[c] != null) {
-        const oB = new PIXI.Graphics();
-        oB.roundRect(cW - 22, 20, 16, 16, 4).fill({ color: cat.color });
-        ct.addChild(oB);
-        const oL = lbl(String(order[c]), 6, 0x1a1a2e, true);
-        oL.anchor = { x: 0.5, y: 0.5 }; oL.x = cW - 14; oL.y = 28;
-        ct.addChild(oL);
-      }
-
-      // 2줄: 스킬 이름
-      const nL = lbl(action.name, 9, ppEmpty ? 0x666688 : 0xddddf0, true);
-      nL.x = 10; nL.y = 26; nL.alpha = cardAlpha;
-      ct.addChild(nL);
-
-      // 구분선
-      const cardSep = new PIXI.Graphics();
-      cardSep.moveTo(10, 46).lineTo(cW - 10, 46)
-        .stroke({ color: 0x444466, width: 0.5, alpha: a });
-      ct.addChild(cardSep);
-
-      // 설명
-      const descH = cardH - 52;
-      const maxCPL = Math.floor(cW / (7 * S));
-      const lines = Math.ceil(action.log.length / maxCPL);
-      let dSz = 7;
-      if (lines * 11 * S > descH * S) dSz = 6;
-
-      const dText = new PIXI.Text({ text: action.log, style: {
-        fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-        fontSize: dSz * S, fill: '#8888aa', fontWeight: '400',
-        wordWrap: true, wordWrapWidth: cW - 18,
-        lineHeight: (dSz + 2) * S,
-      }});
-      dText.x = 10; dText.y = 52; dText.alpha = a;
-      ct.addChild(dText);
+      const ppEmpty = action.pp != null && action.pp <= 0;
+      const ct = buildSkillCard(action, cW, cardH, {
+        selected: isChosen,
+        locked: isLocked,
+        ppEmpty,
+        showDesc: true,
+        preview: previewOpt,
+        orderNum: (isChosen && order[c] != null) ? order[c] : null,
+      });
+      ct.x = x; ct.y = y;
 
       // Click (PP 빈 스킬은 클릭 불가)
       if ((!isLocked || isChosen) && !ppEmpty) {
