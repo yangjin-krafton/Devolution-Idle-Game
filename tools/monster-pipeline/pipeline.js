@@ -211,14 +211,16 @@ async function processOne(rosterEntry, progress) {
   const devo1Count = rosterData.devo1.length;
   const devo2Count = rosterData.devo1.reduce((sum, d1) => sum + (d1.devo2?.length || 0), 0);
   const totalForms = 1 + devo1Count + devo2Count;
-  const variantsPerForm = CONFIG.IMAGES_PER_CONCEPT;
+  const promptsPerForm = CONFIG.PROMPTS_PER_FORM;
+  const seedsPerPrompt = CONFIG.SEEDS_PER_PROMPT;
+  const imagesPerForm = promptsPerForm * seedsPerPrompt;
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`  #${String(id).padStart(2, '0')} ${w.name_kr} (${w.name_en})`);
   console.log(`  ${w.personality} | ${w.sensoryType.join('+')} | ${w.habitat}`);
   console.log(`  devo1: ${devo1Count}종 | devo2: ${devo2Count}종 | 총: ${totalForms}형태`);
-  console.log(`  이미지: ${totalForms} × ${variantsPerForm} = ${totalForms * variantsPerForm}장`);
-  console.log(`  ⚡ LM Studio → 번역 즉시 ComfyUI 큐 적재 (대기 없음)`);
+  console.log(`  이미지: ${totalForms} × (${promptsPerForm}프롬프트 × ${seedsPerPrompt}시드) = ${totalForms * imagesPerForm}장`);
+  console.log(`  ⚡ LM Studio 8프롬프트 → ComfyUI 시드변형 4장씩`);
   if (w.wildMechanic) console.log(`  메커니즘: ${w.wildMechanic.name_kr}`);
   console.log(`${'='.repeat(60)}\n`);
 
@@ -228,8 +230,8 @@ async function processOne(rosterEntry, progress) {
   const allForms = buildFormsFromRoster(rosterData);
   log(`[Phase 0] ${allForms.length}개 형태 빌드 완료`);
 
-  // ── Phase A: LM Studio 번역 → ComfyUI 큐 적재 (메인 루프) ──
-  log(`[Phase A] LM Studio 번역 시작 + ComfyUI 큐 적재`);
+  // ── Phase A: LM Studio 8프롬프트 번역 → ComfyUI 시드변형 큐 적재 ──
+  log(`[Phase A] LM Studio ${promptsPerForm}프롬프트 번역 + ComfyUI ×${seedsPerPrompt}시드 큐 적재`);
 
   // reactions/actions를 번역과 동시에 백그라운드 실행
   const supplementaryPromise = generateReactionsAndActions(rosterData);
@@ -242,26 +244,25 @@ async function processOne(rosterEntry, progress) {
     const form = allForms[i];
     form.image_prompts = [];
 
-    // LM Studio: 8개씩 배치 번역 → 배치마다 즉시 ComfyUI 큐 적재
-    log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" 번역 중...`);
+    // LM Studio: 8개 프롬프트 한 번에 생성
+    log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" ${promptsPerForm}프롬프트 번역 중...`);
     const prompts = await generatePromptVariants(
-      form.image_desc, form.name_kr, variantsPerForm, form.type,
-      (batch, batchIdx) => {
-        // 배치 완료 콜백 — 8개 프롬프트 즉시 ComfyUI 큐 적재
-        const batchForm = {
+      form.image_desc, form.name_kr, promptsPerForm, form.type,
+      (batch) => {
+        // 8개 프롬프트 완료 → ComfyUI에 한 번에 보냄 (각 ×4시드)
+        const imageForm = {
           ...form,
           image_prompt: batch[0],
           image_prompts: batch,
-          _batchIndex: batchIdx,
         };
-        log(`  → [ComfyUI] form[${i}] 배치${batchIdx} ${batch.length}장 큐 적재`);
-        const imagePromise = generateImages(batchForm);
+        log(`  → [ComfyUI] form[${i}] ${batch.length}프롬프트 × ${seedsPerPrompt}시드 = ${batch.length * seedsPerPrompt}장 큐 적재`);
+        const imagePromise = generateImages(imageForm);
         imagePromises.push({ form, promise: imagePromise });
       }
     );
     form.image_prompts = prompts;
     form.image_prompt = prompts[0];
-    log(`  ✓ form[${i}] 번역 완료 (${prompts.length}변형)`);
+    log(`  ✓ form[${i}] 번역 완료 (${prompts.length}프롬프트 → ${prompts.length * seedsPerPrompt}장 예정)`);
   }
 
   log(`[Phase A 완료] ${allForms.length}개 형태 번역 완료, ${imagePromises.length}개 ComfyUI 작업 큐 적재됨`);
@@ -353,10 +354,10 @@ async function runWildOnly(roster) {
     startSilenceWatch(`Wild #${id} ${w.name_en}`);
 
     try {
-      // image_desc → 변형 영어 프롬프트 생성
+      // image_desc → 8개 영어 프롬프트 생성
       const imageDesc = w.visual?.image_desc || w.desc_kr;
-      log(`[Wild] ${CONFIG.IMAGES_PER_CONCEPT}개 변형 프롬프트 생성 중...`);
-      const prompts = await generatePromptVariants(imageDesc, w.name_kr, CONFIG.IMAGES_PER_CONCEPT);
+      log(`[Wild] ${CONFIG.PROMPTS_PER_FORM}프롬프트 × ${CONFIG.SEEDS_PER_PROMPT}시드 = ${CONFIG.IMAGES_PER_CONCEPT}장 생성`);
+      const prompts = await generatePromptVariants(imageDesc, w.name_kr, CONFIG.PROMPTS_PER_FORM);
 
       const wildForm = {
         name_en: w.name_en,
@@ -366,8 +367,8 @@ async function runWildOnly(roster) {
         type: 'base',
       };
 
-      // 이미지 생성 (각 이미지마다 다른 프롬프트)
-      log(`[Wild] ${CONFIG.IMAGES_PER_CONCEPT}장 이미지 생성 중 (${prompts.length}변형 프롬프트)...`);
+      // 이미지 생성 (8프롬프트 × 4시드 = 32장)
+      log(`[Wild] ${prompts.length}프롬프트 × ${CONFIG.SEEDS_PER_PROMPT}시드 이미지 생성 중...`);
       const result = await generateImages(wildForm);
 
       // 심사
@@ -492,7 +493,7 @@ async function runPipeline() {
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log(`║  Model:       ${CONFIG.TEXT_MODEL.padEnd(37)}║`);
   console.log(`║  ComfyUI:     ${CONFIG.COMFYUI_URL.padEnd(37)}║`);
-  console.log(`║  Images:      ${String(CONFIG.IMAGES_PER_CONCEPT + '/form').padEnd(37)}║`);
+  console.log(`║  Images:      ${String(CONFIG.PROMPTS_PER_FORM + 'p × ' + CONFIG.SEEDS_PER_PROMPT + 's = ' + CONFIG.IMAGES_PER_CONCEPT + '/form').padEnd(37)}║`);
   console.log(`║  대상:        ${String(toProcess.length + '종 (' + totalForms + '형태)').padEnd(37)}║`);
   console.log(`║  Silence:     ${String(flags.silenceSec + '초 무응답=hang').padEnd(37)}║`);
   console.log(`║  Max Retries: ${String(flags.maxRetries + '회/몬스터').padEnd(37)}║`);

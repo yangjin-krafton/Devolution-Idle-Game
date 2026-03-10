@@ -99,12 +99,15 @@ async function downloadImage(filename, subfolder, folderType) {
   return Buffer.from(await res.arrayBuffer());
 }
 
+// 8 프롬프트 × 4 시드 = 32장 생성
 export async function generateImages(form) {
-  const { name_en, image_prompt, image_prompts, type, _batchIndex } = form;
-  const hasVariants = Array.isArray(image_prompts) && image_prompts.length > 0;
-  const count = hasVariants ? image_prompts.length : CONFIG.IMAGES_PER_CONCEPT;
-  const indexOffset = (_batchIndex || 0) * count;
-  console.log(`[ComfyUI Agent] "${name_en}" (${type}) 이미지 ${count}장 생성 시작${_batchIndex != null ? ` (배치${_batchIndex})` : ''}...`);
+  const { name_en, image_prompt, image_prompts, type } = form;
+  const prompts = Array.isArray(image_prompts) && image_prompts.length > 0
+    ? image_prompts : [image_prompt];
+  const seedsPerPrompt = CONFIG.SEEDS_PER_PROMPT;
+  const totalImages = prompts.length * seedsPerPrompt;
+
+  console.log(`[ComfyUI Agent] "${name_en}" (${type}) ${prompts.length}프롬프트 × ${seedsPerPrompt}시드 = ${totalImages}장 생성 시작...`);
 
   await loadWorkflow();
 
@@ -112,43 +115,54 @@ export async function generateImages(form) {
   await mkdir(tempDir, { recursive: true });
 
   const images = [];
+  let globalIdx = 0;
 
-  for (let i = 0; i < count; i++) {
-    const seed = Math.floor(Math.random() * 2 ** 48);
-    // 변형 프롬프트 배열이 있으면 각 이미지마다 다른 prompt 사용
-    const prompt = hasVariants ? (image_prompts[i % image_prompts.length] || image_prompt) : image_prompt;
-    const workflow = buildWorkflow(prompt, seed);
+  for (let p = 0; p < prompts.length; p++) {
+    const prompt = prompts[p];
 
-    try {
-      const globalIdx = indexOffset + i;
-      const promptId = await queuePrompt(workflow);
-      console.log(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] queued (seed: ${seed}, id: ${promptId})`);
+    for (let s = 0; s < seedsPerPrompt; s++) {
+      const seed = Math.floor(Math.random() * 2 ** 48);
+      const workflow = buildWorkflow(prompt, seed);
 
-      const outputs = await waitForCompletion(promptId);
+      try {
+        const promptId = await queuePrompt(workflow);
+        console.log(`  [${globalIdx + 1}/${totalImages}] P${p + 1}S${s + 1} queued (seed: ${seed}, id: ${promptId})`);
 
-      // 노드 9 (SaveImage) 또는 노드 99 (RemBg) 에서 이미지 가져오기
-      let imageInfo = null;
-      for (const nodeId of ['9', '99']) {
-        if (outputs[nodeId]?.images?.length > 0) {
-          imageInfo = outputs[nodeId].images[0];
-          break;
+        const outputs = await waitForCompletion(promptId);
+
+        // 노드 9 (SaveImage) 또는 노드 99 (RemBg) 에서 이미지 가져오기
+        let imageInfo = null;
+        for (const nodeId of ['9', '99']) {
+          if (outputs[nodeId]?.images?.length > 0) {
+            imageInfo = outputs[nodeId].images[0];
+            break;
+          }
         }
+
+        if (imageInfo) {
+          const imgBuffer = await downloadImage(imageInfo.filename, imageInfo.subfolder, imageInfo.type);
+          const localPath = resolve(tempDir, `${name_en}_p${p}_s${s}.png`);
+          await writeFile(localPath, imgBuffer);
+          images.push({
+            index: globalIdx,
+            promptIndex: p,
+            seedIndex: s,
+            seed,
+            path: localPath,
+            filename: imageInfo.filename,
+          });
+          console.log(`  [${globalIdx + 1}/${totalImages}] saved: ${name_en}_p${p}_s${s}.png`);
+        } else {
+          console.warn(`  [${globalIdx + 1}/${totalImages}] 이미지 없음, 출력 노드 확인 필요`);
+        }
+      } catch (err) {
+        console.error(`  [${globalIdx + 1}/${totalImages}] 에러: ${err.message}`);
       }
 
-      if (imageInfo) {
-        const imgBuffer = await downloadImage(imageInfo.filename, imageInfo.subfolder, imageInfo.type);
-        const localPath = resolve(tempDir, `${name_en}_${globalIdx}.png`);
-        await writeFile(localPath, imgBuffer);
-        images.push({ index: globalIdx, seed, path: localPath, filename: imageInfo.filename });
-        console.log(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] saved: ${localPath}`);
-      } else {
-        console.warn(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] 이미지 없음, 출력 노드 확인 필요`);
-      }
-    } catch (err) {
-      console.error(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] 에러: ${err.message}`);
+      globalIdx++;
     }
   }
 
-  console.log(`[ComfyUI Agent] "${name_en}" 완료: ${images.length}장 생성`);
+  console.log(`[ComfyUI Agent] "${name_en}" 완료: ${images.length}/${totalImages}장 생성`);
   return { name_en, type, images };
 }

@@ -118,8 +118,9 @@ function getFormSuffix(formType) {
   return FORM_SUFFIX.base;
 }
 
-// ── 형태 1개 → 8개씩 배치 호출, 배치마다 콜백으로 즉시 ComfyUI 큐 적재 가능 ──
-const BATCH_SIZE = 8;
+// ── 형태 1개 → 8개 프롬프트 한 번에 생성, ComfyUI에서 시드 변형으로 32장 ──
+// LM Studio: 8개 다양한 프롬프트 생성 (포즈, 앵글, 디테일 변형)
+// ComfyUI: 각 프롬프트 × 4시드 = 32장
 
 async function generatePromptBatch(imageDesc, batchSize, suffix) {
   const messages = [
@@ -156,24 +157,19 @@ RULES:
 }
 
 // onBatch(prompts, batchIndex) — 배치 완료 시 호출, ComfyUI 큐 즉시 적재용
+// count = 프롬프트 수 (기본 8), ComfyUI에서 시드 변형으로 이미지 수 곱해짐
 async function generatePromptVariants(imageDesc, nameKr, count, formType = 'base', onBatch = null) {
   const suffix = getFormSuffix(formType);
-  const totalBatches = Math.ceil(count / BATCH_SIZE);
-  console.log(`    [번역] "${nameKr}" → ${count}개 (${BATCH_SIZE}×${totalBatches} 배치)`);
+  const promptCount = count || CONFIG.PROMPTS_PER_FORM;
+  console.log(`    [번역] "${nameKr}" → ${promptCount}개 프롬프트 (각 ×${CONFIG.SEEDS_PER_PROMPT}시드 = ${promptCount * CONFIG.SEEDS_PER_PROMPT}장)`);
 
-  const allPrompts = [];
-  for (let b = 0; b < totalBatches; b++) {
-    const need = Math.min(BATCH_SIZE, count - allPrompts.length);
-    console.log(`    [번역] 배치 ${b + 1}/${totalBatches} (${need}개) 요청 중...`);
-    const batch = await generatePromptBatch(imageDesc, need, suffix);
-    allPrompts.push(...batch);
+  // 8개 프롬프트를 한 번에 생성
+  console.log(`    [번역] ${promptCount}개 프롬프트 요청 중...`);
+  const prompts = await generatePromptBatch(imageDesc, promptCount, suffix);
 
-    if (onBatch) onBatch(batch, b);
-    console.log(`    [번역] 배치 ${b + 1} 완료 → 누적 ${allPrompts.length}개`);
-  }
-
-  console.log(`    [번역] 총 ${allPrompts.length}개 완료 (첫번째: ${allPrompts[0]?.substring(0, 60)}...)`);
-  return allPrompts;
+  if (onBatch) onBatch(prompts, 0);
+  console.log(`    [번역] ${prompts.length}개 완료 (첫번째: ${prompts[0]?.substring(0, 60)}...)`);
+  return prompts;
 }
 
 // ── 모든 forms에 대해 변형 프롬프트 일괄 생성 ──
