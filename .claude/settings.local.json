@@ -81,7 +81,8 @@
       "WebFetch(domain:lmstudio.ai)",
       "Bash(for dir:*)",
       "Bash(taskkill //F //PID 35580 2>/dev/null; true)",
-      "Bash(cmd.exe //c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -ano ^| findstr :3456 ^| findstr LISTENING'\\) do taskkill /PID %a /F\")"
+      "Bash(cmd.exe //c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -ano ^| findstr :3456 ^| findstr LISTENING'\\) do taskkill /PID %a /F\")",
+      "Bash(cd \"D:\\\\Weeks\\\\Devolution-Idle-Game\" && grep -oP '\\(?<=\"skillFocus\": \"\\)[^\"]+' tools/monster-pipeline/roster/*.json | sed 's/.*://' | tr '/' '\\\\n' | sed 's/^ *//;s/ *$//' | sort -u)"
     ],
     "additionalDirectories": [
       "\\tmp"
