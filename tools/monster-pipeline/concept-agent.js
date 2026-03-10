@@ -269,33 +269,8 @@ function buildFormsFromRoster(rosterData) {
   return forms;
 }
 
-// ── 메인 export ──
-export async function generateMonsterConcept(rosterData) {
-  if (!rosterData) {
-    throw new Error('자율 모드는 새 roster 기반 파이프라인에서 지원하지 않습니다.');
-  }
-
-  console.log(`[Concept Agent] roster 기반 빌드: ${rosterData.wild.name_kr}`);
-
-  // 1. roster에서 allForms 빌드
-  const allForms = buildFormsFromRoster(rosterData);
-  console.log(`[Concept Agent] ${allForms.length}개 형태 빌드 완료`);
-
-  // 2. 형태별 N개 변형 영어 프롬프트 생성
-  const variantsPerForm = CONFIG.IMAGES_PER_CONCEPT;
-  const allVariants = await translateAllFormsWithVariants(allForms, variantsPerForm);
-
-  // 각 form에 image_prompts 배열 할당 (comfyui-agent에서 사용)
-  // + 대표 image_prompt (첫 번째 변형)
-  for (let i = 0; i < allForms.length; i++) {
-    allForms[i].image_prompts = allVariants[i]; // 32개 변형 배열
-    allForms[i].image_prompt = allVariants[i][0]; // 대표 (concept.json 저장용)
-  }
-
-  // 3. 반응 + 스킬 LLM 생성
-  const supplementary = await generateReactionsAndActions(rosterData);
-
-  // 4. concept 객체 조립
+// ── concept 객체 조립 (pipeline에서 호출) ──
+export function assembleConcept(rosterData, allForms, supplementary) {
   const w = rosterData.wild;
   const concept = {
     base: {
@@ -311,7 +286,7 @@ export async function generateMonsterConcept(rosterData) {
       stats: w.stats,
       visual: w.visual,
       wildMechanic: w.wildMechanic,
-      image_prompt: allForms[0].image_prompt,
+      image_prompt: allForms[0]?.image_prompt || '',
       reactions: supplementary.reactions || {},
     },
     devolutions_1: rosterData.devo1.map(d1 => ({
@@ -348,20 +323,8 @@ export async function generateMonsterConcept(rosterData) {
     }
   }
 
-  // 로그
-  console.log(`[Concept Agent] 컨셉 완료: ${concept.base.name_kr}`);
-  console.log(`  - 야생: ${concept.base.name_kr} (프롬프트 ${variantsPerForm}변형)`);
-  if (concept.base.wildMechanic) {
-    console.log(`  - 메커니즘: ${concept.base.wildMechanic.name_kr}`);
-  }
-  concept.devolutions_1.forEach((d, i) => {
-    console.log(`  - 퇴화1-${String.fromCharCode(65 + i)}: ${d.name_kr} [${d.role}]`);
-    d.actions?.forEach(a => console.log(`      [${a.category}] ${a.name} (${a.axis}) pow:${a.power} esc:${a.escapeRisk} pp:${a.pp}`));
-  });
-  concept.devolutions_2.forEach(d =>
-    console.log(`  - 퇴화2: ${d.name_kr} [${d.role}] ← ${d.parent}`)
-  );
-  console.log(`  총 프롬프트: ${allForms.length} × ${variantsPerForm} = ${allForms.length * variantsPerForm}개`);
-
-  return { concept, allForms };
+  return concept;
 }
+
+// ── 개별 함수 export (pipeline에서 병렬 오케스트레이션용) ──
+export { buildFormsFromRoster, generatePromptVariants, generateReactionsAndActions };

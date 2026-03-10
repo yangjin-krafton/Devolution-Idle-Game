@@ -22,7 +22,12 @@
 //   node pipeline.js --skip-translate # 번역 건너뛰기 (image_desc를 그대로 사용)
 // ============================================================
 
-import { generateMonsterConcept } from './concept-agent.js';
+import {
+  buildFormsFromRoster,
+  generatePromptVariants,
+  generateReactionsAndActions,
+  assembleConcept,
+} from './concept-agent.js';
 import { generateImages } from './comfyui-agent.js';
 import { reviewAndSelectBest } from './review-agent.js';
 import { CONFIG } from './config.js';
@@ -192,40 +197,77 @@ function generateReadme(id, roster, concept, selectedImages) {
   return md;
 }
 
-// ── 1종 처리 (roster) ──
+// ── 1종 처리 (roster) — LM Studio 메인 루프 + ComfyUI 큐 적재 ──
+// LM Studio(번역)가 메인 루프, ComfyUI(이미지)는 큐에 쌓아놓고 나중에 수집:
+//   Phase A: LM Studio가 번역하는 즉시 ComfyUI 큐에 fire-and-forget
+//   Phase B: 모든 번역 완료 후 ComfyUI 결과 일괄 수집
+//   Phase C: 이미지 심사 (LM Studio)
+//   reactions/actions는 Phase A 시작과 동시에 백그라운드 실행
 async function processOne(rosterEntry, progress) {
   const { data: rosterData } = rosterEntry;
   const id = rosterData.id;
   const w = rosterData.wild;
 
-  // 형태 수 계산
   const devo1Count = rosterData.devo1.length;
   const devo2Count = rosterData.devo1.reduce((sum, d1) => sum + (d1.devo2?.length || 0), 0);
   const totalForms = 1 + devo1Count + devo2Count;
+  const variantsPerForm = CONFIG.IMAGES_PER_CONCEPT;
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(`  #${String(id).padStart(2, '0')} ${w.name_kr} (${w.name_en})`);
   console.log(`  ${w.personality} | ${w.sensoryType.join('+')} | ${w.habitat}`);
   console.log(`  devo1: ${devo1Count}종 | devo2: ${devo2Count}종 | 총: ${totalForms}형태`);
+  console.log(`  이미지: ${totalForms} × ${variantsPerForm} = ${totalForms * variantsPerForm}장`);
+  console.log(`  ⚡ LM Studio → 번역 즉시 ComfyUI 큐 적재 (대기 없음)`);
   if (w.wildMechanic) console.log(`  메커니즘: ${w.wildMechanic.name_kr}`);
   console.log(`${'='.repeat(60)}\n`);
 
   startSilenceWatch(`#${id} ${w.name_en}`);
 
-  // Step 1: concept-agent (번역 + 반응/스킬 생성)
-  log(`[Step 1/4] 컨셉 빌드 (번역 + 반응/스킬)...`);
-  const { concept, allForms } = await generateMonsterConcept(rosterData);
+  // ── Phase 0: roster → allForms 빌드 ──
+  const allForms = buildFormsFromRoster(rosterData);
+  log(`[Phase 0] ${allForms.length}개 형태 빌드 완료`);
 
-  // Step 2: 이미지 생성
-  log(`[Step 2/4] ${allForms.length}개 형태 이미지 생성...`);
-  const allImageResults = [];
-  for (const form of allForms) {
-    const result = await generateImages(form);
-    allImageResults.push({ form, result });
+  // ── Phase A: LM Studio 번역 → ComfyUI 큐 적재 (메인 루프) ──
+  log(`[Phase A] LM Studio 번역 시작 + ComfyUI 큐 적재`);
+
+  // reactions/actions를 번역과 동시에 백그라운드 실행
+  const supplementaryPromise = generateReactionsAndActions(rosterData);
+  log(`  [LM Studio] reactions/actions 백그라운드 시작`);
+
+  // ComfyUI 이미지 생성 promise 배열 (await 하지 않고 쌓아둠)
+  const imagePromises = []; // { form, promise: Promise<result> }
+
+  for (let i = 0; i < allForms.length; i++) {
+    const form = allForms[i];
+
+    // LM Studio: 번역 (메인 루프 — 순차 대기)
+    log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" 번역 중...`);
+    const prompts = await generatePromptVariants(form.image_desc, form.name_kr, variantsPerForm);
+    form.image_prompts = prompts;
+    form.image_prompt = prompts[0];
+    log(`  ✓ form[${i}] 번역 완료 (${prompts.length}변형)`);
+
+    // ComfyUI: 큐에 적재 (fire-and-forget — await 안 함!)
+    log(`  → [ComfyUI] form[${i}] "${form.name_kr}" ${variantsPerForm}장 큐 적재`);
+    const imagePromise = generateImages(form);
+    imagePromises.push({ form, promise: imagePromise });
   }
 
-  // Step 3: 이미지 심사
-  log(`[Step 3/4] 토너먼트 심사...`);
+  log(`[Phase A 완료] ${allForms.length}개 형태 번역 완료, ${imagePromises.length}개 ComfyUI 작업 큐 적재됨`);
+
+  // ── Phase B: ComfyUI 결과 일괄 수집 ──
+  log(`[Phase B] ComfyUI 결과 수집 대기 중...`);
+  const allImageResults = [];
+  for (let i = 0; i < imagePromises.length; i++) {
+    const { form, promise } = imagePromises[i];
+    const result = await promise;
+    allImageResults.push({ form, result });
+    log(`  ✓ [ComfyUI] form[${i}] "${form.name_kr}" ${result.images.length}장 수집 완료`);
+  }
+
+  // ── Phase C: 이미지 심사 ──
+  log(`[Phase C] 토너먼트 심사...`);
   const selectedImages = [];
   for (const { form, result } of allImageResults) {
     let winner;
@@ -233,18 +275,28 @@ async function processOne(rosterEntry, progress) {
       winner = result.images[0] || null;
       if (winner) log(`  [Skip] "${form.name_en}" 첫번째 이미지`);
     } else {
-      winner = await reviewAndSelectBest(result, concept);
+      log(`  [LM Studio] "${form.name_kr}" 심사 중...`);
+      winner = await reviewAndSelectBest(result, null);
     }
     selectedImages.push({ form, winner });
   }
 
+  // ── Phase D: reactions 수집 + concept 조립 + 저장 ──
+  log(`[Phase D] 최종 조립 + 저장`);
+  const supplementary = await supplementaryPromise;
+  log(`  ✓ reactions + ${Object.keys(supplementary.actions || {}).length}종 actions 완료`);
+
+  const concept = assembleConcept(rosterData, allForms, supplementary);
+
+  concept.devolutions_1.forEach((d, i) => {
+    console.log(`  퇴화1-${String.fromCharCode(65 + i)}: ${d.name_kr} [${d.role}]`);
+    d.actions?.forEach(a => console.log(`    [${a.category}] ${a.name} (${a.axis}) pow:${a.power} esc:${a.escapeRisk} pp:${a.pp}`));
+  });
+
   stopSilenceWatch();
 
-  // Step 4: 저장
-  log(`[Step 4/4] 후보 저장...`);
   const dirName = await saveCandidateBundle(id, rosterData, concept, selectedImages, allImageResults);
 
-  // 진행 기록
   if (!progress.completed) progress.completed = [];
   if (!progress.completed.includes(id)) progress.completed.push(id);
   progress.lastCompleted = id;
@@ -291,22 +343,21 @@ async function runWildOnly(roster) {
     startSilenceWatch(`Wild #${id} ${w.name_en}`);
 
     try {
-      // image_desc → 영어 번역
+      // image_desc → 변형 영어 프롬프트 생성
       const imageDesc = w.visual?.image_desc || w.desc_kr;
-      log(`[Wild] image_desc 번역 중...`);
+      log(`[Wild] ${CONFIG.IMAGES_PER_CONCEPT}개 변형 프롬프트 생성 중...`);
+      const prompts = await generatePromptVariants(imageDesc, w.name_kr, CONFIG.IMAGES_PER_CONCEPT);
 
-      // concept-agent의 번역 기능 사용
-      const { concept, allForms } = await generateMonsterConcept(entry.data);
-      const wildForm = allForms.find(f => f.type === 'base');
+      const wildForm = {
+        name_en: w.name_en,
+        name_kr: w.name_kr,
+        image_prompt: prompts[0],
+        image_prompts: prompts,
+        type: 'base',
+      };
 
-      if (!wildForm?.image_prompt) {
-        log(`⚠ 번역 실패, 건너뛰기`);
-        stopSilenceWatch();
-        continue;
-      }
-
-      // 이미지 생성
-      log(`[Wild] ${CONFIG.IMAGES_PER_CONCEPT}장 이미지 생성 중...`);
+      // 이미지 생성 (각 이미지마다 다른 프롬프트)
+      log(`[Wild] ${CONFIG.IMAGES_PER_CONCEPT}장 이미지 생성 중 (${prompts.length}변형 프롬프트)...`);
       const result = await generateImages(wildForm);
 
       // 심사
@@ -316,7 +367,7 @@ async function runWildOnly(roster) {
         if (winner) log(`  [Skip] 첫번째 이미지 선택`);
       } else {
         log(`[Wild] 토너먼트 심사...`);
-        winner = await reviewAndSelectBest(result, concept);
+        winner = await reviewAndSelectBest(result, null);
       }
 
       // 저장
@@ -333,9 +384,6 @@ async function runWildOnly(roster) {
         const filename = `base_${w.name_en}_${img.index}.png`;
         await copyFile(img.path, resolve(candidateDir, 'all_images', filename));
       }
-
-      // concept.json 업데이트
-      await writeFile(resolve(candidateDir, 'concept.json'), JSON.stringify(concept, null, 2), 'utf-8');
 
       // temp 정리
       try {
