@@ -2,7 +2,7 @@
 // Combat System — 감정 상태 + 적 AI + 상성 + PP
 // ============================================================
 
-import { GENERIC_LOGS, calcSensoryMod } from './data.js';
+import { GENERIC_LOGS, calcSensoryMod } from './data/index.js';
 import { createEmotionState, tryApplyEmotion, checkAutoEmotion, tickEmotion, getEmotionMods, EMOTIONS } from './emotion.js';
 import { decideEnemyAction, decideTargeting, calcEnemyDamage, calcAoeDamage, PERSONALITY } from './enemyAI.js';
 import { statScale, previewAction as _previewAction } from './combatPreview.js';

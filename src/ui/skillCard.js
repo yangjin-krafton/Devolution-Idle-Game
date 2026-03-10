@@ -3,7 +3,7 @@
 // ============================================================
 
 import { S, lbl } from './theme.js';
-import { SKILL_CATEGORY } from '../data.js';
+import { SKILL_CATEGORY } from '../data/index.js';
 import { AXIS_LABEL } from '../monsterRegistry.js';
 
 // Dark palette (shared with actionPanelUI / titleUI)

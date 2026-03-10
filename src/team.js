@@ -2,7 +2,7 @@
 // Team Management — 6마리 팀 + 퇴화 + 스탯 시스템
 // ============================================================
 
-import { ALLY_MONSTERS, ENEMY_MONSTERS, GENERIC_LOGS } from './data.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS, GENERIC_LOGS } from './data/index.js';
 
 export class TeamManager {
   constructor(orderedIds) {

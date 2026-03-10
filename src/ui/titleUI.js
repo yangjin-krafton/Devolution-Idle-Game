@@ -4,7 +4,7 @@
 
 import { W, H, C, S, hex, lbl, cuteBtn, star, addSparkles } from './theme.js';
 import { monster } from './sprites.js';
-import { ALLY_MONSTERS, ENEMY_MONSTERS } from '../data.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS, STARTER_IDS } from '../data/index.js';
 import { PERSONALITY_LABEL } from '../monsterRegistry.js';
 import { buildSkillCard } from './skillCard.js';
 
@@ -139,7 +139,10 @@ function resetState() {
   selectedMonster = null; scrollOffset = 0; mode = 'idle';
   codexFilter = 'all'; codexSort = 'default'; filteredList = [];
   codexEntries = {};
-  ALLY_MONSTERS.forEach(m => { codexEntries[m.id] = 'unlocked'; });
+  // Only starter monsters are unlocked; rest are locked
+  ALLY_MONSTERS.forEach(m => {
+    codexEntries[m.id] = STARTER_IDS.includes(m.id) ? 'unlocked' : 'locked';
+  });
   ENEMY_MONSTERS.forEach(m => { codexEntries[m.id] = 'locked'; });
 }
 
@@ -630,9 +633,10 @@ function buildStartBtn() {
   startBtnRef = cuteBtn(W / 2 - 180, cy - 5, 180, 48, '▶ 모험 시작', D.neon, D.bg);
   startOverlay.addChild(startBtnRef);
 
-  const sub = lbl('주전 3 + 후보 3 준비 완료', 6, D.dim);
+  const sub = lbl('주전 3 + 후보 0/3 준비 완료', 6, D.dim);
   sub.anchor = { x: 0.5, y: 0 }; sub.x = W / 2; sub.y = cy + 50;
   startOverlay.addChild(sub);
+  startOverlay._subLabel = sub;
 
   ct.addChild(startOverlay);
   ct._startBtn = startBtnRef;
@@ -640,7 +644,13 @@ function buildStartBtn() {
 
 function refreshStartBtn() {
   if (!startOverlay) return;
-  startOverlay.visible = teamSlots.every(s => s !== null);
+  // Show start button when main team (slots 0-2) is full
+  const mainFull = teamSlots[0] !== null && teamSlots[1] !== null && teamSlots[2] !== null;
+  startOverlay.visible = mainFull;
+  if (mainFull && startOverlay._subLabel) {
+    const benchCount = [teamSlots[3], teamSlots[4], teamSlots[5]].filter(Boolean).length;
+    startOverlay._subLabel.text = `주전 3 + 후보 ${benchCount}/3 준비 완료`;
+  }
 }
 
 // ============================================================

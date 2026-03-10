@@ -3,7 +3,7 @@
 // ============================================================
 
 import { C } from './theme.js';
-import { ALLY_MONSTERS, ENEMY_MONSTERS } from '../data.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS } from '../data/index.js';
 
 const textures = {};
 

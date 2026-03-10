@@ -3,7 +3,7 @@
 // Currently wraps data.js; designed to swap to roster JSONs later.
 // ============================================================
 
-import { ALLY_MONSTERS, ENEMY_MONSTERS, SENSORY_AXES } from './data.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS, SENSORY_AXES } from './data/index.js';
 
 // ---- Sensory axis labels ----
 const AXIS_LABEL = { sound: '소리', temperature: '온도', smell: '냄새', behavior: '행동' };

@@ -2,7 +2,7 @@
 // Combat Preview — UI용 스킬 효과 미리보기 계산
 // ============================================================
 
-import { calcSensoryMod } from './data.js';
+import { calcSensoryMod } from './data/index.js';
 import { getEmotionMods } from './emotion.js';
 
 // 스탯 스케일 함수 (combat.js와 동일)
