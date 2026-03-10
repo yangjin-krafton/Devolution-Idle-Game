@@ -15,10 +15,15 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── LLM 호출 (타임아웃 + 재시도) ──
-const LLM_TIMEOUT_MS = 120_000;   // 2분 타임아웃
+const LLM_TIMEOUT_MS = 600_000;   // 10분 타임아웃 (32개 프롬프트 생성 시 출력 토큰 多)
 const LLM_MAX_RETRIES = 3;
 
-async function callLLM(messages, temperature = 0.7) {
+async function callLLM(messages, temperature = 0.7, { noThink = false } = {}) {
+  // noThink: Qwen thinking 비활성화
+  const finalMessages = noThink
+    ? [{ role: 'system', content: '/no_think' }, ...messages]
+    : messages;
+
   for (let attempt = 1; attempt <= LLM_MAX_RETRIES; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
@@ -28,7 +33,7 @@ async function callLLM(messages, temperature = 0.7) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: CONFIG.TEXT_MODEL,
-          messages,
+          messages: finalMessages,
           temperature,
           max_tokens: 16384,
         }),
@@ -113,18 +118,17 @@ function getFormSuffix(formType) {
   return FORM_SUFFIX.base;
 }
 
-// ── 형태 1개 → 1회 LLM 호출로 번역 + N개 프롬프트 완성 ──
-async function generatePromptVariants(imageDesc, nameKr, count, formType = 'base') {
-  console.log(`    [번역] "${nameKr}" → ${count}개 프롬프트 생성 중...`);
+// ── 형태 1개 → 8개씩 배치 호출, 배치마다 콜백으로 즉시 ComfyUI 큐 적재 가능 ──
+const BATCH_SIZE = 8;
 
-  const suffix = getFormSuffix(formType);
+async function generatePromptBatch(imageDesc, batchSize, suffix) {
   const messages = [
     {
       role: 'system',
-      content: `You translate a Korean monster description into ${count} English image prompts for AI image generation.
+      content: `You translate a Korean monster description into ${batchSize} English image prompts for AI image generation.
 
 RULES:
-1. Translate the Korean description into English, then create ${count} variations.
+1. Translate the Korean description into English, then create ${batchSize} variations.
 2. Every prompt MUST start with: "pokemon official art style, ken sugimori style, single creature only, one character, full body, white background, simple clean background, cel-shaded, bold outlines,"
 3. Every prompt MUST end with: "${suffix}"
 4. Between prefix and suffix, include: creature description + one unique variation per prompt.
@@ -132,33 +136,44 @@ RULES:
 6. Translate Korean colors accurately (숯검정→charcoal black, 한밤파랑→midnight blue, 탁한→dull/muted, 독성→toxic).
 7. NEVER use: chibi, baby, kawaii, dragon, pikachu.
 8. Each prompt: 40-80 words.
-9. Output ONLY a JSON array of ${count} strings. No explanation.`
+9. Output ONLY a JSON array of ${batchSize} strings. No explanation.`
     },
-    {
-      role: 'user',
-      content: imageDesc
-    }
+    { role: 'user', content: imageDesc }
   ];
 
-  const raw = await callLLM(messages, 0.7);
+  const raw = await callLLM(messages, 0.7, { noThink: true });
   let prompts;
   try {
     prompts = extractJSON(raw);
   } catch {
-    console.warn(`    [번역] JSON 파싱 실패, fallback`);
     prompts = [raw.replace(/```json|```|\[|\]/g, '').trim()];
   }
+  if (!Array.isArray(prompts)) prompts = prompts.prompts || [String(prompts)];
 
-  if (!Array.isArray(prompts)) {
-    prompts = prompts.prompts || [String(prompts)];
+  while (prompts.length < batchSize) prompts.push(prompts[prompts.length - 1] || imageDesc);
+  if (prompts.length > batchSize) prompts = prompts.slice(0, batchSize);
+  return prompts;
+}
+
+// onBatch(prompts, batchIndex) — 배치 완료 시 호출, ComfyUI 큐 즉시 적재용
+async function generatePromptVariants(imageDesc, nameKr, count, formType = 'base', onBatch = null) {
+  const suffix = getFormSuffix(formType);
+  const totalBatches = Math.ceil(count / BATCH_SIZE);
+  console.log(`    [번역] "${nameKr}" → ${count}개 (${BATCH_SIZE}×${totalBatches} 배치)`);
+
+  const allPrompts = [];
+  for (let b = 0; b < totalBatches; b++) {
+    const need = Math.min(BATCH_SIZE, count - allPrompts.length);
+    console.log(`    [번역] 배치 ${b + 1}/${totalBatches} (${need}개) 요청 중...`);
+    const batch = await generatePromptBatch(imageDesc, need, suffix);
+    allPrompts.push(...batch);
+
+    if (onBatch) onBatch(batch, b);
+    console.log(`    [번역] 배치 ${b + 1} 완료 → 누적 ${allPrompts.length}개`);
   }
 
-  // 부족하면 마지막 것 복제
-  while (prompts.length < count) prompts.push(prompts[prompts.length - 1] || imageDesc);
-  if (prompts.length > count) prompts = prompts.slice(0, count);
-
-  console.log(`    [번역] ${prompts.length}개 완료 (첫번째: ${prompts[0]?.substring(0, 60)}...)`);
-  return prompts;
+  console.log(`    [번역] 총 ${allPrompts.length}개 완료 (첫번째: ${allPrompts[0]?.substring(0, 60)}...)`);
+  return allPrompts;
 }
 
 // ── 모든 forms에 대해 변형 프롬프트 일괄 생성 ──

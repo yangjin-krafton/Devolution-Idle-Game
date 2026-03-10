@@ -100,10 +100,11 @@ async function downloadImage(filename, subfolder, folderType) {
 }
 
 export async function generateImages(form) {
-  const { name_en, image_prompt, image_prompts, type } = form;
-  const count = CONFIG.IMAGES_PER_CONCEPT;
+  const { name_en, image_prompt, image_prompts, type, _batchIndex } = form;
   const hasVariants = Array.isArray(image_prompts) && image_prompts.length > 0;
-  console.log(`[ComfyUI Agent] "${name_en}" (${type}) 이미지 ${count}장 생성 시작${hasVariants ? ` (${image_prompts.length}변형 프롬프트)` : ''}...`);
+  const count = hasVariants ? image_prompts.length : CONFIG.IMAGES_PER_CONCEPT;
+  const indexOffset = (_batchIndex || 0) * count;
+  console.log(`[ComfyUI Agent] "${name_en}" (${type}) 이미지 ${count}장 생성 시작${_batchIndex != null ? ` (배치${_batchIndex})` : ''}...`);
 
   await loadWorkflow();
 
@@ -119,8 +120,9 @@ export async function generateImages(form) {
     const workflow = buildWorkflow(prompt, seed);
 
     try {
+      const globalIdx = indexOffset + i;
       const promptId = await queuePrompt(workflow);
-      console.log(`  [${i + 1}/${CONFIG.IMAGES_PER_CONCEPT}] queued (seed: ${seed}, id: ${promptId})`);
+      console.log(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] queued (seed: ${seed}, id: ${promptId})`);
 
       const outputs = await waitForCompletion(promptId);
 
@@ -135,15 +137,15 @@ export async function generateImages(form) {
 
       if (imageInfo) {
         const imgBuffer = await downloadImage(imageInfo.filename, imageInfo.subfolder, imageInfo.type);
-        const localPath = resolve(tempDir, `${name_en}_${i}.png`);
+        const localPath = resolve(tempDir, `${name_en}_${globalIdx}.png`);
         await writeFile(localPath, imgBuffer);
-        images.push({ index: i, seed, path: localPath, filename: imageInfo.filename });
-        console.log(`  [${i + 1}/${CONFIG.IMAGES_PER_CONCEPT}] saved: ${localPath}`);
+        images.push({ index: globalIdx, seed, path: localPath, filename: imageInfo.filename });
+        console.log(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] saved: ${localPath}`);
       } else {
-        console.warn(`  [${i + 1}/${CONFIG.IMAGES_PER_CONCEPT}] 이미지 없음, 출력 노드 확인 필요`);
+        console.warn(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] 이미지 없음, 출력 노드 확인 필요`);
       }
     } catch (err) {
-      console.error(`  [${i + 1}/${CONFIG.IMAGES_PER_CONCEPT}] 에러: ${err.message}`);
+      console.error(`  [${globalIdx + 1}/${CONFIG.IMAGES_PER_CONCEPT}] 에러: ${err.message}`);
     }
   }
 

@@ -240,18 +240,28 @@ async function processOne(rosterEntry, progress) {
 
   for (let i = 0; i < allForms.length; i++) {
     const form = allForms[i];
+    form.image_prompts = [];
 
-    // LM Studio: 번역 (메인 루프 — 순차 대기)
+    // LM Studio: 8개씩 배치 번역 → 배치마다 즉시 ComfyUI 큐 적재
     log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" 번역 중...`);
-    const prompts = await generatePromptVariants(form.image_desc, form.name_kr, variantsPerForm, form.type);
+    const prompts = await generatePromptVariants(
+      form.image_desc, form.name_kr, variantsPerForm, form.type,
+      (batch, batchIdx) => {
+        // 배치 완료 콜백 — 8개 프롬프트 즉시 ComfyUI 큐 적재
+        const batchForm = {
+          ...form,
+          image_prompt: batch[0],
+          image_prompts: batch,
+          _batchIndex: batchIdx,
+        };
+        log(`  → [ComfyUI] form[${i}] 배치${batchIdx} ${batch.length}장 큐 적재`);
+        const imagePromise = generateImages(batchForm);
+        imagePromises.push({ form, promise: imagePromise });
+      }
+    );
     form.image_prompts = prompts;
     form.image_prompt = prompts[0];
     log(`  ✓ form[${i}] 번역 완료 (${prompts.length}변형)`);
-
-    // ComfyUI: 큐에 적재 (fire-and-forget — await 안 함!)
-    log(`  → [ComfyUI] form[${i}] "${form.name_kr}" ${variantsPerForm}장 큐 적재`);
-    const imagePromise = generateImages(form);
-    imagePromises.push({ form, promise: imagePromise });
   }
 
   log(`[Phase A 완료] ${allForms.length}개 형태 번역 완료, ${imagePromises.length}개 ComfyUI 작업 큐 적재됨`);
