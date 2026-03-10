@@ -18,6 +18,21 @@
       "empathy": 3,
       "resilience": 8,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "가시 짙은 녹색",
+        "secondary": "나무껍질 갈색",
+        "accent": "베리 자홍"
+      },
+      "image_desc": "야생형. 가시 고슴도치 - 독가시를 세우고 냄새로 영역을 표시하는 고슴도치. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+    },
+    "wildMechanic": {
+      "id": "thorn_reflect",
+      "name_kr": "가시 반사",
+      "desc_kr": "행동 축 자극(물리적 접근) 시 가시에 찔려 자극한 아군이 HP 데미지를 받는다.",
+      "trigger": "on_behavior_stimulate",
+      "effect": "damage_attacker"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 13,
         "agility": 2
       },
-      "skillFocus": "smell-defend / behavior-defend / smell-capture"
+      "skillFocus": "smell-defend / behavior-defend / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "가시 짙은 녹색",
+          "secondary": "나무껍질 갈색",
+          "accent": "베리 자홍"
+        },
+        "image_desc": "퇴화1. 꽃가시 - 가시 끝에 작은 꽃이 피어난 고슴도치. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+      },
+      "devo2": [
+        {
+          "name_en": "bud_hedgling",
+          "name_kr": "꽃봉가시",
+          "desc_kr": "작은 가시에 꽃봉오리가 맺힌 방어형 아기 고슴도치",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "가시 짙은 녹색",
+              "secondary": "나무껍질 갈색",
+              "accent": "베리 자홍"
+            },
+            "image_desc": "퇴화2. 꽃봉가시 - 작은 가시에 꽃봉오리가 맺힌 방어형 아기 고슴도치. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend / behavior-defend / smell-capture"
+        },
+        {
+          "name_en": "whiff_hedgling",
+          "name_kr": "향솔가시",
+          "desc_kr": "코를 킁킁거리며 향기를 뿌리는 공격형 아기 고슴도치",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "가시 짙은 녹색",
+              "secondary": "나무껍질 갈색",
+              "accent": "베리 자홍"
+            },
+            "image_desc": "퇴화2. 향솔가시 - 코를 킁킁거리며 향기를 뿌리는 공격형 아기 고슴도치. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-defend / behavior-defend / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "향가시",
@@ -47,7 +116,61 @@
         "resilience": 5,
         "agility": 2
       },
-      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "가시 짙은 녹색",
+          "secondary": "나무껍질 갈색",
+          "accent": "베리 자홍"
+        },
+        "image_desc": "퇴화1. 향가시 - 가시에서 달콤한 향이 나는 고슴도치. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+      },
+      "devo2": [
+        {
+          "name_en": "aroma_hedgling",
+          "name_kr": "달향가시",
+          "desc_kr": "달콤한 향을 풍기는 공격형 아기 고슴도치",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "가시 짙은 녹색",
+              "secondary": "나무껍질 갈색",
+              "accent": "베리 자홍"
+            },
+            "image_desc": "퇴화2. 달향가시 - 달콤한 향을 풍기는 공격형 아기 고슴도치. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+        },
+        {
+          "name_en": "curl_hedgling",
+          "name_kr": "동글가시",
+          "desc_kr": "동글게 말려서 방어하는 아기 고슴도치",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "가시 짙은 녹색",
+              "secondary": "나무껍질 갈색",
+              "accent": "베리 자홍"
+            },
+            "image_desc": "퇴화2. 동글가시 - 동글게 말려서 방어하는 아기 고슴도치. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "약가시",
@@ -61,8 +184,61 @@
         "resilience": 6,
         "agility": 2
       },
-      "skillFocus": "smell-defend(heal) / smell-stimulate / smell-capture"
+      "skillFocus": "smell-defend(heal) / smell-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "가시 짙은 녹색",
+          "secondary": "나무껍질 갈색",
+          "accent": "베리 자홍"
+        },
+        "image_desc": "퇴화1. 약가시 - 약초 가시로 아군을 치유하는 고슴도치. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+      },
+      "devo2": [
+        {
+          "name_en": "salve_hedgling",
+          "name_kr": "약풀가시",
+          "desc_kr": "가시에서 약효가 나는 치유 전문 아기 고슴도치",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "가시 짙은 녹색",
+              "secondary": "나무껍질 갈색",
+              "accent": "베리 자홍"
+            },
+            "image_desc": "퇴화2. 약풀가시 - 가시에서 약효가 나는 치유 전문 아기 고슴도치. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / smell-stimulate / smell-capture"
+        },
+        {
+          "name_en": "scamper_hedgling",
+          "name_kr": "살랑가시",
+          "desc_kr": "살랑살랑 뛰어다니는 빠른 아기 고슴도치",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "가시 짙은 녹색",
+              "secondary": "나무껍질 갈색",
+              "accent": "베리 자홍"
+            },
+            "image_desc": "퇴화2. 살랑가시 - 살랑살랑 뛰어다니는 빠른 아기 고슴도치. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 가시 짙은 녹색, 보조색 나무껍질 갈색, 강조색 베리 자홍"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "smell-defend(heal) / smell-stimulate / smell-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

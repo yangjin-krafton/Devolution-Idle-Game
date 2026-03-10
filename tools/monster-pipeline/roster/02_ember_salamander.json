@@ -18,6 +18,21 @@
       "empathy": 3,
       "resilience": 4,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "화산 적주황",
+        "secondary": "흑요석 검정",
+        "accent": "용융 금색"
+      },
+      "image_desc": "야생형. 용암 도롱뇽 - 용암 속에서 태어나 온몸에 불꽃이 일렁이는 도롱뇽. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+    },
+    "wildMechanic": {
+      "id": "lava_armor",
+      "name_kr": "용암 갑옷",
+      "desc_kr": "온도 자극에 대한 저항이 턴마다 올라간다. 냄새/행동 축으로 우회해야 한다.",
+      "trigger": "passive_scaling",
+      "effect": "temperature_resist_increase"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 2,
         "agility": 2
       },
-      "skillFocus": "temperature-stimulate / temperature-capture / behavior-defend"
+      "skillFocus": "temperature-stimulate / temperature-capture / behavior-defend",
+      "visual": {
+        "colors": {
+          "primary": "화산 적주황",
+          "secondary": "흑요석 검정",
+          "accent": "용융 금색"
+        },
+        "image_desc": "퇴화1. 불씨도롱 - 따뜻한 온기를 나누는 작은 불꽃 도롱뇽. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "spark_larva",
+          "name_kr": "불씨애",
+          "desc_kr": "작은 몸에서 따뜻한 불씨를 피우는 도롱뇽 유생",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 불씨애 - 작은 몸에서 따뜻한 불씨를 피우는 도롱뇽 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-stimulate / temperature-capture / behavior-defend"
+        },
+        {
+          "name_en": "warm_larva",
+          "name_kr": "온기애",
+          "desc_kr": "포근한 온기로 주위를 감싸는 도롱뇽 유생",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 온기애 - 포근한 온기로 주위를 감싸는 도롱뇽 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-stimulate / temperature-capture / behavior-defend"
+        }
+      ]
     },
     {
       "name_kr": "용암방패",
@@ -47,7 +116,61 @@
         "resilience": 13,
         "agility": 2
       },
-      "skillFocus": "temperature-defend / smell-defend(heal) / temperature-capture"
+      "skillFocus": "temperature-defend / smell-defend(heal) / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "화산 적주황",
+          "secondary": "흑요석 검정",
+          "accent": "용융 금색"
+        },
+        "image_desc": "퇴화1. 용암방패 - 굳은 용암으로 아군을 감싸는 수호 도롱뇽. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "rock_larva",
+          "name_kr": "바위애",
+          "desc_kr": "단단한 등껍질로 꿋꿋이 버티는 도롱뇽 유생",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 바위애 - 단단한 등껍질로 꿋꿋이 버티는 도롱뇽 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend / smell-defend(heal) / temperature-capture"
+        },
+        {
+          "name_en": "flare_larva",
+          "name_kr": "섬광애",
+          "desc_kr": "등 틈새에서 작은 불꽃을 내뿜는 도롱뇽 유생",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 섬광애 - 등 틈새에서 작은 불꽃을 내뿜는 도롱뇽 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-defend / smell-defend(heal) / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "온천도롱",
@@ -61,7 +184,61 @@
         "resilience": 4,
         "agility": 2
       },
-      "skillFocus": "temperature-defend(heal) / smell-stimulate / temperature-capture"
+      "skillFocus": "temperature-defend(heal) / smell-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "화산 적주황",
+          "secondary": "흑요석 검정",
+          "accent": "용융 금색"
+        },
+        "image_desc": "퇴화1. 온천도롱 - 치유의 온천수를 몸에서 흘리는 도롱뇽. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "steam_larva",
+          "name_kr": "김이애",
+          "desc_kr": "작은 몸에서 따뜻한 김이 모락모락 피어오르는 유생",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 김이애 - 작은 몸에서 따뜻한 김이 모락모락 피어오르는 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend(heal) / smell-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "pool_larva",
+          "name_kr": "웅덩이애",
+          "desc_kr": "작은 물웅덩이에 웅크리고 앉아 온기를 나누는 유생",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 웅덩이애 - 작은 물웅덩이에 웅크리고 앉아 온기를 나누는 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend(heal) / smell-stimulate / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "섬광도롱",
@@ -75,8 +252,61 @@
         "resilience": 2,
         "agility": 9
       },
-      "skillFocus": "temperature-stimulate / behavior-stimulate / temperature-capture"
+      "skillFocus": "temperature-stimulate / behavior-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "화산 적주황",
+          "secondary": "흑요석 검정",
+          "accent": "용융 금색"
+        },
+        "image_desc": "퇴화1. 섬광도롱 - 불꽃을 순간적으로 터뜨려 적을 놀라게 하는 도롱뇽. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "zip_larva",
+          "name_kr": "번쩍애",
+          "desc_kr": "작은 몸으로 재빨리 움직이는 도롱뇽 유생",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 번쩍애 - 작은 몸으로 재빨리 움직이는 도롱뇽 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "temperature-stimulate / behavior-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "glow_larva",
+          "name_kr": "반딧애",
+          "desc_kr": "어둠 속에서 은은하게 빛나는 도롱뇽 유생",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "화산 적주황",
+              "secondary": "흑요석 검정",
+              "accent": "용융 금색"
+            },
+            "image_desc": "퇴화2. 반딧애 - 어둠 속에서 은은하게 빛나는 도롱뇽 유생. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 화산 적주황, 보조색 흑요석 검정, 강조색 용융 금색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-stimulate / behavior-stimulate / temperature-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

@@ -19,6 +19,21 @@
       "empathy": 5,
       "resilience": 3,
       "agility": 6
+    },
+    "visual": {
+      "colors": {
+        "primary": "따뜻한 적갈색",
+        "secondary": "짙은 자두 보라",
+        "accent": "금빛 호박"
+      },
+      "image_desc": "야생형. 포자 여우 - 꼬리에서 환각 포자를 뿌리며 장난치는 여우. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+    },
+    "wildMechanic": {
+      "id": "hallucination_spore",
+      "name_kr": "환각 포자",
+      "desc_kr": "무작위로 아군 스킬의 대상을 다른 아군으로 변경시킨다. 예측 불가능한 혼란 유발.",
+      "trigger": "random_chance_30",
+      "effect": "redirect_skill_target"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 2,
         "agility": 5
       },
-      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "따뜻한 적갈색",
+          "secondary": "짙은 자두 보라",
+          "accent": "금빛 호박"
+        },
+        "image_desc": "퇴화1. 향여우 - 달콤한 향기로 적의 경계를 풀어버리는 여우. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+      },
+      "devo2": [
+        {
+          "name_en": "scent_pup",
+          "name_kr": "향기꼬마",
+          "desc_kr": "코를 킁킁거리며 달콤한 향을 뿌리는 아기 여우",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "따뜻한 적갈색",
+              "secondary": "짙은 자두 보라",
+              "accent": "금빛 호박"
+            },
+            "image_desc": "퇴화2. 향기꼬마 - 코를 킁킁거리며 달콤한 향을 뿌리는 아기 여우. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+        },
+        {
+          "name_en": "spore_bean",
+          "name_kr": "포자콩",
+          "desc_kr": "등에 작은 포자를 하나 달고 뒤뚱뒤뚱 걷는 꼬마 여우",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "따뜻한 적갈색",
+              "secondary": "짙은 자두 보라",
+              "accent": "금빛 호박"
+            },
+            "image_desc": "퇴화2. 포자콩 - 등에 작은 포자를 하나 달고 뒤뚱뒤뚱 걷는 꼬마 여우. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "안개여우",
@@ -48,8 +117,61 @@
         "resilience": 2,
         "agility": 10
       },
-      "skillFocus": "behavior-stimulate / behavior-defend / smell-capture"
+      "skillFocus": "behavior-stimulate / behavior-defend / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "따뜻한 적갈색",
+          "secondary": "짙은 자두 보라",
+          "accent": "금빛 호박"
+        },
+        "image_desc": "퇴화1. 안개여우 - 포자 안개로 아군을 숨겨주는 여우. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+      },
+      "devo2": [
+        {
+          "name_en": "misty_pup",
+          "name_kr": "안개솜이",
+          "desc_kr": "보솜보솜한 꼬리에서 안개가 살짝 피어오르는 아기 여우",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "따뜻한 적갈색",
+              "secondary": "짙은 자두 보라",
+              "accent": "금빛 호박"
+            },
+            "image_desc": "퇴화2. 안개솜이 - 보솜보솜한 꼬리에서 안개가 살짝 피어오르는 아기 여우. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / behavior-defend / smell-capture"
+        },
+        {
+          "name_en": "mushroom_button",
+          "name_kr": "버섯단추",
+          "desc_kr": "머리 위에 작은 버섯 모자를 쓰고 있는 동그란 아기 여우",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "따뜻한 적갈색",
+              "secondary": "짙은 자두 보라",
+              "accent": "금빛 호박"
+            },
+            "image_desc": "퇴화2. 버섯단추 - 머리 위에 작은 버섯 모자를 쓰고 있는 동그란 아기 여우. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 따뜻한 적갈색, 보조색 짙은 자두 보라, 강조색 금빛 호박"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / behavior-defend / smell-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

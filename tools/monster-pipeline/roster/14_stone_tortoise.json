@@ -18,6 +18,21 @@
       "empathy": 3,
       "resilience": 9,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "슬레이트 회색",
+        "secondary": "사암 황갈색",
+        "accent": "비취 녹색"
+      },
+      "image_desc": "야생형. 바위 거북 - 등에 이끼가 자란 거대한 고대 거북. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+    },
+    "wildMechanic": {
+      "id": "shell_retreat",
+      "name_kr": "은둔 방어",
+      "desc_kr": "3턴마다 등껍질에 숨어 모든 자극 효과가 50% 감소한다. 1턴 지속.",
+      "trigger": "every_3_turns",
+      "effect": "half_stimulation_effectiveness"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 14,
         "agility": 2
       },
-      "skillFocus": "temperature-defend / smell-defend / temperature-capture"
+      "skillFocus": "temperature-defend / smell-defend / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "슬레이트 회색",
+          "secondary": "사암 황갈색",
+          "accent": "비취 녹색"
+        },
+        "image_desc": "퇴화1. 이끼거북 - 등의 이끼에서 약초가 자라나는 치유 거북. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "pebble_tortling",
+          "name_kr": "조약돌거북",
+          "desc_kr": "작고 둥근 돌등판으로 웅크리는 아기 거북",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 조약돌거북 - 작고 둥근 돌등판으로 웅크리는 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend / smell-defend / temperature-capture"
+        },
+        {
+          "name_en": "warm_tortling",
+          "name_kr": "온기거북",
+          "desc_kr": "따뜻한 등판에서 김이 나는 치유형 아기 거북",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 온기거북 - 따뜻한 등판에서 김이 나는 치유형 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend / smell-defend / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "온천거북",
@@ -47,7 +116,61 @@
         "resilience": 5,
         "agility": 2
       },
-      "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+      "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "슬레이트 회색",
+          "secondary": "사암 황갈색",
+          "accent": "비취 녹색"
+        },
+        "image_desc": "퇴화1. 온천거북 - 따뜻한 등에서 치유의 김이 올라오는 거북. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "steam_tortling",
+          "name_kr": "김거북",
+          "desc_kr": "등에서 따뜻한 김이 솔솔 나는 치유 전문 아기 거북",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 김거북 - 등에서 따뜻한 김이 솔솔 나는 치유 전문 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+        },
+        {
+          "name_en": "rumble_tortling",
+          "name_kr": "쿵거북",
+          "desc_kr": "작은 발로 쿵쿵 걸어다니는 활발한 아기 거북",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 쿵거북 - 작은 발로 쿵쿵 걸어다니는 활발한 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "화석거북",
@@ -61,7 +184,61 @@
         "resilience": 6,
         "agility": 2
       },
-      "skillFocus": "temperature-stimulate / sound-stimulate / temperature-capture"
+      "skillFocus": "temperature-stimulate / sound-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "슬레이트 회색",
+          "secondary": "사암 황갈색",
+          "accent": "비취 녹색"
+        },
+        "image_desc": "퇴화1. 화석거북 - 고대의 힘으로 강렬한 소리를 울리는 거북. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "fossil_tortling",
+          "name_kr": "뼈거북",
+          "desc_kr": "등판에 작은 화석 무늬가 있는 공격형 아기 거북",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 뼈거북 - 등판에 작은 화석 무늬가 있는 공격형 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-stimulate / sound-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "scoot_tortling",
+          "name_kr": "총총거북",
+          "desc_kr": "작은 다리로 재빠르게 움직이는 아기 거북",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 총총거북 - 작은 다리로 재빠르게 움직이는 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "temperature-stimulate / sound-stimulate / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "지진거북",
@@ -75,8 +252,61 @@
         "resilience": 4,
         "agility": 9
       },
-      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "슬레이트 회색",
+          "secondary": "사암 황갈색",
+          "accent": "비취 녹색"
+        },
+        "image_desc": "퇴화1. 지진거북 - 무거운 발걸음으로 지면을 흔드는 거북. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "dash_tortling",
+          "name_kr": "달리거북",
+          "desc_kr": "작은 다리로 지면을 탁탁 치며 달리는 아기 거북",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 달리거북 - 작은 다리로 지면을 탁탁 치며 달리는 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "shell_tortling",
+          "name_kr": "방패거북",
+          "desc_kr": "작지만 단단한 등판으로 웅크리는 방어형 아기 거북",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "슬레이트 회색",
+              "secondary": "사암 황갈색",
+              "accent": "비취 녹색"
+            },
+            "image_desc": "퇴화2. 방패거북 - 작지만 단단한 등판으로 웅크리는 방어형 아기 거북. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 슬레이트 회색, 보조색 사암 황갈색, 강조색 비취 녹색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

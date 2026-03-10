@@ -18,6 +18,21 @@
       "empathy": 7,
       "resilience": 4,
       "agility": 4
+    },
+    "visual": {
+      "colors": {
+        "primary": "무지개빛 청록",
+        "secondary": "크롬 은색",
+        "accent": "전기 자홍"
+      },
+      "image_desc": "야생형. 거울 카멜레온 - 몸을 투명하게 바꿔 상대의 행동을 관찰하는 카멜레온. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+    },
+    "wildMechanic": {
+      "id": "mirror_copy",
+      "name_kr": "거울 모방",
+      "desc_kr": "마지막으로 사용된 아군 스킬을 복사해 역으로 사용한다. 순화도 대신 탈출 게이지를 올린다.",
+      "trigger": "after_ally_skill",
+      "effect": "copy_reverse_skill"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 2,
         "agility": 3
       },
-      "skillFocus": "behavior-stimulate / behavior-capture / temperature-defend(heal)"
+      "skillFocus": "behavior-stimulate / behavior-capture / temperature-defend(heal)",
+      "visual": {
+        "colors": {
+          "primary": "무지개빛 청록",
+          "secondary": "크롬 은색",
+          "accent": "전기 자홍"
+        },
+        "image_desc": "퇴화1. 빛도마뱀 - 빛을 반사해 아군의 스킬을 증폭시키는 도마뱀. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+      },
+      "devo2": [
+        {
+          "name_en": "sparkle_newt",
+          "name_kr": "반짝이",
+          "desc_kr": "몸에서 작은 빛을 반사하며 반짝거리는 꼬마 도마뱀",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "무지개빛 청록",
+              "secondary": "크롬 은색",
+              "accent": "전기 자홍"
+            },
+            "image_desc": "퇴화2. 반짝이 - 몸에서 작은 빛을 반사하며 반짝거리는 꼬마 도마뱀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / behavior-capture / temperature-defend(heal)"
+        },
+        {
+          "name_en": "flash_gecko",
+          "name_kr": "섬광이",
+          "desc_kr": "꼬리 끝에서 번쩍이는 빛으로 놀라게 하는 아기 도마뱀",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "무지개빛 청록",
+              "secondary": "크롬 은색",
+              "accent": "전기 자홍"
+            },
+            "image_desc": "퇴화2. 섬광이 - 꼬리 끝에서 번쩍이는 빛으로 놀라게 하는 아기 도마뱀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "behavior-stimulate / behavior-capture / temperature-defend(heal)"
+        }
+      ]
     },
     {
       "name_kr": "위장도마뱀",
@@ -47,8 +116,61 @@
         "resilience": 2,
         "agility": 10
       },
-      "skillFocus": "behavior-stimulate / behavior-defend / behavior-capture"
+      "skillFocus": "behavior-stimulate / behavior-defend / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "무지개빛 청록",
+          "secondary": "크롬 은색",
+          "accent": "전기 자홍"
+        },
+        "image_desc": "퇴화1. 위장도마뱀 - 완벽한 위장으로 적의 공격을 피하는 도마뱀. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+      },
+      "devo2": [
+        {
+          "name_en": "dash_dot",
+          "name_kr": "쏜살이",
+          "desc_kr": "재빠르게 숨었다 나타났다 하는 장난꾸러기 꼬마 도마뱀",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "무지개빛 청록",
+              "secondary": "크롬 은색",
+              "accent": "전기 자홍"
+            },
+            "image_desc": "퇴화2. 쏜살이 - 재빠르게 숨었다 나타났다 하는 장난꾸러기 꼬마 도마뱀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / behavior-defend / behavior-capture"
+        },
+        {
+          "name_en": "mirror_pebble",
+          "name_kr": "거울콩",
+          "desc_kr": "작은 몸에 비친 주변 풍경을 보여주는 동그란 도마뱀",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "무지개빛 청록",
+              "secondary": "크롬 은색",
+              "accent": "전기 자홍"
+            },
+            "image_desc": "퇴화2. 거울콩 - 작은 몸에 비친 주변 풍경을 보여주는 동그란 도마뱀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 무지개빛 청록, 보조색 크롬 은색, 강조색 전기 자홍"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / behavior-defend / behavior-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

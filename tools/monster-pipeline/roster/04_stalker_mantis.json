@@ -18,6 +18,21 @@
       "empathy": 5,
       "resilience": 2,
       "agility": 8
+    },
+    "visual": {
+      "colors": {
+        "primary": "숲 에메랄드",
+        "secondary": "나무껍질 갈색",
+        "accent": "핏빛 빨강"
+      },
+      "image_desc": "야생형. 그림자 사마귀 - 소리 없이 접근해 한순간에 덮치는 거대한 사마귀. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+    },
+    "wildMechanic": {
+      "id": "ambush_stealth",
+      "name_kr": "은닉 매복",
+      "desc_kr": "무작위 턴에 숨기를 시전한다. 숨은 동안 행동 축 자극만 유효하다.",
+      "trigger": "random_turns",
+      "effect": "stealth_immune_except_behavior"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 2,
         "agility": 12
       },
-      "skillFocus": "behavior-stimulate / behavior-capture / sound-defend"
+      "skillFocus": "behavior-stimulate / behavior-capture / sound-defend",
+      "visual": {
+        "colors": {
+          "primary": "숲 에메랄드",
+          "secondary": "나무껍질 갈색",
+          "accent": "핏빛 빨강"
+        },
+        "image_desc": "퇴화1. 춤사마귀 - 위협 대신 춤으로 소통하는 우아한 사마귀. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "twirl_nymph",
+          "name_kr": "빙글이",
+          "desc_kr": "작은 몸으로 빙글빙글 춤추는 꼬마 사마귀",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "숲 에메랄드",
+              "secondary": "나무껍질 갈색",
+              "accent": "핏빛 빨강"
+            },
+            "image_desc": "퇴화2. 빙글이 - 작은 몸으로 빙글빙글 춤추는 꼬마 사마귀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / behavior-capture / sound-defend"
+        },
+        {
+          "name_en": "guard_nymph",
+          "name_kr": "지킴이",
+          "desc_kr": "작은 팔로 열심히 아군을 지키는 꼬마 사마귀",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "숲 에메랄드",
+              "secondary": "나무껍질 갈색",
+              "accent": "핏빛 빨강"
+            },
+            "image_desc": "퇴화2. 지킴이 - 작은 팔로 열심히 아군을 지키는 꼬마 사마귀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / behavior-capture / sound-defend"
+        }
+      ]
     },
     {
       "name_kr": "꽃사마귀",
@@ -47,7 +116,61 @@
         "resilience": 2,
         "agility": 4
       },
-      "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+      "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "숲 에메랄드",
+          "secondary": "나무껍질 갈색",
+          "accent": "핏빛 빨강"
+        },
+        "image_desc": "퇴화1. 꽃사마귀 - 꽃잎 같은 팔로 적을 유인하는 사마귀. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "bloom_nymph",
+          "name_kr": "꽃봉이",
+          "desc_kr": "작은 꽃잎 팔을 흔들어 적을 유혹하는 꼬마 사마귀",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "숲 에메랄드",
+              "secondary": "나무껍질 갈색",
+              "accent": "핏빛 빨강"
+            },
+            "image_desc": "퇴화2. 꽃봉이 - 작은 꽃잎 팔을 흔들어 적을 유혹하는 꼬마 사마귀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "leaf_nymph",
+          "name_kr": "잎새꼬미",
+          "desc_kr": "잎사귀처럼 숨어 아군을 돕는 꼬마 사마귀",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "숲 에메랄드",
+              "secondary": "나무껍질 갈색",
+              "accent": "핏빛 빨강"
+            },
+            "image_desc": "퇴화2. 잎새꼬미 - 잎사귀처럼 숨어 아군을 돕는 꼬마 사마귀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+        }
+      ]
     },
     {
       "name_kr": "갑옷사마귀",
@@ -61,8 +184,61 @@
         "resilience": 10,
         "agility": 4
       },
-      "skillFocus": "behavior-defend / sound-defend / behavior-capture"
+      "skillFocus": "behavior-defend / sound-defend / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "숲 에메랄드",
+          "secondary": "나무껍질 갈색",
+          "accent": "핏빛 빨강"
+        },
+        "image_desc": "퇴화1. 갑옷사마귀 - 단단한 외골격으로 아군을 지키는 사마귀. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "shell_nymph",
+          "name_kr": "갑옷꼬미",
+          "desc_kr": "작은 딱딱한 몸으로 아군을 지키는 꼬마 사마귀",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "숲 에메랄드",
+              "secondary": "나무껍질 갈색",
+              "accent": "핏빛 빨강"
+            },
+            "image_desc": "퇴화2. 갑옷꼬미 - 작은 딱딱한 몸으로 아군을 지키는 꼬마 사마귀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-defend / sound-defend / behavior-capture"
+        },
+        {
+          "name_en": "snip_nymph",
+          "name_kr": "싹둑이",
+          "desc_kr": "작은 팔을 휘둘러 열심히 싸우는 꼬마 사마귀",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "숲 에메랄드",
+              "secondary": "나무껍질 갈색",
+              "accent": "핏빛 빨강"
+            },
+            "image_desc": "퇴화2. 싹둑이 - 작은 팔을 휘둘러 열심히 싸우는 꼬마 사마귀. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숲 에메랄드, 보조색 나무껍질 갈색, 강조색 핏빛 빨강"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "behavior-defend / sound-defend / behavior-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

@@ -18,6 +18,21 @@
       "empathy": 7,
       "resilience": 5,
       "agility": 4
+    },
+    "visual": {
+      "colors": {
+        "primary": "얼음 강철 파랑",
+        "secondary": "서리 흰색",
+        "accent": "수정 청록"
+      },
+      "image_desc": "야생형. 서리 나방 - 날개에 서리가 내려앉은 투명한 거대 나방. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+    },
+    "wildMechanic": {
+      "id": "frost_barrier",
+      "name_kr": "서리 결계",
+      "desc_kr": "순화도가 40% 이상이 되면 서리 방벽을 생성해 다음 자극 1회를 무효화한다.",
+      "trigger": "taming_threshold_40",
+      "effect": "block_next_stimulation"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 3,
         "agility": 3
       },
-      "skillFocus": "temperature-defend(heal) / temperature-stimulate / behavior-capture"
+      "skillFocus": "temperature-defend(heal) / temperature-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "얼음 강철 파랑",
+          "secondary": "서리 흰색",
+          "accent": "수정 청록"
+        },
+        "image_desc": "퇴화1. 눈꽃나방 - 서리가 눈꽃으로 변해 아군을 지키는 나방. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+      },
+      "devo2": [
+        {
+          "name_en": "flurry_larva",
+          "name_kr": "눈송이",
+          "desc_kr": "작은 눈꽃을 흩뿌리며 아군을 치유하는 꼬마 나방",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "얼음 강철 파랑",
+              "secondary": "서리 흰색",
+              "accent": "수정 청록"
+            },
+            "image_desc": "퇴화2. 눈송이 - 작은 눈꽃을 흩뿌리며 아군을 치유하는 꼬마 나방. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend(heal) / temperature-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "chill_larva",
+          "name_kr": "서늘이",
+          "desc_kr": "차가운 바람으로 적의 움직임을 늦추는 꼬마 나방",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "얼음 강철 파랑",
+              "secondary": "서리 흰색",
+              "accent": "수정 청록"
+            },
+            "image_desc": "퇴화2. 서늘이 - 차가운 바람으로 적의 움직임을 늦추는 꼬마 나방. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "temperature-defend(heal) / temperature-stimulate / behavior-capture"
+        }
+      ]
     },
     {
       "name_kr": "얼음나방",
@@ -47,8 +116,61 @@
         "resilience": 10,
         "agility": 3
       },
-      "skillFocus": "temperature-defend / temperature-stimulate / temperature-capture"
+      "skillFocus": "temperature-defend / temperature-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "얼음 강철 파랑",
+          "secondary": "서리 흰색",
+          "accent": "수정 청록"
+        },
+        "image_desc": "퇴화1. 얼음나방 - 차가운 바람으로 적의 움직임을 늦추는 나방. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+      },
+      "devo2": [
+        {
+          "name_en": "frost_larva",
+          "name_kr": "얼음꼬미",
+          "desc_kr": "단단한 얼음 껍질로 아군을 지키는 꼬마 나방",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "얼음 강철 파랑",
+              "secondary": "서리 흰색",
+              "accent": "수정 청록"
+            },
+            "image_desc": "퇴화2. 얼음꼬미 - 단단한 얼음 껍질로 아군을 지키는 꼬마 나방. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend / temperature-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "sparkle_larva",
+          "name_kr": "반짝이",
+          "desc_kr": "반짝이는 가루를 뿌려 적을 현혹하는 꼬마 나방",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "얼음 강철 파랑",
+              "secondary": "서리 흰색",
+              "accent": "수정 청록"
+            },
+            "image_desc": "퇴화2. 반짝이 - 반짝이는 가루를 뿌려 적을 현혹하는 꼬마 나방. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 얼음 강철 파랑, 보조색 서리 흰색, 강조색 수정 청록"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-defend / temperature-stimulate / temperature-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

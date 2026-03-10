@@ -19,6 +19,21 @@
       "empathy": 7,
       "resilience": 5,
       "agility": 3
+    },
+    "visual": {
+      "colors": {
+        "primary": "반투명 짙은 청록",
+        "secondary": "유령 라벤더",
+        "accent": "생물발광 녹색"
+      },
+      "image_desc": "야생형. 안개 해파리 - 공중에 떠다니며 촉수에서 차가운 안개를 뿜는 해파리. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+    },
+    "wildMechanic": {
+      "id": "tentacle_counter",
+      "name_kr": "촉수 반격",
+      "desc_kr": "행동 축 자극 시 30% 확률로 촉수가 반격해 자극한 아군의 HP를 감소시킨다.",
+      "trigger": "on_behavior_stimulate",
+      "effect": "counter_hp_damage"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 4,
         "agility": 2
       },
-      "skillFocus": "smell-defend(heal) / temperature-stimulate / smell-capture"
+      "skillFocus": "smell-defend(heal) / temperature-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "반투명 짙은 청록",
+          "secondary": "유령 라벤더",
+          "accent": "생물발광 녹색"
+        },
+        "image_desc": "퇴화1. 이슬해파리 - 이슬방울을 머금은 치유의 해파리. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "droplet_jelly",
+          "name_kr": "이슬방울",
+          "desc_kr": "작은 방울 모양으로 떠다니며 촉촉한 이슬을 뿌리는 아기 해파리",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "반투명 짙은 청록",
+              "secondary": "유령 라벤더",
+              "accent": "생물발광 녹색"
+            },
+            "image_desc": "퇴화2. 이슬방울 - 작은 방울 모양으로 떠다니며 촉촉한 이슬을 뿌리는 아기 해파리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / temperature-stimulate / smell-capture"
+        },
+        {
+          "name_en": "chill_blob",
+          "name_kr": "한기방울",
+          "desc_kr": "차가운 안개를 살짝 내뿜는 동그란 젤리 덩어리",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "반투명 짙은 청록",
+              "secondary": "유령 라벤더",
+              "accent": "생물발광 녹색"
+            },
+            "image_desc": "퇴화2. 한기방울 - 차가운 안개를 살짝 내뿜는 동그란 젤리 덩어리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / temperature-stimulate / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "독촉수",
@@ -48,8 +117,61 @@
         "resilience": 4,
         "agility": 3
       },
-      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+      "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "반투명 짙은 청록",
+          "secondary": "유령 라벤더",
+          "accent": "생물발광 녹색"
+        },
+        "image_desc": "퇴화1. 독촉수 - 독촉수로 적의 도주를 억제하는 해파리. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "sting_drop",
+          "name_kr": "쏘기방울",
+          "desc_kr": "작은 촉수로 살짝 찌르는 동그란 아기 해파리",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "반투명 짙은 청록",
+              "secondary": "유령 라벤더",
+              "accent": "생물발광 녹색"
+            },
+            "image_desc": "퇴화2. 쏘기방울 - 작은 촉수로 살짝 찌르는 동그란 아기 해파리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+        },
+        {
+          "name_en": "mist_puff",
+          "name_kr": "안개솜",
+          "desc_kr": "안개를 살짝 내뿜으며 둥실 떠다니는 솜뭉치 해파리",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "반투명 짙은 청록",
+              "secondary": "유령 라벤더",
+              "accent": "생물발광 녹색"
+            },
+            "image_desc": "퇴화2. 안개솜 - 안개를 살짝 내뿜으며 둥실 떠다니는 솜뭉치 해파리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 반투명 짙은 청록, 보조색 유령 라벤더, 강조색 생물발광 녹색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-stimulate / temperature-stimulate / smell-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

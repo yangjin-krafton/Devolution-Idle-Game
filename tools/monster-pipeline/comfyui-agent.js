@@ -100,8 +100,10 @@ async function downloadImage(filename, subfolder, folderType) {
 }
 
 export async function generateImages(form) {
-  const { name_en, image_prompt, type } = form;
-  console.log(`[ComfyUI Agent] "${name_en}" (${type}) 이미지 ${CONFIG.IMAGES_PER_CONCEPT}장 생성 시작...`);
+  const { name_en, image_prompt, image_prompts, type } = form;
+  const count = CONFIG.IMAGES_PER_CONCEPT;
+  const hasVariants = Array.isArray(image_prompts) && image_prompts.length > 0;
+  console.log(`[ComfyUI Agent] "${name_en}" (${type}) 이미지 ${count}장 생성 시작${hasVariants ? ` (${image_prompts.length}변형 프롬프트)` : ''}...`);
 
   await loadWorkflow();
 
@@ -110,9 +112,11 @@ export async function generateImages(form) {
 
   const images = [];
 
-  for (let i = 0; i < CONFIG.IMAGES_PER_CONCEPT; i++) {
+  for (let i = 0; i < count; i++) {
     const seed = Math.floor(Math.random() * 2 ** 48);
-    const workflow = buildWorkflow(image_prompt, seed);
+    // 변형 프롬프트 배열이 있으면 각 이미지마다 다른 prompt 사용
+    const prompt = hasVariants ? (image_prompts[i % image_prompts.length] || image_prompt) : image_prompt;
+    const workflow = buildWorkflow(prompt, seed);
 
     try {
       const promptId = await queuePrompt(workflow);

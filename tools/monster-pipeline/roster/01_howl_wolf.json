@@ -18,6 +18,21 @@
       "empathy": 4,
       "resilience": 4,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "숯 검정",
+        "secondary": "한밤 파랑",
+        "accent": "은빛"
+      },
+      "image_desc": "야생형. 울부짖는 늑대 - 달빛 아래 울부짖으며 음파로 사냥하는 어둠의 늑대. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+    },
+    "wildMechanic": {
+      "id": "sonic_buildup",
+      "name_kr": "음파 축적",
+      "desc_kr": "매 턴 음파 게이지가 쌓이며, 3턴마다 전체 탈출 게이지가 크게 상승한다. 빠른 순화가 필요하다.",
+      "trigger": "every_3_turns",
+      "effect": "escape_gauge_burst"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 3,
         "agility": 2
       },
-      "skillFocus": "sound-stimulate / sound-capture / behavior-defend"
+      "skillFocus": "sound-stimulate / sound-capture / behavior-defend",
+      "visual": {
+        "colors": {
+          "primary": "숯 검정",
+          "secondary": "한밤 파랑",
+          "accent": "은빛"
+        },
+        "image_desc": "퇴화1. 달울림 - 울음이 아군을 격려하는 전장의 노래꾼. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+      },
+      "devo2": [
+        {
+          "name_en": "howl_pup",
+          "name_kr": "울림이",
+          "desc_kr": "작은 입으로 용감하게 울부짖는 꼬마 늑대",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "숯 검정",
+              "secondary": "한밤 파랑",
+              "accent": "은빛"
+            },
+            "image_desc": "퇴화2. 울림이 - 작은 입으로 용감하게 울부짖는 꼬마 늑대. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "sound-stimulate / sound-capture / behavior-defend"
+        },
+        {
+          "name_en": "lull_pup",
+          "name_kr": "자장이",
+          "desc_kr": "부드러운 울음으로 주변을 달래는 꼬마 늑대",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "숯 검정",
+              "secondary": "한밤 파랑",
+              "accent": "은빛"
+            },
+            "image_desc": "퇴화2. 자장이 - 부드러운 울음으로 주변을 달래는 꼬마 늑대. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "sound-stimulate / sound-capture / behavior-defend"
+        }
+      ]
     },
     {
       "name_kr": "수호늑대",
@@ -47,7 +116,61 @@
         "resilience": 11,
         "agility": 2
       },
-      "skillFocus": "sound-defend / behavior-defend / sound-capture"
+      "skillFocus": "sound-defend / behavior-defend / sound-capture",
+      "visual": {
+        "colors": {
+          "primary": "숯 검정",
+          "secondary": "한밤 파랑",
+          "accent": "은빛"
+        },
+        "image_desc": "퇴화1. 수호늑대 - 울음소리로 적의 접근을 막는 방어의 늑대. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+      },
+      "devo2": [
+        {
+          "name_en": "shield_pup",
+          "name_kr": "방패냥",
+          "desc_kr": "작은 몸으로 버티며 아군을 지키는 꼬마 늑대",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "숯 검정",
+              "secondary": "한밤 파랑",
+              "accent": "은빛"
+            },
+            "image_desc": "퇴화2. 방패냥 - 작은 몸으로 버티며 아군을 지키는 꼬마 늑대. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "sound-defend / behavior-defend / sound-capture"
+        },
+        {
+          "name_en": "echo_pup",
+          "name_kr": "메아리",
+          "desc_kr": "작은 울음이 멀리까지 울려 퍼지는 꼬마 늑대",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "숯 검정",
+              "secondary": "한밤 파랑",
+              "accent": "은빛"
+            },
+            "image_desc": "퇴화2. 메아리 - 작은 울음이 멀리까지 울려 퍼지는 꼬마 늑대. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "sound-defend / behavior-defend / sound-capture"
+        }
+      ]
     },
     {
       "name_kr": "질풍늑대",
@@ -61,8 +184,61 @@
         "resilience": 2,
         "agility": 9
       },
-      "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture"
+      "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture",
+      "visual": {
+        "colors": {
+          "primary": "숯 검정",
+          "secondary": "한밤 파랑",
+          "accent": "은빛"
+        },
+        "image_desc": "퇴화1. 질풍늑대 - 바람처럼 빠르게 달려 적을 압박하는 늑대. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+      },
+      "devo2": [
+        {
+          "name_en": "dash_pup",
+          "name_kr": "쏜살이",
+          "desc_kr": "짧은 다리로 후다닥 내달리는 꼬마 늑대",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "숯 검정",
+              "secondary": "한밤 파랑",
+              "accent": "은빛"
+            },
+            "image_desc": "퇴화2. 쏜살이 - 짧은 다리로 후다닥 내달리는 꼬마 늑대. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture"
+        },
+        {
+          "name_en": "breeze_pup",
+          "name_kr": "솔솔이",
+          "desc_kr": "가볍게 뛰어다니며 바람을 일으키는 꼬마 늑대",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "숯 검정",
+              "secondary": "한밤 파랑",
+              "accent": "은빛"
+            },
+            "image_desc": "퇴화2. 솔솔이 - 가볍게 뛰어다니며 바람을 일으키는 꼬마 늑대. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 숯 검정, 보조색 한밤 파랑, 강조색 은빛"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "sound-stimulate / behavior-stimulate / sound-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

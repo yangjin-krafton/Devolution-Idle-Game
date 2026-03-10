@@ -19,6 +19,21 @@
       "empathy": 4,
       "resilience": 3,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "전기 파랑",
+        "secondary": "폭풍 짙은 회색",
+        "accent": "번개 흰색"
+      },
+      "image_desc": "야생형. 번개 장어 - 몸에서 전기를 뿜어 물속 모든 것을 마비시키는 장어. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+    },
+    "wildMechanic": {
+      "id": "electric_charge",
+      "name_kr": "전기 충전",
+      "desc_kr": "3턴간 충전 후 방전하여 전체 아군의 스킬 쿨다운이 +1턴 증가한다.",
+      "trigger": "every_3_turns_charge",
+      "effect": "increase_all_cooldowns"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 2,
         "agility": 2
       },
-      "skillFocus": "sound-stimulate / temperature-stimulate / sound-capture"
+      "skillFocus": "sound-stimulate / temperature-stimulate / sound-capture",
+      "visual": {
+        "colors": {
+          "primary": "전기 파랑",
+          "secondary": "폭풍 짙은 회색",
+          "accent": "번개 흰색"
+        },
+        "image_desc": "퇴화1. 불꽃장어 - 전기가 따뜻한 빛으로 변해 아군을 비추는 장어. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+      },
+      "devo2": [
+        {
+          "name_en": "spark_bean",
+          "name_kr": "불꽃콩",
+          "desc_kr": "조그만 몸에서 따끈한 불꽃이 깜빡이는 꼬마 장어",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "전기 파랑",
+              "secondary": "폭풍 짙은 회색",
+              "accent": "번개 흰색"
+            },
+            "image_desc": "퇴화2. 불꽃콩 - 조그만 몸에서 따끈한 불꽃이 깜빡이는 꼬마 장어. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "sound-stimulate / temperature-stimulate / sound-capture"
+        },
+        {
+          "name_en": "warm_wiggly",
+          "name_kr": "따끈꿈틀",
+          "desc_kr": "따뜻한 몸으로 꿈틀거리며 아군을 감싸주는 꼬마 장어",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "전기 파랑",
+              "secondary": "폭풍 짙은 회색",
+              "accent": "번개 흰색"
+            },
+            "image_desc": "퇴화2. 따끈꿈틀 - 따뜻한 몸으로 꿈틀거리며 아군을 감싸주는 꼬마 장어. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "sound-stimulate / temperature-stimulate / sound-capture"
+        }
+      ]
     },
     {
       "name_kr": "전기뱀장어",
@@ -48,7 +117,61 @@
         "resilience": 2,
         "agility": 10
       },
-      "skillFocus": "sound-stimulate / behavior-stimulate / temperature-capture"
+      "skillFocus": "sound-stimulate / behavior-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "전기 파랑",
+          "secondary": "폭풍 짙은 회색",
+          "accent": "번개 흰색"
+        },
+        "image_desc": "퇴화1. 전기뱀장어 - 전기 충격으로 적을 놀라게 하는 장어. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+      },
+      "devo2": [
+        {
+          "name_en": "volt_tadpole",
+          "name_kr": "전기올챙",
+          "desc_kr": "빠르게 헤엄치며 찌릿찌릿 전기를 내뿜는 꼬마 장어",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "전기 파랑",
+              "secondary": "폭풍 짙은 회색",
+              "accent": "번개 흰색"
+            },
+            "image_desc": "퇴화2. 전기올챙 - 빠르게 헤엄치며 찌릿찌릿 전기를 내뿜는 꼬마 장어. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "sound-stimulate / behavior-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "shock_guard",
+          "name_kr": "전기방패",
+          "desc_kr": "전기 막으로 아군을 보호하는 꼬마 장어",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "전기 파랑",
+              "secondary": "폭풍 짙은 회색",
+              "accent": "번개 흰색"
+            },
+            "image_desc": "퇴화2. 전기방패 - 전기 막으로 아군을 보호하는 꼬마 장어. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "sound-stimulate / behavior-stimulate / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "치유장어",
@@ -62,8 +185,61 @@
         "resilience": 3,
         "agility": 4
       },
-      "skillFocus": "temperature-defend(heal) / sound-defend / temperature-capture"
+      "skillFocus": "temperature-defend(heal) / sound-defend / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "전기 파랑",
+          "secondary": "폭풍 짙은 회색",
+          "accent": "번개 흰색"
+        },
+        "image_desc": "퇴화1. 치유장어 - 약한 전류로 아군의 근육을 풀어주는 장어. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+      },
+      "devo2": [
+        {
+          "name_en": "heal_drop",
+          "name_kr": "치유방울",
+          "desc_kr": "약한 전류로 상처를 감싸주는 동글동글한 꼬마 장어",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "전기 파랑",
+              "secondary": "폭풍 짙은 회색",
+              "accent": "번개 흰색"
+            },
+            "image_desc": "퇴화2. 치유방울 - 약한 전류로 상처를 감싸주는 동글동글한 꼬마 장어. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend(heal) / sound-defend / temperature-capture"
+        },
+        {
+          "name_en": "zap_nip",
+          "name_kr": "찌릿톡",
+          "desc_kr": "짧은 전기 충격으로 적을 톡톡 자극하는 꼬마 장어",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "전기 파랑",
+              "secondary": "폭풍 짙은 회색",
+              "accent": "번개 흰색"
+            },
+            "image_desc": "퇴화2. 찌릿톡 - 짧은 전기 충격으로 적을 톡톡 자극하는 꼬마 장어. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 전기 파랑, 보조색 폭풍 짙은 회색, 강조색 번개 흰색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-defend(heal) / sound-defend / temperature-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

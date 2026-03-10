@@ -19,6 +19,21 @@
       "empathy": 5,
       "resilience": 3,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "짙은 산호 빨강",
+        "secondary": "바다 감청",
+        "accent": "진주 흰색"
+      },
+      "image_desc": "야생형. 산호 해마 - 산호처럼 화려하고 물 온도로 감정을 표현하는 해마. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+    },
+    "wildMechanic": {
+      "id": "tidal_flux",
+      "name_kr": "조류 변동",
+      "desc_kr": "매 턴 무작위로 한 감각축의 자극 효과가 1.5배 또는 0.5배가 된다. 운과 적응력 시험.",
+      "trigger": "every_turn_random",
+      "effect": "random_axis_modifier"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 2,
         "agility": 3
       },
-      "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+      "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 산호 빨강",
+          "secondary": "바다 감청",
+          "accent": "진주 흰색"
+        },
+        "image_desc": "퇴화1. 온도해마 - 몸 색깔로 온도를 전달해 적을 매혹시키는 해마. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+      },
+      "devo2": [
+        {
+          "name_en": "ember_pony",
+          "name_kr": "불씨조랑",
+          "desc_kr": "조그만 몸에서 따끈한 온기가 나오는 꼬마 해마",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 산호 빨강",
+              "secondary": "바다 감청",
+              "accent": "진주 흰색"
+            },
+            "image_desc": "퇴화2. 불씨조랑 - 조그만 몸에서 따끈한 온기가 나오는 꼬마 해마. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "tide_pebble",
+          "name_kr": "파도알",
+          "desc_kr": "물속에서 동글동글 떠다니며 향기를 풍기는 꼬마 해마",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 산호 빨강",
+              "secondary": "바다 감청",
+              "accent": "진주 흰색"
+            },
+            "image_desc": "퇴화2. 파도알 - 물속에서 동글동글 떠다니며 향기를 풍기는 꼬마 해마. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "치유해마",
@@ -48,8 +117,61 @@
         "resilience": 3,
         "agility": 3
       },
-      "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+      "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 산호 빨강",
+          "secondary": "바다 감청",
+          "accent": "진주 흰색"
+        },
+        "image_desc": "퇴화1. 치유해마 - 따뜻한 물로 아군의 상처를 씻어주는 해마. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+      },
+      "devo2": [
+        {
+          "name_en": "warm_drop",
+          "name_kr": "온기방울",
+          "desc_kr": "따뜻한 물방울 같은 몸으로 상처를 감싸주는 꼬마 해마",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 산호 빨강",
+              "secondary": "바다 감청",
+              "accent": "진주 흰색"
+            },
+            "image_desc": "퇴화2. 온기방울 - 따뜻한 물방울 같은 몸으로 상처를 감싸주는 꼬마 해마. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+        },
+        {
+          "name_en": "coral_spark",
+          "name_kr": "산호불꽃",
+          "desc_kr": "작은 몸에서 뜨거운 산호 빛이 번쩍이는 꼬마 해마",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 산호 빨강",
+              "secondary": "바다 감청",
+              "accent": "진주 흰색"
+            },
+            "image_desc": "퇴화2. 산호불꽃 - 작은 몸에서 뜨거운 산호 빛이 번쩍이는 꼬마 해마. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 산호 빨강, 보조색 바다 감청, 강조색 진주 흰색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-defend(heal) / smell-defend(heal) / temperature-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

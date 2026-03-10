@@ -19,6 +19,21 @@
       "empathy": 3,
       "resilience": 9,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "짙은 숲 녹색",
+        "secondary": "고대 돌 회색",
+        "accent": "호박 수액 금색"
+      },
+      "image_desc": "야생형. 이끼 골렘 - 오래된 이끼와 바위로 이루어진 거대한 골렘. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+    },
+    "wildMechanic": {
+      "id": "moss_regen",
+      "name_kr": "이끼 재생",
+      "desc_kr": "매 턴 순화도가 5% 자연 감소한다. 지속적인 자극 유지가 필요하다.",
+      "trigger": "every_turn",
+      "effect": "taming_gauge_passive_decay"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 14,
         "agility": 2
       },
-      "skillFocus": "smell-defend / sound-defend / smell-capture"
+      "skillFocus": "smell-defend / sound-defend / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 숲 녹색",
+          "secondary": "고대 돌 회색",
+          "accent": "호박 수액 금색"
+        },
+        "image_desc": "퇴화1. 숲골렘 - 이끼에서 새싹이 자라나는 수호의 골렘. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "grove_pebble",
+          "name_kr": "숲조약돌",
+          "desc_kr": "동글동글한 돌 위에 이끼가 자라는 꼬마 골렘",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 숲조약돌 - 동글동글한 돌 위에 이끼가 자라는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend / sound-defend / smell-capture"
+        },
+        {
+          "name_en": "sap_sprout",
+          "name_kr": "수액새싹",
+          "desc_kr": "달콤한 수액 향기로 아군을 격려하는 꼬마 골렘",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 수액새싹 - 달콤한 수액 향기로 아군을 격려하는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-defend / sound-defend / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "울림골렘",
@@ -48,7 +117,61 @@
         "resilience": 5,
         "agility": 2
       },
-      "skillFocus": "sound-stimulate / smell-stimulate / sound-capture"
+      "skillFocus": "sound-stimulate / smell-stimulate / sound-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 숲 녹색",
+          "secondary": "고대 돌 회색",
+          "accent": "호박 수액 금색"
+        },
+        "image_desc": "퇴화1. 울림골렘 - 몸을 울려 강한 소리 자극을 주는 골렘. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "echo_pebble",
+          "name_kr": "울림알",
+          "desc_kr": "통통 소리를 내며 굴러다니는 꼬마 골렘",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 울림알 - 통통 소리를 내며 굴러다니는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "sound-stimulate / smell-stimulate / sound-capture"
+        },
+        {
+          "name_en": "moss_lullaby",
+          "name_kr": "이끼자장",
+          "desc_kr": "부드러운 울림으로 아군을 편안하게 해주는 꼬마 골렘",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 이끼자장 - 부드러운 울림으로 아군을 편안하게 해주는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "sound-stimulate / smell-stimulate / sound-capture"
+        }
+      ]
     },
     {
       "name_kr": "치유골렘",
@@ -62,7 +185,61 @@
         "resilience": 6,
         "agility": 2
       },
-      "skillFocus": "smell-defend(heal) / sound-defend(heal) / smell-capture"
+      "skillFocus": "smell-defend(heal) / sound-defend(heal) / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 숲 녹색",
+          "secondary": "고대 돌 회색",
+          "accent": "호박 수액 금색"
+        },
+        "image_desc": "퇴화1. 치유골렘 - 이끼에서 약효 성분이 스며나오는 골렘. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "heal_moss",
+          "name_kr": "치유솜이끼",
+          "desc_kr": "동글동글한 이끼 뭉치에서 약효가 퍼지는 꼬마 골렘",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 치유솜이끼 - 동글동글한 이끼 뭉치에서 약효가 퍼지는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / sound-defend(heal) / smell-capture"
+        },
+        {
+          "name_en": "rock_rumble",
+          "name_kr": "돌멩우르",
+          "desc_kr": "작은 몸으로 우르르 굴러가며 적을 자극하는 꼬마 골렘",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 돌멩우르 - 작은 몸으로 우르르 굴러가며 적을 자극하는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-defend(heal) / sound-defend(heal) / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "지진골렘",
@@ -76,8 +253,61 @@
         "resilience": 4,
         "agility": 9
       },
-      "skillFocus": "behavior-stimulate / sound-stimulate / behavior-capture"
+      "skillFocus": "behavior-stimulate / sound-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 숲 녹색",
+          "secondary": "고대 돌 회색",
+          "accent": "호박 수액 금색"
+        },
+        "image_desc": "퇴화1. 지진골렘 - 무거운 걸음으로 지면을 흔들어 적을 제압하는 골렘. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+      },
+      "devo2": [
+        {
+          "name_en": "quake_pebble",
+          "name_kr": "지진콩돌",
+          "desc_kr": "통통 튀어다니며 땅을 흔드는 꼬마 골렘",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 지진콩돌 - 통통 튀어다니며 땅을 흔드는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / sound-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "root_anchor",
+          "name_kr": "뿌리닻",
+          "desc_kr": "뿌리를 내려 아군을 단단히 보호하는 꼬마 골렘",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "짙은 숲 녹색",
+              "secondary": "고대 돌 회색",
+              "accent": "호박 수액 금색"
+            },
+            "image_desc": "퇴화2. 뿌리닻 - 뿌리를 내려 아군을 단단히 보호하는 꼬마 골렘. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 숲 녹색, 보조색 고대 돌 회색, 강조색 호박 수액 금색"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / sound-stimulate / behavior-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

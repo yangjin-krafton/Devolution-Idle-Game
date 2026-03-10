@@ -18,6 +18,21 @@
       "empathy": 5,
       "resilience": 7,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "짙은 이끼 녹색",
+        "secondary": "마호가니 갈색",
+        "accent": "장미 빨강"
+      },
+      "image_desc": "야생형. 덩굴 거미 - 냄새나는 덩굴로 거미줄을 치고 먹이를 기다리는 거미. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+    },
+    "wildMechanic": {
+      "id": "web_trap",
+      "name_kr": "거미줄 속박",
+      "desc_kr": "매 2턴마다 앞 줄 아군 한 마리를 거미줄로 구속해 1턴 행동불가로 만든다.",
+      "trigger": "every_2_turns",
+      "effect": "bind_front_ally"
     }
   },
   "devo1": [
@@ -33,7 +48,61 @@
         "resilience": 12,
         "agility": 3
       },
-      "skillFocus": "smell-defend(heal) / smell-stimulate / behavior-capture"
+      "skillFocus": "smell-defend(heal) / smell-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 이끼 녹색",
+          "secondary": "마호가니 갈색",
+          "accent": "장미 빨강"
+        },
+        "image_desc": "퇴화1. 꽃거미 - 꽃향기 나는 실을 짜서 아군을 보호하는 거미. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "bud_spider",
+          "name_kr": "꽃봉이",
+          "desc_kr": "등에 작은 꽃봉오리를 달고 다니는 꼬마 거미",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "짙은 이끼 녹색",
+              "secondary": "마호가니 갈색",
+              "accent": "장미 빨강"
+            },
+            "image_desc": "퇴화2. 꽃봉이 - 등에 작은 꽃봉오리를 달고 다니는 꼬마 거미. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / smell-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "thorn_tot",
+          "name_kr": "가시콩",
+          "desc_kr": "작은 가시를 세우며 용감하게 으르렁대는 아기 거미",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 이끼 녹색",
+              "secondary": "마호가니 갈색",
+              "accent": "장미 빨강"
+            },
+            "image_desc": "퇴화2. 가시콩 - 작은 가시를 세우며 용감하게 으르렁대는 아기 거미. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-defend(heal) / smell-stimulate / behavior-capture"
+        }
+      ]
     },
     {
       "name_kr": "실뿜이",
@@ -47,7 +116,61 @@
         "resilience": 3,
         "agility": 9
       },
-      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 이끼 녹색",
+          "secondary": "마호가니 갈색",
+          "accent": "장미 빨강"
+        },
+        "image_desc": "퇴화1. 실뿜이 - 빠르게 실을 뿜어 적을 묶는 거미. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "thread_pup",
+          "name_kr": "실뭉치",
+          "desc_kr": "실을 뭉쳐서 공처럼 데굴데굴 굴러다니는 아기 거미",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "짙은 이끼 녹색",
+              "secondary": "마호가니 갈색",
+              "accent": "장미 빨강"
+            },
+            "image_desc": "퇴화2. 실뭉치 - 실을 뭉쳐서 공처럼 데굴데굴 굴러다니는 아기 거미. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+        },
+        {
+          "name_en": "leaf_napper",
+          "name_kr": "잎잠이",
+          "desc_kr": "나뭇잎 위에서 꾸벅꾸벅 조는 느긋한 아기 거미",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 이끼 녹색",
+              "secondary": "마호가니 갈색",
+              "accent": "장미 빨강"
+            },
+            "image_desc": "퇴화2. 잎잠이 - 나뭇잎 위에서 꾸벅꾸벅 조는 느긋한 아기 거미. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "약초거미",
@@ -61,8 +184,61 @@
         "resilience": 5,
         "agility": 3
       },
-      "skillFocus": "smell-defend(heal) / behavior-defend / smell-capture"
+      "skillFocus": "smell-defend(heal) / behavior-defend / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 이끼 녹색",
+          "secondary": "마호가니 갈색",
+          "accent": "장미 빨강"
+        },
+        "image_desc": "퇴화1. 약초거미 - 거미줄에 약초 성분을 섞어 아군을 치유하는 거미. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "herb_pebble",
+          "name_kr": "약콩이",
+          "desc_kr": "작은 약초 잎을 꼭 안고 있는 동그란 아기 거미",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 이끼 녹색",
+              "secondary": "마호가니 갈색",
+              "accent": "장미 빨강"
+            },
+            "image_desc": "퇴화2. 약콩이 - 작은 약초 잎을 꼭 안고 있는 동그란 아기 거미. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / behavior-defend / smell-capture"
+        },
+        {
+          "name_en": "vine_bean",
+          "name_kr": "덩굴콩",
+          "desc_kr": "짧은 덩굴 다리로 또각또각 걸어다니는 꼬마 거미",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "짙은 이끼 녹색",
+              "secondary": "마호가니 갈색",
+              "accent": "장미 빨강"
+            },
+            "image_desc": "퇴화2. 덩굴콩 - 짧은 덩굴 다리로 또각또각 걸어다니는 꼬마 거미. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 이끼 녹색, 보조색 마호가니 갈색, 강조색 장미 빨강"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / behavior-defend / smell-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

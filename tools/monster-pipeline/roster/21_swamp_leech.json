@@ -19,6 +19,21 @@
       "empathy": 6,
       "resilience": 6,
       "agility": 4
+    },
+    "visual": {
+      "colors": {
+        "primary": "짙은 늪 갈색",
+        "secondary": "독성 연두",
+        "accent": "핏빛 버건디"
+      },
+      "image_desc": "야생형. 늪지 거머리 - 거대한 몸에서 독한 점액을 흘리는 늪의 포식자. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+    },
+    "wildMechanic": {
+      "id": "blood_drain",
+      "name_kr": "흡혈 부착",
+      "desc_kr": "아군 한 마리에 부착되어 매 턴 HP를 흡수하면서 탈출 게이지가 천천히 증가한다. 행동 자극으로 떼어낼 수 있다.",
+      "trigger": "attach_to_ally",
+      "effect": "drain_hp_increase_escape"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 5,
         "agility": 3
       },
-      "skillFocus": "smell-defend(heal) / behavior-defend(heal) / smell-capture"
+      "skillFocus": "smell-defend(heal) / behavior-defend(heal) / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 늪 갈색",
+          "secondary": "독성 연두",
+          "accent": "핏빛 버건디"
+        },
+        "image_desc": "퇴화1. 약초거머리 - 점액이 치유 효과를 가진 약초 성분으로 변한 거머리. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+      },
+      "devo2": [
+        {
+          "name_en": "herb_blob",
+          "name_kr": "약초방울",
+          "desc_kr": "동글동글한 몸에서 약초 향이 나는 꼬마 거머리",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 늪 갈색",
+              "secondary": "독성 연두",
+              "accent": "핏빛 버건디"
+            },
+            "image_desc": "퇴화2. 약초방울 - 동글동글한 몸에서 약초 향이 나는 꼬마 거머리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / behavior-defend(heal) / smell-capture"
+        },
+        {
+          "name_en": "swamp_nibble",
+          "name_kr": "늪짹짹",
+          "desc_kr": "작은 입으로 짹짹 소리를 내며 적을 자극하는 꼬마 거머리",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 늪 갈색",
+              "secondary": "독성 연두",
+              "accent": "핏빛 버건디"
+            },
+            "image_desc": "퇴화2. 늪짹짹 - 작은 입으로 짹짹 소리를 내며 적을 자극하는 꼬마 거머리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-defend(heal) / behavior-defend(heal) / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "철갑거머리",
@@ -48,7 +117,61 @@
         "resilience": 12,
         "agility": 3
       },
-      "skillFocus": "behavior-defend / smell-defend / smell-capture"
+      "skillFocus": "behavior-defend / smell-defend / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 늪 갈색",
+          "secondary": "독성 연두",
+          "accent": "핏빛 버건디"
+        },
+        "image_desc": "퇴화1. 철갑거머리 - 단단한 점액이 갑옷이 된 거머리. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+      },
+      "devo2": [
+        {
+          "name_en": "armor_pebble",
+          "name_kr": "갑옷알",
+          "desc_kr": "조그만 몸이 단단한 껍질로 덮인 꼬마 거머리",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "짙은 늪 갈색",
+              "secondary": "독성 연두",
+              "accent": "핏빛 버건디"
+            },
+            "image_desc": "퇴화2. 갑옷알 - 조그만 몸이 단단한 껍질로 덮인 꼬마 거머리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-defend / smell-defend / smell-capture"
+        },
+        {
+          "name_en": "slime_bud",
+          "name_kr": "점액싹",
+          "desc_kr": "점액을 뿌려 적의 움직임을 방해하는 꼬마 거머리",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "짙은 늪 갈색",
+              "secondary": "독성 연두",
+              "accent": "핏빛 버건디"
+            },
+            "image_desc": "퇴화2. 점액싹 - 점액을 뿌려 적의 움직임을 방해하는 꼬마 거머리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-defend / smell-defend / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "흡수거머리",
@@ -62,8 +185,61 @@
         "resilience": 4,
         "agility": 3
       },
-      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+      "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "짙은 늪 갈색",
+          "secondary": "독성 연두",
+          "accent": "핏빛 버건디"
+        },
+        "image_desc": "퇴화1. 흡수거머리 - 적의 에너지를 흡수해 순화도를 올리는 거머리. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+      },
+      "devo2": [
+        {
+          "name_en": "drain_dot",
+          "name_kr": "흡수콩",
+          "desc_kr": "작은 입으로 쪽쪽 에너지를 빨아들이는 꼬마 거머리",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "짙은 늪 갈색",
+              "secondary": "독성 연두",
+              "accent": "핏빛 버건디"
+            },
+            "image_desc": "퇴화2. 흡수콩 - 작은 입으로 쪽쪽 에너지를 빨아들이는 꼬마 거머리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+        },
+        {
+          "name_en": "mud_cuddle",
+          "name_kr": "진흙포근",
+          "desc_kr": "따뜻한 진흙으로 아군을 감싸주는 꼬마 거머리",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "짙은 늪 갈색",
+              "secondary": "독성 연두",
+              "accent": "핏빛 버건디"
+            },
+            "image_desc": "퇴화2. 진흙포근 - 따뜻한 진흙으로 아군을 감싸주는 꼬마 거머리. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 짙은 늪 갈색, 보조색 독성 연두, 강조색 핏빛 버건디"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-stimulate / behavior-stimulate / smell-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

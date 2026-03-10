@@ -19,6 +19,21 @@
       "empathy": 3,
       "resilience": 9,
       "agility": 5
+    },
+    "visual": {
+      "colors": {
+        "primary": "건메탈 회색",
+        "secondary": "녹슨 갈색",
+        "accent": "대장간 빨강"
+      },
+      "image_desc": "야생형. 강철 멧돼지 - 강철처럼 단단한 갈기를 세우고 돌진하는 멧돼지. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+    },
+    "wildMechanic": {
+      "id": "iron_charge",
+      "name_kr": "철벽 돌진",
+      "desc_kr": "2턴마다 돌진 준비 자세를 취하고, 다음 턴에 탈출 게이지가 폭증한다. 준비 턴에 행동 자극으로 중단 가능.",
+      "trigger": "every_2_turns_charge",
+      "effect": "escape_burst_next_turn_interruptible"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 14,
         "agility": 2
       },
-      "skillFocus": "smell-defend / temperature-defend / behavior-capture"
+      "skillFocus": "smell-defend / temperature-defend / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "건메탈 회색",
+          "secondary": "녹슨 갈색",
+          "accent": "대장간 빨강"
+        },
+        "image_desc": "퇴화1. 철등멧돼지 - 강철 등으로 아군을 지키는 든든한 방패. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "pebble_piglet",
+          "name_kr": "자갈돼지",
+          "desc_kr": "작고 단단한 등판으로 뒹굴며 방어하는 아기 멧돼지",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 자갈돼지 - 작고 단단한 등판으로 뒹굴며 방어하는 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend / temperature-defend / behavior-capture"
+        },
+        {
+          "name_en": "spark_piglet",
+          "name_kr": "불꽃돼지",
+          "desc_kr": "작은 콧김에서 불씨가 튀는 호기심 많은 아기 멧돼지",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 불꽃돼지 - 작은 콧김에서 불씨가 튀는 호기심 많은 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "smell-defend / temperature-defend / behavior-capture"
+        }
+      ]
     },
     {
       "name_kr": "화염멧돼지",
@@ -48,7 +117,61 @@
         "resilience": 5,
         "agility": 2
       },
-      "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+      "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture",
+      "visual": {
+        "colors": {
+          "primary": "건메탈 회색",
+          "secondary": "녹슨 갈색",
+          "accent": "대장간 빨강"
+        },
+        "image_desc": "퇴화1. 화염멧돼지 - 뜨거운 갈기로 순화도를 올리는 공격형. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "ember_piglet",
+          "name_kr": "숯불돼지",
+          "desc_kr": "등에서 따뜻한 열기가 나는 작은 공격형 아기 멧돼지",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 숯불돼지 - 등에서 따뜻한 열기가 나는 작은 공격형 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+        },
+        {
+          "name_en": "iron_nap_piglet",
+          "name_kr": "쇠잠돼지",
+          "desc_kr": "따뜻한 몸으로 아군 곁에서 졸며 치유하는 아기 멧돼지",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 쇠잠돼지 - 따뜻한 몸으로 아군 곁에서 졸며 치유하는 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "temperature-stimulate / smell-stimulate / temperature-capture"
+        }
+      ]
     },
     {
       "name_kr": "약초멧돼지",
@@ -62,7 +185,61 @@
         "resilience": 6,
         "agility": 2
       },
-      "skillFocus": "smell-defend(heal) / temperature-defend(heal) / smell-capture"
+      "skillFocus": "smell-defend(heal) / temperature-defend(heal) / smell-capture",
+      "visual": {
+        "colors": {
+          "primary": "건메탈 회색",
+          "secondary": "녹슨 갈색",
+          "accent": "대장간 빨강"
+        },
+        "image_desc": "퇴화1. 약초멧돼지 - 갈기에서 약초 향이 나는 치유의 멧돼지. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "herb_piglet",
+          "name_kr": "풀향돼지",
+          "desc_kr": "콧등에서 약초 냄새가 나는 치유 전문 아기 멧돼지",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 풀향돼지 - 콧등에서 약초 냄새가 나는 치유 전문 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "smell-defend(heal) / temperature-defend(heal) / smell-capture"
+        },
+        {
+          "name_en": "iron_dash_piglet",
+          "name_kr": "쇠달돼지",
+          "desc_kr": "짧은 다리로 총총 뛰어다니는 활발한 아기 멧돼지",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 쇠달돼지 - 짧은 다리로 총총 뛰어다니는 활발한 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "smell-defend(heal) / temperature-defend(heal) / smell-capture"
+        }
+      ]
     },
     {
       "name_kr": "돌진멧돼지",
@@ -76,8 +253,61 @@
         "resilience": 4,
         "agility": 9
       },
-      "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+      "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "건메탈 회색",
+          "secondary": "녹슨 갈색",
+          "accent": "대장간 빨강"
+        },
+        "image_desc": "퇴화1. 돌진멧돼지 - 맹렬한 돌진으로 적에게 압박을 주는 멧돼지. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+      },
+      "devo2": [
+        {
+          "name_en": "bolt_piglet",
+          "name_kr": "번개돼지",
+          "desc_kr": "짧은 다리로 빠르게 돌진하는 작고 빠른 아기 멧돼지",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 번개돼지 - 짧은 다리로 빠르게 돌진하는 작고 빠른 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "guard_piglet",
+          "name_kr": "지킴돼지",
+          "desc_kr": "작지만 용감하게 앞을 막아서는 아기 멧돼지",
+          "role": "tank",
+          "visual": {
+            "colors": {
+              "primary": "건메탈 회색",
+              "secondary": "녹슨 갈색",
+              "accent": "대장간 빨강"
+            },
+            "image_desc": "퇴화2. 지킴돼지 - 작지만 용감하게 앞을 막아서는 아기 멧돼지. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 건메탈 회색, 보조색 녹슨 갈색, 강조색 대장간 빨강"
+          },
+          "hp": 20,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 2,
+            "resilience": 8,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / smell-stimulate / behavior-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }

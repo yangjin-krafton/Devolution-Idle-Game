@@ -19,6 +19,21 @@
       "empathy": 5,
       "resilience": 3,
       "agility": 7
+    },
+    "visual": {
+      "colors": {
+        "primary": "칠흑",
+        "secondary": "한밤 보라",
+        "accent": "야광 녹색"
+      },
+      "image_desc": "야생형. 그림자 고양이 - 그림자처럼 일렁이며 호기심 가득한 눈으로 관찰하는 고양이. 위압적이고 복잡한 외형, 어둡고 채도 높은 색감. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+    },
+    "wildMechanic": {
+      "id": "shadow_leap",
+      "name_kr": "그림자 도약",
+      "desc_kr": "탈출 게이지가 50% 이상이면 매 턴 탈출 시도 확률이 2배가 된다. 탈출 게이지 관리 필수.",
+      "trigger": "escape_above_50",
+      "effect": "double_escape_chance"
     }
   },
   "devo1": [
@@ -34,7 +49,61 @@
         "resilience": 2,
         "agility": 11
       },
-      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+      "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "칠흑",
+          "secondary": "한밤 보라",
+          "accent": "야광 녹색"
+        },
+        "image_desc": "퇴화1. 달빛고양이 - 달빛처럼 은은하게 빛나며 빠르게 움직이는 고양이. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "flicker_kitten",
+          "name_kr": "깜빡냥이",
+          "desc_kr": "그림자 속에서 깜빡이며 빠르게 움직이는 아기 고양이",
+          "role": "speedster",
+          "visual": {
+            "colors": {
+              "primary": "칠흑",
+              "secondary": "한밤 보라",
+              "accent": "야광 녹색"
+            },
+            "image_desc": "퇴화2. 깜빡냥이 - 그림자 속에서 깜빡이며 빠르게 움직이는 아기 고양이. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+          },
+          "hp": 14,
+          "stats": {
+            "gentleness": 3,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 7
+          },
+          "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+        },
+        {
+          "name_en": "whisper_kitten",
+          "name_kr": "속삭냥이",
+          "desc_kr": "조용히 다가와 동료를 치유하는 아기 고양이",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "칠흑",
+              "secondary": "한밤 보라",
+              "accent": "야광 녹색"
+            },
+            "image_desc": "퇴화2. 속삭냥이 - 조용히 다가와 동료를 치유하는 아기 고양이. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "behavior-stimulate / temperature-stimulate / behavior-capture"
+        }
+      ]
     },
     {
       "name_kr": "그늘고양이",
@@ -48,8 +117,61 @@
         "resilience": 4,
         "agility": 3
       },
-      "skillFocus": "behavior-defend(heal) / temperature-defend / behavior-capture"
+      "skillFocus": "behavior-defend(heal) / temperature-defend / behavior-capture",
+      "visual": {
+        "colors": {
+          "primary": "칠흑",
+          "secondary": "한밤 보라",
+          "accent": "야광 녹색"
+        },
+        "image_desc": "퇴화1. 그늘고양이 - 그림자에 숨어 아군을 치유하는 고양이. 야생형보다 단순화된 체형, 정돈된 외형, 동일 컬러 팔레트 유지. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+      },
+      "devo2": [
+        {
+          "name_en": "purr_kitten",
+          "name_kr": "그르렁냥이",
+          "desc_kr": "그르렁 소리로 동료를 치유하는 아기 고양이",
+          "role": "support",
+          "visual": {
+            "colors": {
+              "primary": "칠흑",
+              "secondary": "한밤 보라",
+              "accent": "야광 녹색"
+            },
+            "image_desc": "퇴화2. 그르렁냥이 - 그르렁 소리로 동료를 치유하는 아기 고양이. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+          },
+          "hp": 18,
+          "stats": {
+            "gentleness": 2,
+            "empathy": 7,
+            "resilience": 3,
+            "agility": 2
+          },
+          "skillFocus": "behavior-defend(heal) / temperature-defend / behavior-capture"
+        },
+        {
+          "name_en": "pounce_kitten",
+          "name_kr": "덮치냥이",
+          "desc_kr": "그림자에서 갑자기 튀어나오는 공격형 아기 고양이",
+          "role": "attacker",
+          "visual": {
+            "colors": {
+              "primary": "칠흑",
+              "secondary": "한밤 보라",
+              "accent": "야광 녹색"
+            },
+            "image_desc": "퇴화2. 덮치냥이 - 그림자에서 갑자기 튀어나오는 공격형 아기 고양이. 가장 단순한 형태, 동글동글 작은 체형, 큰 머리, 큰 눈, 짧은 다리, 동일 컬러 팔레트 유지. 기본색 칠흑, 보조색 한밤 보라, 강조색 야광 녹색"
+          },
+          "hp": 16,
+          "stats": {
+            "gentleness": 7,
+            "empathy": 2,
+            "resilience": 2,
+            "agility": 3
+          },
+          "skillFocus": "behavior-defend(heal) / temperature-defend / behavior-capture"
+        }
+      ]
     }
-  ],
-  "devo2_per_devo1": 2
+  ]
 }
