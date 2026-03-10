@@ -80,11 +80,15 @@ let battleCount = 0;
 let capturedCount = 0;
 let pendingDevoReveals = [];
 let eggCheckInterval = null;
+let _currentScreen = 'title'; // 브릿지용 화면 추적
+
+const _origShowScreen = showScreen;
+const _showScreenTracked = (name) => { _currentScreen = name; _origShowScreen(name); };
 
 // ============================================================
 // Title Screen
 // ============================================================
-showScreen('title');
+_showScreenTracked('title');
 
 titleScr._startBtn.on('pointerdown', () => {
   teamManager = new TeamManager();
@@ -124,7 +128,7 @@ function startBattle() {
     confirm: handleConfirm,
   });
 
-  showScreen('combat');
+  _showScreenTracked('combat');
   renderEnemy(combat.enemy);
   refreshCombatUI();
 }
@@ -195,7 +199,7 @@ function endBattle() {
     teamManager.addCaptured(combat.enemy);
   }
 
-  showScreen('result');
+  _showScreenTracked('result');
   renderResult(result.state, combat.enemy, xpLogs, devoLogs, () => {
     if (result.state === 'defeat') showGameOverScreen();
     else showTeamScreen();
@@ -207,7 +211,7 @@ function endBattle() {
 // ============================================================
 function showTeamScreen() {
   teamManager.healTeam();
-  showScreen('team');
+  _showScreenTracked('team');
   renderTeamCards(
     teamManager.allies,
     teamManager.collection,
@@ -263,7 +267,7 @@ function stopEggCheckInterval() {
 // ============================================================
 function showDevoRevealScreen() {
   stopEggCheckInterval();
-  showScreen('devo');
+  _showScreenTracked('devo');
   renderDevoReveal(pendingDevoReveals[0], () => {
     pendingDevoReveals.shift();
     if (pendingDevoReveals.length > 0) showDevoRevealScreen();
@@ -276,7 +280,7 @@ function showDevoRevealScreen() {
 // ============================================================
 function showGameOverScreen() {
   stopEggCheckInterval();
-  showScreen('gameover');
+  _showScreenTracked('gameover');
   renderGameOver(battleCount, capturedCount, () => {
     teamManager = new TeamManager();
     battleCount = 0;
@@ -285,6 +289,32 @@ function showGameOverScreen() {
     startBattle();
   });
 }
+
+// ============================================================
+// Debug Bridge — 외부 도구(play-reviewer 등)용 상태 노출
+// ============================================================
+window.__BRIDGE = {
+  get ready() { return true; },
+  get currentScreen() { return _currentScreen; },
+  get combat() { return combat; },
+  get teamManager() { return teamManager; },
+  handleAction,
+  handleConfirm,
+  clickStart: () => titleScr._startBtn.emit('pointerdown'),
+  clickNext: () => {
+    // 각 화면 내 버튼 참조를 사용해 콜백 트리거
+    if (_currentScreen === 'result') {
+      // renderResult에서 nextBtn에 등록된 pointerdown 콜백 실행
+      resultScr.children.forEach(c => { if (c.cursor === 'pointer') c.emit('pointerdown'); });
+    } else if (_currentScreen === 'team') {
+      onNextBattle();
+    } else if (_currentScreen === 'gameover') {
+      teamManager = new TeamManager();
+      battleCount = 0; capturedCount = 0; pendingDevoReveals = [];
+      startBattle();
+    }
+  },
+};
 
 // ============================================================
 // Animation Loop

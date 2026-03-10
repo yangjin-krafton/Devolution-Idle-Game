@@ -71,7 +71,8 @@
       "Bash(sed -i \"s/{ x: W \\\\* 0.10, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(위쪽, 적 옆 포위\\)/{ x: W * 0.18, y: 215, size: 88 },    \\\\/\\\\/ 좌 \\(적 옆 포위\\)/\" \"f:/Workspace/Devolution-Idle-Game/src/ui/battleFieldUI.js\")",
       "Bash(sed -i \"s/{ x: W \\\\* 0.90, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(위쪽, 적 옆 포위\\)/{ x: W * 0.82, y: 215, size: 88 },    \\\\/\\\\/ 우 \\(적 옆 포위\\)/\" \"f:/Workspace/Devolution-Idle-Game/src/ui/battleFieldUI.js\")",
       "Bash(node -e \":*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(cd D:/Weeks/Devolution-Idle-Game && npm install puppeteer --save-dev 2>&1 | tail -5)"
     ],
     "additionalDirectories": [
       "\\tmp"

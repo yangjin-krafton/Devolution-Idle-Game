@@ -6,3 +6,7 @@ Thumbs.db
 tools/monster-pipeline/temp/
 tools/monster-pipeline/candidates/
 tools/monster-pipeline/progress.json
+
+# Play reviewer output
+tools/play-reviewer/screenshots/
+tools/play-reviewer/reports/
