@@ -14,21 +14,40 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ── LLM 호출 ──
+// ── LLM 호출 (타임아웃 + 재시도) ──
+const LLM_TIMEOUT_MS = 120_000;   // 2분 타임아웃
+const LLM_MAX_RETRIES = 3;
+
 async function callLLM(messages, temperature = 0.7) {
-  const res = await fetch(`${CONFIG.LM_STUDIO_URL}/v1/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: CONFIG.TEXT_MODEL,
-      messages,
-      temperature,
-      max_tokens: 16384,
-    }),
-  });
-  if (!res.ok) throw new Error(`LLM API error: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.choices[0].message.content;
+  for (let attempt = 1; attempt <= LLM_MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+    try {
+      const res = await fetch(`${CONFIG.LM_STUDIO_URL}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: CONFIG.TEXT_MODEL,
+          messages,
+          temperature,
+          max_tokens: 16384,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`LLM API error: ${res.status} ${await res.text()}`);
+      const data = await res.json();
+      return data.choices[0].message.content;
+    } catch (err) {
+      clearTimeout(timer);
+      const isTimeout = err.name === 'AbortError';
+      console.warn(`    [LLM] ${isTimeout ? '타임아웃' : '오류'} (${attempt}/${LLM_MAX_RETRIES}): ${err.message}`);
+      if (attempt === LLM_MAX_RETRIES) throw err;
+      const delay = attempt * 3000;
+      console.log(`    [LLM] ${delay / 1000}초 후 재시도...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
 }
 
 // ── JSON 추출 ──
@@ -81,70 +100,64 @@ function extractJSON(text) {
   return JSON.parse(cleaned.substring(start, end + 1));
 }
 
-// ── 형태 1개 → N개 변형 영어 프롬프트 생성 ──
-// 한국어 image_desc를 기반으로 N개의 약간씩 다른 영어 프롬프트 생성
-async function generatePromptVariants(imageDesc, nameKr, count) {
-  console.log(`    [번역] "${nameKr}" → ${count}개 변형 프롬프트 생성...`);
+// ── 형태별 스타일 서픽스 ──
+const FORM_SUFFIX = {
+  base: 'dark saturated color palette, intimidating presence',
+  devo1: 'reduced complexity, two eyes, neat proportions',
+  devo2: 'small round proportions, oversized head, big eyes, stubby legs, young small creature',
+};
 
+function getFormSuffix(formType) {
+  if (formType.startsWith('devo2')) return FORM_SUFFIX.devo2;
+  if (formType.startsWith('devo1')) return FORM_SUFFIX.devo1;
+  return FORM_SUFFIX.base;
+}
+
+// ── 형태 1개 → 1회 LLM 호출로 번역 + N개 프롬프트 완성 ──
+async function generatePromptVariants(imageDesc, nameKr, count, formType = 'base') {
+  console.log(`    [번역] "${nameKr}" → ${count}개 프롬프트 생성 중...`);
+
+  const suffix = getFormSuffix(formType);
   const messages = [
     {
       role: 'system',
-      content: `You are a creative Korean-to-English translator for AI image generation prompts.
-Given a Korean monster description, generate ${count} DIFFERENT English image prompts.
+      content: `You translate a Korean monster description into ${count} English image prompts for AI image generation.
 
-CRITICAL RULES:
-- All ${count} prompts describe the SAME creature but with creative variations
-- Variations: different poses, angles, expressions, detail emphasis, texture descriptions, lighting words, body proportions, action hints
-- Every prompt MUST start with: "pokemon official art style, ken sugimori style, single creature only, one character, full body, white background, simple clean background, cel-shaded, bold outlines,"
-- For 야생형: add "dark saturated color palette, intimidating presence"
-- For 퇴화1: add "reduced complexity, two eyes, neat proportions"
-- For 퇴화2: add "small round proportions, oversized head, big eyes, stubby legs, young small creature"
-- Each prompt: 40-80 words, vivid and specific
-- NEVER use: "chibi", "baby", "kawaii", "dragon", "pikachu", or negative descriptions
-- Keep the EXACT SAME color palette across all variants
-- Translate Korean colors accurately (숯검정→charcoal black, 한밤파랑→midnight blue, etc.)
-
-Variation ideas to mix in randomly:
-- Pose: standing alert, slight head tilt, looking over shoulder, mid-step, crouching, rearing up
-- Emphasis: focus on fur texture, focus on eyes detail, focus on claws/horns, focus on tail/mane
-- Descriptors: fierce gaze, glowing markings, battle-scarred, wind-swept fur, steam rising
-- Composition: slightly angled view, dynamic pose, calm resting pose, proud stance
-
-Output ONLY a JSON array of ${count} strings. No object wrapper, just: ["prompt1", "prompt2", ...]`
+RULES:
+1. Translate the Korean description into English, then create ${count} variations.
+2. Every prompt MUST start with: "pokemon official art style, ken sugimori style, single creature only, one character, full body, white background, simple clean background, cel-shaded, bold outlines,"
+3. Every prompt MUST end with: "${suffix}"
+4. Between prefix and suffix, include: creature description + one unique variation per prompt.
+5. Variations: different poses (standing, crouching, leaping, sitting, rearing up, head tilt, looking back, mid-step), angles (front, three-quarter, side), emphasis (skin texture, eyes, claws, markings, tail).
+6. Translate Korean colors accurately (숯검정→charcoal black, 한밤파랑→midnight blue, 탁한→dull/muted, 독성→toxic).
+7. NEVER use: chibi, baby, kawaii, dragon, pikachu.
+8. Each prompt: 40-80 words.
+9. Output ONLY a JSON array of ${count} strings. No explanation.`
     },
     {
       role: 'user',
-      content: `Korean description:\n${imageDesc}\n\nGenerate ${count} creative English prompt variants for this creature.`
+      content: imageDesc
     }
   ];
 
-  // temperature 0.85로 창의성 부여
-  const raw = await callLLM(messages, 0.85);
+  const raw = await callLLM(messages, 0.7);
   let prompts;
   try {
     prompts = extractJSON(raw);
   } catch {
-    // fallback: 단일 번역이라도 시도
-    console.warn(`    [번역] JSON 파싱 실패, fallback 번역 시도`);
+    console.warn(`    [번역] JSON 파싱 실패, fallback`);
     prompts = [raw.replace(/```json|```|\[|\]/g, '').trim()];
   }
 
-  // 배열이 아닌 경우 처리
   if (!Array.isArray(prompts)) {
-    if (prompts.prompts) prompts = prompts.prompts;
-    else prompts = [String(prompts)];
+    prompts = prompts.prompts || [String(prompts)];
   }
 
-  // 부족한 경우 마지막 것을 복제하되 seed 변형으로 대체
-  while (prompts.length < count) {
-    const base = prompts[prompts.length - 1] || imageDesc;
-    prompts.push(base);
-  }
-
-  // 초과분 제거
+  // 부족하면 마지막 것 복제
+  while (prompts.length < count) prompts.push(prompts[prompts.length - 1] || imageDesc);
   if (prompts.length > count) prompts = prompts.slice(0, count);
 
-  console.log(`    [번역] ${prompts.length}개 변형 완료 (첫번째: ${prompts[0]?.substring(0, 60)}...)`);
+  console.log(`    [번역] ${prompts.length}개 완료 (첫번째: ${prompts[0]?.substring(0, 60)}...)`);
   return prompts;
 }
 
@@ -157,7 +170,8 @@ async function translateAllFormsWithVariants(forms, variantsPerForm) {
     const variants = await generatePromptVariants(
       form.image_desc,
       form.name_kr,
-      variantsPerForm
+      variantsPerForm,
+      form.type
     );
     results.push(variants);
   }

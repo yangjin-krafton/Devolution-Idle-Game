@@ -243,7 +243,7 @@ async function processOne(rosterEntry, progress) {
 
     // LM Studio: 번역 (메인 루프 — 순차 대기)
     log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" 번역 중...`);
-    const prompts = await generatePromptVariants(form.image_desc, form.name_kr, variantsPerForm);
+    const prompts = await generatePromptVariants(form.image_desc, form.name_kr, variantsPerForm, form.type);
     form.image_prompts = prompts;
     form.image_prompt = prompts[0];
     log(`  ✓ form[${i}] 번역 완료 (${prompts.length}변형)`);
