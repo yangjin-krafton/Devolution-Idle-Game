@@ -4,11 +4,14 @@
 // ============================================================
 
 import { CONFIG } from './config.js';
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFile } from 'fs/promises';
+import sharp from 'sharp';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const REVIEW_SIZE = 128; // 심사용 다운스케일 크기
+
+async function downsizeImage(buffer) {
+  return sharp(buffer).resize(REVIEW_SIZE, REVIEW_SIZE, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+}
 
 async function callVision(messages) {
   const res = await fetch(`${CONFIG.LM_STUDIO_URL}/v1/chat/completions`, {
@@ -17,8 +20,9 @@ async function callVision(messages) {
     body: JSON.stringify({
       model: CONFIG.VISION_MODEL,
       messages,
-      temperature: 0.3,
-      max_tokens: 2048,
+      temperature: 0.1,
+      max_tokens: 30,
+      response_format: { type: 'json_object' },
     }),
   });
   if (!res.ok) throw new Error(`Vision API error: ${res.status} ${await res.text()}`);
@@ -30,58 +34,30 @@ function imageToBase64(buffer) {
   return buffer.toString('base64');
 }
 
-function getReviewCriteria(type) {
-  if (type === 'base') {
-    return `[야생 원본] 더 기괴하고, 무섭고, 위협적이고, 다크 판타지 느낌이 강한 쪽을 선택하세요. 날카로운 디테일, 어두운 색감, 공포스러운 분위기가 더 좋은 쪽이 승자입니다.`;
-  }
-  if (type.startsWith('devo1')) {
-    return `[1단 퇴화 아군] 더 강력하고, 멋지고, 전투적인 쪽을 선택하세요. 전투 파트너로 믿음직하고 디지몬 챔피언급 느낌이 더 강한 쪽이 승자입니다.`;
-  }
-  return `[2단 퇴화 최종] 더 귀엽고, 깜찍하고, 사랑스러운 쪽을 선택하세요. 둥글둥글하고 부드럽고 베이비 포켓몬 같은 느낌이 더 강한 쪽이 승자입니다.`;
-}
-
 // 1:1 비교로 승자 결정
 async function compareTwo(imgA, imgB, type, name_en, matchLabel) {
-  const bufA = await readFile(imgA.path);
-  const bufB = await readFile(imgB.path);
+  const bufA = await downsizeImage(await readFile(imgA.path));
+  const bufB = await downsizeImage(await readFile(imgB.path));
 
   // A와 B 순서를 랜덤으로 섞어서 위치 편향 방지
   const swapped = Math.random() > 0.5;
   const first = swapped ? bufB : bufA;
   const second = swapped ? bufA : bufB;
-  const firstLabel = swapped ? 'B' : 'A';
-  const secondLabel = swapped ? 'A' : 'B';
+  const criteriaShort = type === 'base' ? 'darker, scarier, more menacing'
+    : type.startsWith('devo1') ? 'stronger, cooler, more battle-ready'
+    : 'cuter, rounder, more adorable';
 
   const content = [
     {
       type: 'text',
-      text: `You are a game sprite judge. Compare Image 1 and Image 2.
-
-Monster: ${name_en}
-${getReviewCriteria(type)}
-
-Pick ONE winner. Reply with ONLY this exact format, nothing else:
-WINNER: 1
-or
-WINNER: 2`,
+      text: `Pick the better "${name_en}" sprite (${criteriaShort}). Reply ONLY: {"w":1} or {"w":2}`,
     },
-    { type: 'text', text: '\n--- 이미지 1 ---' },
     { type: 'image_url', image_url: { url: `data:image/png;base64,${imageToBase64(first)}` } },
-    { type: 'text', text: '\n--- 이미지 2 ---' },
     { type: 'image_url', image_url: { url: `data:image/png;base64,${imageToBase64(second)}` } },
   ];
 
   try {
     const raw = await callVision([{ role: 'user', content }]);
-
-    // 디버그 로그 저장
-    const debugDir = resolve(__dirname, CONFIG.TEMP_DIR);
-    await mkdir(debugDir, { recursive: true });
-    await writeFile(
-      resolve(debugDir, `review_debug_${name_en}_${matchLabel}.txt`),
-      `Match: ${matchLabel}\nSwapped: ${swapped}\nRaw response:\n${raw}`,
-      'utf-8'
-    );
 
     const cleaned = raw
       .replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -89,62 +65,36 @@ WINNER: 2`,
       .replace(/<\/?no_think>/g, '')
       .trim();
 
-    // 방법 1: JSON 파싱 시도
+    // JSON에서 승자 추출: {"w":1} or {"w":2} or {"winner":1}
     const jsonMatch = cleaned.match(/\{[\s\S]*?\}/);
     if (jsonMatch) {
       try {
         const result = JSON.parse(jsonMatch[0]);
-        const pickedNum = result.winner;
-        let winner;
-        if (pickedNum === 1) {
-          winner = swapped ? imgB : imgA;
-        } else {
-          winner = swapped ? imgA : imgB;
+        const pickedNum = result.w ?? result.winner;
+        if (pickedNum === 1 || pickedNum === 2) {
+          const winner = pickedNum === 1 ? (swapped ? imgB : imgA) : (swapped ? imgA : imgB);
+          console.log(`    ${matchLabel}: img${imgA.index} vs img${imgB.index} → img${winner.index}`);
+          return winner;
         }
-        console.log(`    ${matchLabel}: 이미지${imgA.index} vs 이미지${imgB.index} → 승자: 이미지${winner.index} (${result.reason})`);
-        return winner;
       } catch {}
     }
 
-    // 방법 2: 텍스트에서 승자 번호 추출 (다양한 패턴)
-    const winnerPatterns = [
-      /WINNER:\s*(\d)/i,
-      /winner[:\s]*(\d)/i,
-      /pick[:\s]*(?:image\s*)?(\d)/i,
-      /choose[:\s]*(?:image\s*)?(\d)/i,
-      /select[:\s]*(?:image\s*)?(\d)/i,
-      /image\s*(\d)\s*(?:is|wins|the winner|is better|is the better)/i,
-      /(?:선택|승자)[:\s]*(?:이미지\s*)?(\d)/i,
-      /Therefore,?\s*Image\s*(\d)/i,
-      /\bImage\s*(\d)\s*(?:is\s+)?(?:the\s+)?(?:winner|better|best|fits|more)/i,
-      /\bImage\s*(\d)\s+(?:fits|wins|better|more)/i,
-      /(?:go with|prefer)\s*(?:image\s*)?(\d)/i,
-    ];
-
-    for (const pattern of winnerPatterns) {
-      const textMatch = cleaned.match(pattern);
-      if (textMatch) {
-        const pickedNum = parseInt(textMatch[1]);
-        if (pickedNum === 1 || pickedNum === 2) {
-          let winner;
-          if (pickedNum === 1) {
-            winner = swapped ? imgB : imgA;
-          } else {
-            winner = swapped ? imgA : imgB;
-          }
-          console.log(`    ${matchLabel}: 이미지${imgA.index} vs 이미지${imgB.index} → 승자: 이미지${winner.index} (텍스트 추출)`);
-          return winner;
-        }
-      }
+    // 폴백: 숫자 추출
+    const numMatch = cleaned.match(/[12]/);
+    if (numMatch) {
+      const pickedNum = parseInt(numMatch[0]);
+      const winner = pickedNum === 1 ? (swapped ? imgB : imgA) : (swapped ? imgA : imgB);
+      console.log(`    ${matchLabel}: img${imgA.index} vs img${imgB.index} → img${winner.index} (fallback)`);
+      return winner;
     }
 
   } catch (err) {
-    console.error(`    ${matchLabel} 심사 에러: ${err.message}`);
+    console.error(`    ${matchLabel} 에러: ${err.message}`);
   }
 
-  // 최종 폴백: 랜덤 선택
+  // 최종 폴백: 랜덤
   const fallback = Math.random() > 0.5 ? imgA : imgB;
-  console.log(`    ${matchLabel}: 파싱 실패 → 랜덤 선택: 이미지${fallback.index}`);
+  console.log(`    ${matchLabel}: 파싱실패 → 랜덤 img${fallback.index}`);
   return fallback;
 }
 

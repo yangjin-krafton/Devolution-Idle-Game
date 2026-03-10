@@ -76,7 +76,8 @@
       "Bash(ls -la /d/Weeks/Devolution-Idle-Game/tools/monster-pipeline/ | grep -E \"\\\\.js$\")",
       "Bash(cd \"D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline\" && rm -rf candidates/01_howl_wolf/selected/* candidates/01_howl_wolf/all_images/* && node pipeline.js --only 1 --skip-review)",
       "Bash(cd \"D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline\" && rm -rf candidates && mkdir candidates && rm -f progress.json && echo \"완료\")",
-      "Bash(cd \"D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline\" && rm -rf candidates/01_howl_wolf/selected candidates/01_howl_wolf/all_images candidates/01_howl_wolf/concept.json candidates/01_howl_wolf/roster.json candidates/01_howl_wolf/README.md && rmdir candidates/01_howl_wolf 2>/dev/null; rm -f progress.json && ls candidates/ 2>/dev/null; echo \"완료\")"
+      "Bash(cd \"D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline\" && rm -rf candidates/01_howl_wolf/selected candidates/01_howl_wolf/all_images candidates/01_howl_wolf/concept.json candidates/01_howl_wolf/roster.json candidates/01_howl_wolf/README.md && rmdir candidates/01_howl_wolf 2>/dev/null; rm -f progress.json && ls candidates/ 2>/dev/null; echo \"완료\")",
+      "Bash(cd D:/Weeks/Devolution-Idle-Game && npm install sharp)"
     ],
     "additionalDirectories": [
       "\\tmp"
