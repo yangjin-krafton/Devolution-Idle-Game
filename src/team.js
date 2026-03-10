@@ -5,8 +5,11 @@
 import { ALLY_MONSTERS, ENEMY_MONSTERS, GENERIC_LOGS } from './data.js';
 
 export class TeamManager {
-  constructor() {
-    this.allies = ALLY_MONSTERS.map(a => ({
+  constructor(orderedIds) {
+    const source = orderedIds
+      ? orderedIds.map(id => ALLY_MONSTERS.find(a => a.id === id)).filter(Boolean)
+      : ALLY_MONSTERS;
+    this.allies = source.map(a => ({
       ...a,
       actions: a.actions.map(ac => ({ ...ac })),
       stats: { ...a.stats },

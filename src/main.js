@@ -15,7 +15,7 @@ import {
   tickCombat, resetDanmaku,
 } from './ui/combatUI.js';
 import { randomEnvironment } from './backgrounds.js';
-import { initTitle } from './ui/titleUI.js';
+import { initTitle, resetTitle } from './ui/titleUI.js';
 import {
   initResult, renderResult,
   initTeam, renderTeamCards, updateEggProgress,
@@ -91,7 +91,9 @@ const _showScreenTracked = (name) => { _currentScreen = name; _origShowScreen(na
 _showScreenTracked('title');
 
 titleScr._startBtn.on('pointerdown', () => {
-  teamManager = new TeamManager();
+  const selectedIds = titleScr.getSelectedTeam();
+  if (selectedIds.length < 6) return; // need full team
+  teamManager = new TeamManager(selectedIds);
   battleCount = 0;
   capturedCount = 0;
   pendingDevoReveals = [];
@@ -282,11 +284,11 @@ function showGameOverScreen() {
   stopEggCheckInterval();
   _showScreenTracked('gameover');
   renderGameOver(battleCount, capturedCount, () => {
-    teamManager = new TeamManager();
     battleCount = 0;
     capturedCount = 0;
     pendingDevoReveals = [];
-    startBattle();
+    resetTitle();
+    _showScreenTracked('title');
   });
 }
 
@@ -309,9 +311,9 @@ window.__BRIDGE = {
     } else if (_currentScreen === 'team') {
       onNextBattle();
     } else if (_currentScreen === 'gameover') {
-      teamManager = new TeamManager();
       battleCount = 0; capturedCount = 0; pendingDevoReveals = [];
-      startBattle();
+      resetTitle();
+      _showScreenTracked('title');
     }
   },
 };
