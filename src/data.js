@@ -43,7 +43,7 @@ export const ALLY_MONSTERS = [
     devolvedName: '물방울콩', devolvedDesc: '아주 작고 투명한 콩 모양의 존재',
     actions: [
       { id: 'rain_sound', name: '빗소리', axis: 'sound', category: 'stimulate',
-        power: 12, escapeRisk: 3, pp: 8, maxPp: 8,
+        power: 9, escapeRisk: 4, pp: 8, maxPp: 8,
         effects: [{ type: 'calm', chance: 0.2, turns: 2 }],
         log: '빗소리로 순화도를 올린다.' },
       { id: 'cool_mist', name: '서늘한 안개', axis: 'temperature', category: 'defend',
@@ -67,7 +67,7 @@ export const ALLY_MONSTERS = [
     devolvedName: '꺼지지않는불씨', devolvedDesc: '손바닥 위에 올라오는 아주 작은 불씨',
     actions: [
       { id: 'warm_aura', name: '따뜻한 온기', axis: 'temperature', category: 'stimulate',
-        power: 12, escapeRisk: 3, pp: 8, maxPp: 8,
+        power: 9, escapeRisk: 4, pp: 8, maxPp: 8,
         effects: [{ type: 'curious', chance: 0.15, turns: 2 }],
         log: '온도 자극으로 순화도를 올린다.' },
       { id: 'gentle_glow', name: '은은한 존재감', axis: 'behavior', category: 'defend',
@@ -91,7 +91,7 @@ export const ALLY_MONSTERS = [
     devolvedName: '씨앗눈', devolvedDesc: '눈처럼 작은 씨앗에서 눈이 반짝이는 존재',
     actions: [
       { id: 'forest_scent', name: '숲 냄새', axis: 'smell', category: 'stimulate',
-        power: 12, escapeRisk: 3, pp: 8, maxPp: 8,
+        power: 9, escapeRisk: 4, pp: 8, maxPp: 8,
         effects: [{ type: 'charmed', chance: 0.1, turns: 3 }],
         log: '후각 자극으로 순화도를 올린다.' },
       { id: 'hide', name: '숨기기', axis: 'behavior', category: 'defend',
@@ -115,7 +115,7 @@ export const ALLY_MONSTERS = [
     devolvedName: '수정알갱이', devolvedDesc: '투명하고 단단한 작은 구슬 같은 존재',
     actions: [
       { id: 'crystal_hum', name: '수정 울림', axis: 'sound', category: 'stimulate',
-        power: 10, escapeRisk: 4, pp: 7, maxPp: 7,
+        power: 8, escapeRisk: 4, pp: 7, maxPp: 7,
         effects: [{ type: 'curious', chance: 0.2, turns: 2 }],
         log: '청각 자극으로 순화도 상승.' },
       { id: 'crystal_guard', name: '수정 방벽', axis: 'behavior', category: 'defend',
@@ -139,7 +139,7 @@ export const ALLY_MONSTERS = [
     devolvedName: '이끼솜', devolvedDesc: '폭신한 이끼 뭉치에서 눈이 깜빡이는 존재',
     actions: [
       { id: 'moss_scent', name: '이끼 향', axis: 'smell', category: 'stimulate',
-        power: 11, escapeRisk: 2, pp: 9, maxPp: 9,
+        power: 8, escapeRisk: 3, pp: 9, maxPp: 9,
         effects: [{ type: 'charmed', chance: 0.12, turns: 3 }],
         log: '가장 안전한 순화. 도주 거의 없음.' },
       { id: 'moss_heal', name: '이끼 치유', axis: 'smell', category: 'defend',
@@ -163,7 +163,7 @@ export const ALLY_MONSTERS = [
     devolvedName: '전기콩', devolvedDesc: '찌릿찌릿한 작은 콩 모양의 존재',
     actions: [
       { id: 'spark_crackle', name: '정전기 소리', axis: 'sound', category: 'stimulate',
-        power: 15, escapeRisk: 7, pp: 5, maxPp: 5,
+        power: 11, escapeRisk: 7, pp: 5, maxPp: 5,
         effects: [{ type: 'curious', chance: 0.25, turns: 2 }],
         log: '최강 순화력. 도주 위험도 높음.' },
       { id: 'spark_calm', name: '방전 안정', axis: 'temperature', category: 'defend',
