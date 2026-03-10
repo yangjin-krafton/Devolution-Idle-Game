@@ -22,7 +22,19 @@ async function callVision(messages) {
       messages,
       temperature: 0.1,
       max_tokens: 30,
-      response_format: { type: 'json_object' },
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'pick_winner',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: { w: { type: 'integer', enum: [1, 2] } },
+            required: ['w'],
+            additionalProperties: false,
+          },
+        },
+      },
     }),
   });
   if (!res.ok) throw new Error(`Vision API error: ${res.status} ${await res.text()}`);
@@ -43,14 +55,25 @@ async function compareTwo(imgA, imgB, type, name_en, matchLabel) {
   const swapped = Math.random() > 0.5;
   const first = swapped ? bufB : bufA;
   const second = swapped ? bufA : bufB;
-  const criteriaShort = type === 'base' ? 'darker, scarier, more menacing'
+  const styleCriteria = type === 'base' ? 'darker, scarier, more menacing'
     : type.startsWith('devo1') ? 'stronger, cooler, more battle-ready'
     : 'cuter, rounder, more adorable';
+
+  const prompt = [
+    `Compare two "${name_en}" sprites. Pick the better one.`,
+    `Quality criteria (in priority order):`,
+    `1. NOT cropped/cut off — full body visible, not extending beyond canvas edges`,
+    `2. Clean transparent background — no leftover artifacts or colored bg remnants`,
+    `3. No visual glitches — no broken parts, no weird seams or distortions`,
+    `4. Facing LEFT — monster should be looking/facing toward the left side`,
+    `5. Style fit: ${styleCriteria}`,
+    `Reply ONLY: {"w":1} or {"w":2}`,
+  ].join('\n');
 
   const content = [
     {
       type: 'text',
-      text: `Pick the better "${name_en}" sprite (${criteriaShort}). Reply ONLY: {"w":1} or {"w":2}`,
+      text: prompt,
     },
     { type: 'image_url', image_url: { url: `data:image/png;base64,${imageToBase64(first)}` } },
     { type: 'image_url', image_url: { url: `data:image/png;base64,${imageToBase64(second)}` } },
