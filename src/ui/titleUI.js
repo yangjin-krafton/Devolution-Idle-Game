@@ -5,6 +5,7 @@
 import { W, H, C, S, hex, lbl, cuteBtn, star, addSparkles } from './theme.js';
 import { monster } from './sprites.js';
 import { ALLY_MONSTERS, ENEMY_MONSTERS, SKILL_CATEGORY } from '../data.js';
+import { getMonsterById, getStatTotal, AXIS_LABEL, PERSONALITY_LABEL, ROLE_LABEL } from '../monsterRegistry.js';
 
 // ---- Dark palette (from actionPanelUI) ----
 const D = {
@@ -55,6 +56,9 @@ let scrollOffset = 0, maxScroll = 0, scrollStartOffset = 0;
 let codexFilter = 'all'; // 'all' | 'ally' | 'enemy' | 'unlocked' | 'locked'
 let codexSort = 'default'; // 'default' | 'name' | 'hp'
 let filteredList = [];     // cached for hit testing
+let detailPage = 0; // 0=정보, 1=스킬, 2=퇴화
+const DETAIL_PAGES = 3;
+const SWIPE_THRESHOLD = 30;
 
 // ---- UI refs ----
 let ct, detailBody, slotGfx = [], codexContent, codexMask;
@@ -142,7 +146,7 @@ function getFilteredMonsters() {
 function resetState() {
   teamSlots = [null, null, null, null, null, null];
   selectedMonster = null; scrollOffset = 0; mode = 'idle';
-  codexFilter = 'all'; codexSort = 'default'; filteredList = [];
+  codexFilter = 'all'; codexSort = 'default'; filteredList = []; detailPage = 0;
   codexEntries = {};
   ALLY_MONSTERS.forEach(m => { codexEntries[m.id] = 'unlocked'; });
   ENEMY_MONSTERS.forEach(m => { codexEntries[m.id] = 'locked'; });
@@ -207,79 +211,285 @@ function buildDetailPanel() {
 function refreshDetail() {
   detailBody.removeChildren();
   const mon = selectedMonster;
+  const pw = W - PAD * 2;
+
   if (!mon) {
-    const h = lbl('도감에서 몬스터를 선택하세요', 9, D.dimmer);
-    h.anchor = { x: 0.5, y: 0.5 }; h.x = (W - PAD * 2) / 2; h.y = DETAIL_H / 2 - 6;
+    const h = lbl('도감에서 몬스터를 선택하세요', 10, D.dimmer);
+    h.anchor = { x: 0.5, y: 0.5 }; h.x = pw / 2; h.y = DETAIL_H / 2 - 8;
     detailBody.addChild(h);
-    const arrow = lbl('▼', 8, D.neon);
-    arrow.anchor = { x: 0.5, y: 0.5 }; arrow.x = (W - PAD * 2) / 2; arrow.y = DETAIL_H / 2 + 18;
-    arrow.alpha = 0.5;
+    const arrow = lbl('◀  스와이프  ▶', 7, D.neon); arrow.alpha = 0.3;
+    arrow.anchor = { x: 0.5, y: 0.5 }; arrow.x = pw / 2; arrow.y = DETAIL_H / 2 + 20;
     detailBody.addChild(arrow);
     return;
   }
   const unlocked = codexEntries[mon.id] === 'unlocked';
+  const reg = getMonsterById(mon.id);
 
-  // Circular backdrop
-  const circCol = unlocked ? D.neon : D.dimmer;
+  if (!unlocked) {
+    const spr = monster(60, mon.img); spr.x = pw / 2; spr.y = 50;
+    if (spr.children[0]) spr.children[0].tint = 0x333344;
+    detailBody.addChild(spr);
+    detailBody.addChild(Object.assign(lbl('???', 16, D.dimmer, true), { x: pw / 2 - 20, y: 90 }));
+    detailBody.addChild(Object.assign(lbl('영입하면 정보가 공개됩니다', 8, D.dimmer), { x: pw / 2 - 80, y: 120 }));
+    renderPageDots(pw);
+    return;
+  }
+
+  // Render current page
+  if (detailPage === 0) renderPageInfo(pw, mon, reg);
+  else if (detailPage === 1) renderPageSkills(pw, mon);
+  else if (detailPage === 2) renderPageDevo(pw, mon, reg);
+
+  // Page dots
+  renderPageDots(pw);
+}
+
+function renderPageDots(pw) {
+  const labels = ['정보', '스킬', '퇴화'];
+  const dotY = DETAIL_H - 16;
+  for (let i = 0; i < DETAIL_PAGES; i++) {
+    const active = detailPage === i;
+    const dx = pw / 2 + (i - 1) * 42;
+    detailBody.addChild(new PIXI.Graphics()
+      .circle(dx, dotY, active ? 4 : 3)
+      .fill({ color: active ? D.neon : D.dimmer, alpha: active ? 0.8 : 0.4 }));
+    const dt = lbl(labels[i], 5, active ? D.neon : D.dimmer, active);
+    dt.anchor = { x: 0.5, y: 0 }; dt.x = dx; dt.y = dotY + 6;
+    detailBody.addChild(dt);
+  }
+}
+
+// ---- Page 0: 정보 ----
+// Layout: [Sprite 90px] | [Info right column]
+//         [──── Stats row (full width) ────]
+function renderPageInfo(pw, mon, reg) {
+  const isAlly = !!mon.actions;
+  const R = 90; // right column start x
+
+  // ── Left: Sprite area (0~85) ──
   detailBody.addChild(new PIXI.Graphics()
-    .circle(42, 46, 34).fill({ color: circCol, alpha: 0.08 })
-    .stroke({ color: circCol, width: 1, alpha: 0.2 }));
-  const spr = monster(68, mon.img);
-  spr.x = 42; spr.y = 46;
-  if (!unlocked && spr.children[0]) spr.children[0].tint = 0x333344;
+    .roundRect(0, 0, 82, 80, 12).fill({ color: D.neon, alpha: 0.04 })
+    .stroke({ color: D.neon, width: 1, alpha: 0.1 }));
+  const spr = monster(72, mon.img); spr.x = 41; spr.y = 40;
   detailBody.addChild(spr);
 
-  // Name
-  detailBody.addChild(Object.assign(lbl(unlocked ? mon.name : '???', 13, D.text, true), { x: 90, y: 6 }));
-  // Desc
-  detailBody.addChild(Object.assign(lbl(unlocked ? (mon.desc || '') : '???', 6.5, D.dim), { x: 90, y: 32 }));
-  // Separator
+  // ── Right: Name row ──
+  detailBody.addChild(Object.assign(lbl(mon.name, 14, D.text, true), { x: R, y: 2 }));
+
+  // Badges row (under name)
+  let bx = R;
+  const tb = neonBadge(isAlly ? '아군' : '적', isAlly ? D.neon : D.red);
+  tb.x = bx; tb.y = 28; detailBody.addChild(tb); bx += (tb._pillWidth || 42) + 6;
+  if (reg?.role) {
+    const rb = neonBadge(ROLE_LABEL[reg.role] || reg.role, D.blue);
+    rb.x = bx; rb.y = 28; detailBody.addChild(rb); bx += (rb._pillWidth || 42) + 6;
+  }
+  if (mon.maxHp) {
+    const hb = neonBadge(`HP ${mon.maxHp}`, D.dim);
+    hb.x = bx; hb.y = 28; detailBody.addChild(hb);
+  }
+  if (mon.attackPower != null) {
+    const ab = neonBadge(`ATK ${mon.attackPower}`, D.red);
+    ab.x = bx; ab.y = 28; detailBody.addChild(ab);
+  }
+
+  // Desc (right column, 2 lines max)
+  const desc = mon.desc || '';
+  detailBody.addChild(Object.assign(lbl(desc, 7, D.dimmer), { x: R, y: 48 }));
+
+  // ── Separator + total ──
   detailBody.addChild(new PIXI.Graphics()
-    .moveTo(90, 48).lineTo(W - PAD * 2 - 10, 48).stroke({ color: D.sep, width: 0.5 }));
+    .moveTo(0, 82).lineTo(pw, 82).stroke({ color: D.sep, width: 0.5, alpha: 0.4 }));
+  if (mon.stats) {
+    const total = Object.values(mon.stats).reduce((s, v) => s + v, 0);
+    detailBody.addChild(Object.assign(lbl(`총합 ${total}`, 6, D.dim), { x: pw - 44, y: 72 }));
+  }
 
-  // Stats
-  if (mon.stats && unlocked) {
-    const names = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
-    const colors = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
+  // ── Bottom: Stats — 4 rows single column for clarity ──
+  const M = 6; // inner left margin
+  if (mon.stats) {
+    const STAT = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
+    const SCOL = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
+    const barX = M + 38, barW = pw - barX - 28;
+
     Object.entries(mon.stats).forEach(([k, v], i) => {
-      const col = i % 2, row = Math.floor(i / 2);
-      const x = 90 + col * 105, y = 53 + row * 19;
-      detailBody.addChild(Object.assign(lbl(names[k], 6, D.dim), { x, y }));
-      detailBody.addChild(statBar(x + 30, y + 2, 38, 7, v / 10, colors[k]));
-      detailBody.addChild(Object.assign(lbl(String(v), 6.5, D.text, true), { x: x + 72, y }));
+      const y = 88 + i * 16;
+      detailBody.addChild(Object.assign(lbl(STAT[k], 7, SCOL[k], true), { x: M, y }));
+      detailBody.addChild(statBar(barX, y + 3, barW, 8, v / 10, SCOL[k]));
+      detailBody.addChild(Object.assign(lbl(String(v), 8, D.text, true), { x: pw - 14, y }));
     });
-  } else if (mon.stats) {
-    detailBody.addChild(Object.assign(lbl('스탯: ???', 8, D.dimmer), { x: 90, y: 55 }));
   }
 
-  if (!mon.stats && mon.attackPower != null && unlocked) {
-    detailBody.addChild(Object.assign(
-      lbl(`공격력 ${mon.attackPower}  감각 ${(mon.sensoryType || []).join('/')}`, 7, D.dim), { x: 90, y: 55 }));
+  // Enemy stats — 2×2 grid
+  if (mon.attackPower != null) {
+    const sensory = (mon.sensoryType || []).map(s => AXIS_LABEL[s] || s).join(', ');
+    const pers = PERSONALITY_LABEL[mon.personality] || mon.personality || '';
+    const rx = pw / 2;
+    detailBody.addChild(Object.assign(lbl('감각', 6, D.dimmer), { x: M, y: 88 }));
+    detailBody.addChild(Object.assign(lbl(sensory, 8, D.text, true), { x: M + 34, y: 87 }));
+    detailBody.addChild(Object.assign(lbl('성격', 6, D.dimmer), { x: rx, y: 88 }));
+    detailBody.addChild(Object.assign(lbl(pers, 8, D.text, true), { x: rx + 34, y: 87 }));
+    detailBody.addChild(Object.assign(lbl('순화', 6, D.dimmer), { x: M, y: 108 }));
+    detailBody.addChild(Object.assign(lbl(String(mon.tamingThreshold), 10, D.neon, true), { x: M + 34, y: 106 }));
+    detailBody.addChild(Object.assign(lbl('도주', 6, D.dimmer), { x: rx, y: 108 }));
+    detailBody.addChild(Object.assign(lbl(String(mon.escapeThreshold), 10, D.red, true), { x: rx + 34, y: 106 }));
+  }
+}
+
+// ---- Page 1: 스킬 ----
+// Layout: 3 equal columns, structured rows inside each
+function renderPageSkills(pw, mon) {
+  if (!mon.actions) {
+    const t = lbl('스킬 정보 없음', 10, D.dimmer);
+    t.anchor = { x: 0.5, y: 0.5 }; t.x = pw / 2; t.y = 65;
+    detailBody.addChild(t); return;
+  }
+  const gap = 6, sw = Math.floor((pw - gap * 2) / 3);
+  const sh = DETAIL_H - 24;
+
+  mon.actions.forEach((a, i) => {
+    const x = i * (sw + gap);
+    const cat = CAT_COLOR[a.category] || CAT_COLOR.stimulate;
+
+    // Card bg
+    detailBody.addChild(new PIXI.Graphics()
+      .roundRect(x, 0, sw, sh, 12).fill({ color: cat.bg })
+      .stroke({ color: cat.c, width: 1, alpha: 0.35 }));
+    // Type color bar (left)
+    detailBody.addChild(new PIXI.Graphics()
+      .roundRect(x, 5, 3, sh - 10, 1.5).fill({ color: cat.c, alpha: 0.6 }));
+
+    const cx = x + 10; // content x
+    const cw = sw - 16; // content width
+
+    // Row 1: Category · Axis
+    const catName = SKILL_CATEGORY[a.category]?.name || a.category;
+    const axisName = AXIS_LABEL[a.axis] || a.axis;
+    detailBody.addChild(Object.assign(lbl(`${catName} · ${axisName}`, 6, cat.c, true), { x: cx, y: 5 }));
+
+    // Row 2: Skill name (big, centered)
+    const nm = lbl(a.name, 10, D.text, true);
+    nm.anchor = { x: 0.5, y: 0 }; nm.x = x + sw / 2; nm.y = 22;
+    detailBody.addChild(nm);
+
+    // Separator
+    detailBody.addChild(new PIXI.Graphics()
+      .moveTo(cx, 46).lineTo(x + sw - 6, 46).stroke({ color: D.sep, width: 0.5 }));
+
+    // Row 3: Power — label + big number
+    const mid = x + sw / 2;
+    detailBody.addChild(Object.assign(lbl('위력', 6, D.dimmer), { x: cx, y: 50 }));
+    const pwN = lbl(String(a.power), 14, D.text, true);
+    pwN.anchor = { x: 0.5, y: 0 }; pwN.x = mid; pwN.y = 60;
+    detailBody.addChild(pwN);
+
+    // Row 4: PP — label inline with number
+    const ppTxt = lbl(`PP ${a.pp}/${a.maxPp}`, 9, cat.c, true);
+    ppTxt.anchor = { x: 0.5, y: 0 }; ppTxt.x = mid; ppTxt.y = 90;
+    detailBody.addChild(ppTxt);
+
+    // Row 5: Escape risk
+    if (a.escapeRisk !== 0) {
+      const risk = a.escapeRisk > 0 ? `+${a.escapeRisk}` : String(a.escapeRisk);
+      const rc = a.escapeRisk > 0 ? D.red : D.neon;
+      const rTxt = lbl(`도주 ${risk}`, 8, rc, true);
+      rTxt.anchor = { x: 0.5, y: 0 }; rTxt.x = mid; rTxt.y = 114;
+      detailBody.addChild(rTxt);
+    }
+  });
+}
+
+// ---- Page 2: 퇴화 ----
+// Layout: [Before | Arrow | After] top row, stat table below
+function renderPageDevo(pw, mon, reg) {
+  if (!mon.devolvedName && !reg?.devoTree) {
+    const t = lbl('퇴화 정보 없음', 10, D.dimmer);
+    t.anchor = { x: 0.5, y: 0.5 }; t.x = pw / 2; t.y = 65;
+    detailBody.addChild(t); return;
   }
 
-  // Skills
-  if (mon.actions && unlocked) {
-    const sy = 95, sw = Math.floor((W - PAD * 2 - 28) / 3);
-    mon.actions.forEach((a, i) => {
-      const x = 4 + i * (sw + 6);
-      const cat = CAT_COLOR[a.category] || CAT_COLOR.stimulate;
+  if (mon.devolvedName) {
+    const half = pw / 2 - 16;
 
-      // Skill card
-      detailBody.addChild(new PIXI.Graphics()
-        .roundRect(x, sy, sw, 52, 10).fill({ color: cat.bg })
-        .stroke({ color: cat.c, width: 1, alpha: 0.4 }));
-      // Left type bar
-      detailBody.addChild(new PIXI.Graphics()
-        .roundRect(x, sy + 4, 3, 44, 1.5).fill({ color: cat.c, alpha: 0.6 }));
+    // ── Top row: Before → After ──
+    // Before box
+    detailBody.addChild(new PIXI.Graphics()
+      .roundRect(0, 0, half, 36, 8).fill({ color: D.card })
+      .stroke({ color: D.sep, width: 1 }));
+    const bn = lbl(mon.name, 9, D.text, true);
+    bn.anchor = { x: 0.5, y: 0.5 }; bn.x = half / 2; bn.y = 18;
+    detailBody.addChild(bn);
 
-      const catName = SKILL_CATEGORY[a.category]?.name || a.category;
-      detailBody.addChild(Object.assign(lbl(catName, 5.5, cat.c, true), { x: x + 8, y: sy + 3 }));
-      detailBody.addChild(Object.assign(lbl(a.name, 7.5, D.text, true), { x: x + 8, y: sy + 17 }));
-      // Separator inside card
-      detailBody.addChild(new PIXI.Graphics()
-        .moveTo(x + 8, sy + 33).lineTo(x + sw - 6, sy + 33).stroke({ color: D.sep, width: 0.5 }));
-      detailBody.addChild(Object.assign(lbl(`위력 ${a.power}`, 5, D.dim), { x: x + 8, y: sy + 36 }));
-      detailBody.addChild(Object.assign(lbl(`${a.pp}/${a.maxPp}`, 5, cat.c, true), { x: x + sw - 32, y: sy + 36 }));
+    // Arrow
+    const ar = lbl('▶', 10, D.neon, true);
+    ar.anchor = { x: 0.5, y: 0.5 }; ar.x = pw / 2; ar.y = 18;
+    detailBody.addChild(ar);
+
+    // After box
+    const ax = pw / 2 + 16;
+    detailBody.addChild(new PIXI.Graphics()
+      .roundRect(ax, 0, half, 36, 8).fill({ color: D.neon, alpha: 0.08 })
+      .stroke({ color: D.neon, width: 1, alpha: 0.4 }));
+    const an = lbl(mon.devolvedName, 9, D.neon, true);
+    an.anchor = { x: 0.5, y: 0.5 }; an.x = ax + half / 2; an.y = 18;
+    detailBody.addChild(an);
+
+    // Desc
+    if (mon.devolvedDesc) {
+      detailBody.addChild(Object.assign(lbl(mon.devolvedDesc, 6, D.dimmer), { x: 0, y: 40 }));
+    }
+
+    // ── Separator ──
+    detailBody.addChild(new PIXI.Graphics()
+      .moveTo(0, 56).lineTo(pw, 56).stroke({ color: D.sep, width: 0.5, alpha: 0.4 }));
+
+    // ── Stat comparison table (y=60~130) ──
+    if (mon.devolvedStats) {
+      const STAT = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
+      const SCOL = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
+      const M = 6; // inner margin
+
+      // Header row
+      detailBody.addChild(Object.assign(lbl('스탯', 6, D.dimmer), { x: M, y: 60 }));
+      detailBody.addChild(Object.assign(lbl('현재', 6, D.dimmer), { x: M + 58, y: 60 }));
+      detailBody.addChild(Object.assign(lbl('퇴화 후', 6, D.dimmer), { x: M + 118, y: 60 }));
+      detailBody.addChild(Object.assign(lbl('변화', 6, D.dimmer), { x: M + 188, y: 60 }));
+
+      Object.entries(mon.devolvedStats).forEach(([k, v], i) => {
+        const y = 76 + i * 18;
+        const orig = mon.stats?.[k] || 0;
+        const diff = v - orig;
+        const diffStr = diff > 0 ? `+${diff}` : String(diff);
+        const diffCol = diff > 0 ? D.neon : diff < 0 ? D.red : D.dim;
+
+        detailBody.addChild(Object.assign(lbl(STAT[k], 7, SCOL[k], true), { x: M, y }));
+        detailBody.addChild(Object.assign(lbl(String(orig), 9, D.dimmer), { x: M + 66, y: y - 1 }));
+        detailBody.addChild(Object.assign(lbl('→', 7, D.sep), { x: M + 94, y }));
+        detailBody.addChild(Object.assign(lbl(String(v), 9, D.text, true), { x: M + 118, y: y - 1 }));
+
+        // Diff with colored bar indicator
+        detailBody.addChild(Object.assign(lbl(diffStr, 9, diffCol, true), { x: M + 188, y: y - 1 }));
+        const barW = Math.abs(diff) * 6;
+        if (barW > 0) {
+          detailBody.addChild(new PIXI.Graphics()
+            .roundRect(M + 218, y + 4, Math.min(barW, pw - M - 222), 6, 3).fill({ color: diffCol, alpha: 0.4 }));
+        }
+      });
+    }
+  }
+
+  // Roster devo tree (future)
+  if (reg?.devoTree?.devo1) {
+    let dy = mon.devolvedName ? 148 : 4;
+    reg.devoTree.devo1.forEach((d1, i) => {
+      const role = d1.role ? ` [${ROLE_LABEL[d1.role] || d1.role}]` : '';
+      detailBody.addChild(Object.assign(lbl(`퇴화1-${i + 1}: ${d1.name}${role}`, 8, D.neon, true), { x: 4, y: dy }));
+      dy += 22;
+      (d1.devo2 || []).forEach((d2, j) => {
+        const r2 = d2.role ? ` [${ROLE_LABEL[d2.role] || d2.role}]` : '';
+        detailBody.addChild(Object.assign(lbl(`  └ ${d2.name}${r2}`, 7, D.blue), { x: 16, y: dy }));
+        dy += 18;
+      });
     });
   }
 }
@@ -598,6 +808,10 @@ function onPointerDown(e) {
     const bx = startBtnRef.x, by = startBtnRef.y, bw = 180 * S, bh = 48 * S;
     if (pos.x >= bx && pos.x < bx + bw && pos.y >= by && pos.y < by + bh) return;
   }
+  // Detail panel swipe
+  if (selectedMonster && pos.y >= DETAIL_Y && pos.y < DETAIL_Y + DETAIL_H + 8) {
+    mode = 'detail-swipe'; return;
+  }
   const si = hitSlot(pos.x, pos.y);
   if (si >= 0 && teamSlots[si]) { mode = 'slot-pending'; pendingSlotIdx = si; return; }
   if (pos.y >= CODEX_GRID_Y && pos.y <= H && !startOverlay.visible) {
@@ -626,6 +840,11 @@ function onPointerMove(e) {
 
 function onPointerUp(e) {
   const pos = e.getLocalPosition(ct);
+  if (mode === 'detail-swipe') {
+    const dx = pos.x - startPos.x;
+    if (dx < -SWIPE_THRESHOLD && detailPage < DETAIL_PAGES - 1) { detailPage++; refreshDetail(); }
+    else if (dx > SWIPE_THRESHOLD && detailPage > 0) { detailPage--; refreshDetail(); }
+  }
   if (mode === 'slot-pending') {
     selectedMonster = teamSlots[pendingSlotIdx];
     refreshDetail(); refreshSlots(); refreshCodex();
