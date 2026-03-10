@@ -655,7 +655,22 @@ node tools/monster-pipeline/watchdog.js
 node tools/monster-pipeline/watchdog.js --timeout 300 --max-retries 3
 ```
 
-### 후보 심사 및 게임 통합
+### 후보 이미지 리뷰 (GUI)
+
+AI 토너먼트로 선택된 이미지를 직접 점검하고, 더 나은 후보로 교체할 수 있는 웹 UI입니다.
+
+```bash
+# 리뷰 서버 실행
+node tools/monster-pipeline/review-server.js
+# → http://localhost:3456 열기
+```
+
+기능:
+* 몬스터별 base / devo1 / devo2 각 폼의 선택 이미지 + 16개 후보 그리드 표시
+* 스탯, 스킬, 역할 등 concept.json 데이터 함께 표시
+* 후보 클릭 → 현재 vs 새 이미지 비교 모달 → 확인 시 `selected/` 폴더 파일 직접 교체
+
+### 후보 심사 및 게임 통합 (CLI)
 
 생성된 몬스터는 `candidates/` 폴더에 쌓이며, 직접 검토 후 통합합니다.
 

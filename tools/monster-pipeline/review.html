@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Monster Candidate Review</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+  /* Layout */
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; background: #16213e; overflow-y: auto; border-right: 1px solid #333; }
+  .main { margin-left: 260px; padding: 24px; }
+
+  /* Sidebar */
+  .sidebar h2 { padding: 16px; font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .monster-btn {
+    display: block; width: 100%; padding: 12px 16px; border: none; background: none;
+    color: #ccc; text-align: left; cursor: pointer; font-size: 14px; transition: background 0.15s;
+  }
+  .monster-btn:hover { background: #1a3a5c; }
+  .monster-btn.active { background: #0f3460; color: #fff; border-left: 3px solid #e94560; }
+  .monster-btn .sub { font-size: 11px; color: #777; }
+
+  /* Form group */
+  .form-group { margin-bottom: 32px; }
+  .form-group h2 {
+    font-size: 18px; margin-bottom: 4px; color: #e94560;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-group h2 .tag {
+    font-size: 11px; background: #333; color: #aaa; padding: 2px 8px; border-radius: 10px;
+  }
+  .form-group .desc { font-size: 13px; color: #888; margin-bottom: 12px; }
+
+  /* Selected display */
+  .selected-area {
+    display: flex; align-items: flex-start; gap: 20px; margin-bottom: 16px;
+    background: #16213e; border-radius: 8px; padding: 16px;
+  }
+  .selected-img {
+    width: 192px; height: 192px; object-fit: contain; border: 3px solid #e94560;
+    border-radius: 8px; background: #222; image-rendering: auto;
+  }
+  .selected-info { flex: 1; }
+  .selected-info h3 { font-size: 14px; color: #e94560; margin-bottom: 8px; }
+
+  /* Previous stage reference */
+  .prev-stage {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .prev-stage img {
+    width: 192px; height: 192px; object-fit: contain; border: 2px solid #555;
+    border-radius: 8px; background: #222; image-rendering: auto;
+  }
+  .prev-stage .prev-label {
+    font-size: 11px; color: #888; text-align: center; white-space: nowrap;
+  }
+  .prev-arrow { color: #555; font-size: 24px; align-self: center; }
+
+  /* Devolution tree overview — top-down */
+  .devo-tree {
+    background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 32px;
+    border: 1px solid #333; overflow-x: auto;
+  }
+  .devo-tree h2 { font-size: 15px; color: #888; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+  .devo-tree-layout { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .devo-tree-row { display: flex; justify-content: center; align-items: flex-start; gap: 12px; position: relative; }
+  .devo-tree-branch { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; position: relative; }
+  .devo-tree-branch img {
+    width: 96px; height: 96px; object-fit: contain; border-radius: 8px;
+    background: #222; image-rendering: auto; border: 2px solid #333;
+    cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+  }
+  .devo-tree-branch img:hover { border-color: #e94560; transform: scale(1.08); }
+  .devo-tree-branch .tree-name { font-size: 10px; color: #aaa; text-align: center; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .devo-tree-branch .tree-role { font-size: 9px; color: #666; }
+  .devo-tree-line-v { width: 2px; height: 20px; background: #444; margin: 0 auto; }
+  .devo-tree-lines { position: relative; height: 20px; margin: 0 auto; }
+  .devo-tree-group-d1 { display: flex; justify-content: center; gap: 24px; }
+  .devo-tree-d1-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .devo-tree-d2-row { display: flex; justify-content: center; gap: 8px; }
+  .devo-tree-lines-canvas { display: block; }
+  .stat-row { font-size: 13px; color: #aaa; margin: 2px 0; }
+  .stat-row span { color: #fff; }
+
+  /* Candidates grid */
+  .candidates-label { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .candidates-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px;
+  }
+  .candidate-card {
+    position: relative; cursor: pointer; border: 2px solid transparent;
+    border-radius: 6px; overflow: hidden; transition: all 0.15s; background: #111;
+  }
+  .candidate-card:hover { border-color: #e94560; transform: scale(1.05); }
+  .candidate-card.is-selected { border-color: #4caf50; }
+  .candidate-card img {
+    width: 100%; height: 128px; object-fit: contain; display: block;
+    background: #1a1a1a; image-rendering: auto;
+  }
+  .candidate-card img.flipped { transform: scaleX(-1); }
+  .candidate-card .card-actions {
+    position: absolute; top: 4px; left: 4px; display: flex; gap: 4px;
+  }
+  .flip-btn {
+    width: 22px; height: 22px; border: none; border-radius: 4px;
+    background: rgba(0,0,0,0.6); color: #ccc; cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .candidate-card:hover .flip-btn { opacity: 1; }
+  .flip-btn:hover { background: #e94560; color: #fff; }
+  .flip-btn.active { background: #e94560; color: #fff; opacity: 1; }
+  .candidate-card .label {
+    font-size: 10px; color: #888; text-align: center; padding: 2px;
+    background: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .candidate-card .check {
+    position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+    background: #4caf50; border-radius: 50%; display: none; align-items: center;
+    justify-content: center; font-size: 12px; color: #fff;
+  }
+  .candidate-card.is-selected .check { display: flex; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-content {
+    background: #1a1a2e; border-radius: 12px; padding: 24px; max-width: 600px; text-align: center;
+  }
+  .modal-content img {
+    max-width: 512px; max-height: 512px; image-rendering: auto;
+    border-radius: 8px; margin-bottom: 16px; background: #222;
+  }
+  .modal-content .actions { display: flex; gap: 12px; justify-content: center; }
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 14px; transition: background 0.15s;
+  }
+  .btn-primary { background: #e94560; color: #fff; }
+  .btn-primary:hover { background: #c73a52; }
+  .btn-cancel { background: #333; color: #ccc; }
+  .btn-cancel:hover { background: #444; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; padding: 12px 20px;
+    background: #4caf50; color: #fff; border-radius: 8px; font-size: 14px;
+    opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Action stats */
+  .actions-table { margin-top: 8px; }
+  .actions-table table {
+    border-collapse: collapse; width: 100%; font-size: 12px;
+  }
+  .actions-table th, .actions-table td {
+    padding: 4px 8px; border: 1px solid #333; text-align: left;
+  }
+  .actions-table th { background: #1a3a5c; color: #ccc; }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <h2>Candidates</h2>
+</div>
+
+<div class="main" id="main">
+  <div style="color:#666; padding: 60px; text-align:center; font-size: 18px;">
+    &larr; 왼쪽에서 몬스터를 선택하세요
+  </div>
+</div>
+
+<!-- Override confirm modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:12px; color:#e94560;">이미지 교체 확인</h3>
+    <div style="display:flex; gap:16px; justify-content:center; align-items:center; margin-bottom:16px;">
+      <div>
+        <div style="font-size:11px; color:#888; margin-bottom:4px;">현재 선택</div>
+        <img id="modal-old" style="width:192px; height:192px; object-fit:contain;">
+      </div>
+      <div style="font-size:24px; color:#e94560;">&rarr;</div>
+      <div>
+        <div style="font-size:11px; color:#888; margin-bottom:4px;">새 선택</div>
+        <img id="modal-new" style="width:192px; height:192px; object-fit:contain;">
+        <div style="margin-top:4px; font-size:11px; color:#e94560; display:none;" id="modal-flip-label">좌우 반전 적용됨</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="modal-confirm">교체하기</button>
+      <button class="btn btn-cancel" id="modal-cancel">취소</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let candidates = [];
+let currentDir = null;
+let pendingOverride = null;
+
+// ---- Helpers ----
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function imgUrl(dir, folder, file) {
+  return `${API}/img/${encodeURIComponent(dir)}/${folder}/${encodeURIComponent(file)}`;
+}
+
+// Derive selected filename from an all_images filename
+// e.g. "base_howl_wolf_3.png" -> "base_howl_wolf.png"
+function toSelectedName(allImgFile) {
+  return allImgFile.replace(/_(\d+)\.png$/, '.png');
+}
+
+// Group all_images by form (base name without trailing _N)
+function groupByForm(files) {
+  const groups = {};
+  for (const f of files) {
+    const key = toSelectedName(f);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(f);
+  }
+  return groups;
+}
+
+// ---- Load candidates list ----
+async function loadCandidates() {
+  const res = await fetch(`${API}/api/candidates`);
+  candidates = await res.json();
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '<h2>Candidates</h2>';
+  for (const c of candidates) {
+    const btn = document.createElement('button');
+    btn.className = 'monster-btn';
+    const name = c.concept?.base?.name_kr || c.dir;
+    const nameEn = c.concept?.base?.name_en || '';
+    btn.innerHTML = `${c.dir.split('_')[0]} ${name}<br><span class="sub">${nameEn}</span>`;
+    btn.onclick = () => selectMonster(c.dir);
+    sb.appendChild(btn);
+  }
+}
+
+// ---- Select & render monster ----
+async function selectMonster(dir) {
+  currentDir = dir;
+
+  // Highlight sidebar
+  document.querySelectorAll('.monster-btn').forEach((b, i) => {
+    b.classList.toggle('active', candidates[i].dir === dir);
+  });
+
+  const cand = candidates.find(c => c.dir === dir);
+  const concept = cand.concept;
+
+  const [allImages, selected] = await Promise.all([
+    fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/all-images`).then(r => r.json()),
+    fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/selected`).then(r => r.json()),
+  ]);
+
+  const groups = groupByForm(allImages);
+  const selectedSet = new Set(selected);
+
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  // Title
+  const title = document.createElement('h1');
+  title.style.cssText = 'margin-bottom:24px; font-size:24px;';
+  title.textContent = `${concept?.base?.name_kr || dir} (${concept?.base?.name_en || ''})`;
+  main.appendChild(title);
+
+  // Devolution tree overview
+  main.appendChild(buildDevoTree(dir, concept, selectedSet));
+
+  // Render each form group
+  for (const [selectedFile, variants] of Object.entries(groups)) {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+
+    // Determine form info
+    const formInfo = getFormInfo(selectedFile, concept);
+
+    // Header
+    const h2 = document.createElement('h2');
+    h2.innerHTML = `${formInfo.label} <span class="tag">${formInfo.tag}</span>`;
+    group.appendChild(h2);
+
+    if (formInfo.desc) {
+      const desc = document.createElement('div');
+      desc.className = 'desc';
+      desc.textContent = formInfo.desc;
+      group.appendChild(desc);
+    }
+
+    // Selected image display
+    const selArea = document.createElement('div');
+    selArea.className = 'selected-area';
+    const isSelected = selectedSet.has(selectedFile);
+    const selImgSrc = isSelected
+      ? imgUrl(dir, 'selected', selectedFile)
+      : imgUrl(dir, 'all_images', variants[0]);
+
+    // Build previous stage reference HTML
+    let prevHtml = '';
+    const prevStages = getPrevStages(selectedFile, dir, selectedSet, concept);
+    if (prevStages.length > 0) {
+      const prevItems = prevStages.map(p => `
+        <div class="prev-stage">
+          <img src="${p.src}" title="${p.name}" />
+          <div class="prev-label">${p.label}</div>
+        </div>
+      `).join('<div class="prev-arrow">&rarr;</div>');
+      prevHtml = prevItems + '<div class="prev-arrow">&rarr;</div>';
+    }
+
+    selArea.innerHTML = `
+      ${prevHtml}
+      <img class="selected-img" id="sel-${selectedFile}" src="${selImgSrc}" />
+      <div class="selected-info">
+        <h3>${isSelected ? selectedFile : '(선택 없음)'}</h3>
+        ${formInfo.statsHtml}
+      </div>
+    `;
+    group.appendChild(selArea);
+
+    // Candidate grid
+    const label = document.createElement('div');
+    label.className = 'candidates-label';
+    label.textContent = `후보 이미지 (${variants.length}개) — 클릭하여 교체`;
+    group.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'candidates-grid';
+
+    // Sort variants numerically
+    variants.sort((a, b) => {
+      const na = parseInt(a.match(/_(\d+)\.png$/)?.[1] || '0');
+      const nb = parseInt(b.match(/_(\d+)\.png$/)?.[1] || '0');
+      return na - nb;
+    });
+
+    for (const v of variants) {
+      const card = document.createElement('div');
+      card.className = 'candidate-card';
+      card.innerHTML = `
+        <div class="card-actions">
+          <button class="flip-btn" title="좌우 반전 (원본 저장)">&#8646;</button>
+        </div>
+        <img src="${imgUrl(dir, 'all_images', v)}" loading="lazy" />
+        <div class="label">${v.replace(/_(\d+)\.png$/, ' #$1')}</div>
+        <div class="check">&#10003;</div>
+      `;
+      const img = card.querySelector('img');
+      const flipBtn = card.querySelector('.flip-btn');
+      flipBtn.onclick = (e) => {
+        e.stopPropagation();
+        flipAndSave(dir, v, img, flipBtn);
+      };
+      card.onclick = () => confirmOverride(dir, v, selectedFile);
+      grid.appendChild(card);
+    }
+    group.appendChild(grid);
+    main.appendChild(group);
+  }
+}
+
+function getFormInfo(selectedFile, concept) {
+  // Parse: base_xxx.png, devo1_N_xxx.png, devo2_N_xxx.png
+  const info = { label: selectedFile, tag: '', desc: '', statsHtml: '' };
+
+  if (selectedFile.startsWith('base_')) {
+    info.label = concept?.base?.name_kr || 'Base';
+    info.tag = 'Wild';
+    info.desc = concept?.base?.desc_kr || '';
+    const b = concept?.base;
+    if (b) {
+      info.statsHtml = `
+        <div class="stat-row">HP: <span>${b.hp}</span> | ATK: <span>${b.attackPower}</span></div>
+        <div class="stat-row">Taming: <span>${b.tamingThreshold}</span> | Escape: <span>${b.escapeThreshold}</span></div>
+        <div class="stat-row">Sensory: <span>${b.sensoryType?.join(', ')}</span> | Personality: <span>${b.personality}</span></div>
+        <div class="stat-row">Stats: G<span>${b.stats?.gentleness}</span> E<span>${b.stats?.empathy}</span> R<span>${b.stats?.resilience}</span> A<span>${b.stats?.agility}</span></div>
+      `;
+    }
+  } else {
+    const devoMatch = selectedFile.match(/^(devo[12])_(\d+)_(.+)\.png$/);
+    if (devoMatch) {
+      const [, level, idx, name] = devoMatch;
+      const devoKey = level === 'devo1' ? 'devolutions_1' : 'devolutions_2';
+      const devoArr = concept?.[devoKey] || [];
+      const devo = devoArr[parseInt(idx)];
+      if (devo) {
+        info.label = devo.name_kr || name;
+        info.tag = level === 'devo1' ? `Devo1 #${idx} — ${devo.role || ''}` : `Devo2 #${idx}`;
+        info.desc = devo.desc_kr || '';
+        if (level === 'devo1' && devo.actions) {
+          let actionsHtml = '<div class="actions-table"><table><tr><th>Action</th><th>Type</th><th>Axis</th><th>Power</th><th>PP</th><th>Esc</th></tr>';
+          for (const a of devo.actions) {
+            actionsHtml += `<tr><td>${a.name_kr}</td><td>${a.type}</td><td>${a.axis}</td><td>${a.power}</td><td>${a.pp}</td><td>${a.escapeRisk}</td></tr>`;
+          }
+          actionsHtml += '</table></div>';
+          info.statsHtml = `<div class="stat-row">HP: <span>${devo.hp}</span> | Role: <span>${devo.role}</span></div>${actionsHtml}`;
+        }
+      } else {
+        info.label = name;
+        info.tag = level;
+      }
+    }
+  }
+  return info;
+}
+
+// ---- Devolution tree overview ----
+function buildDevoTree(dir, concept, selectedSet) {
+  const tree = document.createElement('div');
+  tree.className = 'devo-tree';
+  tree.innerHTML = '<h2>Devolution Tree</h2>';
+
+  const devo1s = concept?.devolutions_1 || [];
+  const devo2s = concept?.devolutions_2 || [];
+  const devo2PerDevo1 = devo1s.length > 0 ? Math.ceil(devo2s.length / devo1s.length) : 0;
+
+  function makeNode(filename, label, sublabel) {
+    const branch = document.createElement('div');
+    branch.className = 'devo-tree-branch';
+    const hasSel = selectedSet.has(filename);
+    const img = document.createElement('img');
+    if (hasSel) {
+      img.src = imgUrl(dir, 'selected', filename) + '?t=' + Date.now();
+    } else {
+      img.style.opacity = '0.3';
+    }
+    img.title = filename;
+    img.onclick = () => {
+      const target = document.getElementById('sel-' + filename);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    branch.appendChild(img);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'tree-name';
+    nameEl.textContent = label;
+    branch.appendChild(nameEl);
+    if (sublabel) {
+      const roleEl = document.createElement('div');
+      roleEl.className = 'tree-role';
+      roleEl.textContent = sublabel;
+      branch.appendChild(roleEl);
+    }
+    return branch;
+  }
+
+  function makeLineV() {
+    const l = document.createElement('div');
+    l.className = 'devo-tree-line-v';
+    return l;
+  }
+
+  // Top-down layout:
+  //           [base]
+  //              │
+  //    ┌─────────┼─────────┐
+  //  [d1-A]    [d1-B]    [d1-C]
+  //   ┌─┐      ┌─┐      ┌─┐
+  // [A1][A2] [B1][B2] [C1][C2]
+
+  const layout = document.createElement('div');
+  layout.className = 'devo-tree-layout';
+
+  // Row 0: Base
+  const baseName = `base_${concept?.base?.name_en}.png`;
+  layout.appendChild(makeNode(baseName, concept?.base?.name_kr || 'Wild', 'wild'));
+
+  // Connector line down
+  layout.appendChild(makeLineV());
+
+  // Row 1: Devo1 with connector lines drawn via canvas
+  const d1Row = document.createElement('div');
+  d1Row.className = 'devo-tree-group-d1';
+
+  // Each devo1 column (devo1 + its devo2s)
+  for (let i = 0; i < devo1s.length; i++) {
+    const d1 = devo1s[i];
+    const col = document.createElement('div');
+    col.className = 'devo-tree-d1-col';
+
+    // Devo1 node
+    const d1Name = `devo1_${i}_${d1.name_en}.png`;
+    col.appendChild(makeNode(d1Name, d1.name_kr || d1.name_en, d1.role));
+
+    // Line down to devo2
+    col.appendChild(makeLineV());
+
+    // Devo2 row
+    const d2Row = document.createElement('div');
+    d2Row.className = 'devo-tree-d2-row';
+    for (let j = 0; j < devo2PerDevo1; j++) {
+      const d2Idx = i * devo2PerDevo1 + j;
+      if (d2Idx >= devo2s.length) break;
+      const d2 = devo2s[d2Idx];
+      const d2Name = `devo2_${d2Idx}_${d2.name_en}.png`;
+      d2Row.appendChild(makeNode(d2Name, d2.name_kr || d2.name_en));
+    }
+    col.appendChild(d2Row);
+
+    d1Row.appendChild(col);
+  }
+
+  // Draw horizontal bracket line between devo1 columns using a canvas
+  const linesDiv = document.createElement('div');
+  linesDiv.className = 'devo-tree-lines';
+  linesDiv.style.width = '100%';
+  layout.appendChild(linesDiv);
+  layout.appendChild(d1Row);
+
+  // After render, draw bracket lines with canvas
+  requestAnimationFrame(() => {
+    const cols = d1Row.querySelectorAll('.devo-tree-d1-col');
+    if (cols.length < 2) {
+      // Single column — just a vertical line
+      linesDiv.innerHTML = '';
+      linesDiv.appendChild(makeLineV());
+      return;
+    }
+    const parentRect = linesDiv.getBoundingClientRect();
+    const rects = Array.from(cols).map(c => c.getBoundingClientRect());
+    const canvas = document.createElement('canvas');
+    canvas.className = 'devo-tree-lines-canvas';
+    canvas.width = parentRect.width;
+    canvas.height = 20;
+    canvas.style.width = '100%';
+    canvas.style.height = '20px';
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 2;
+
+    // Horizontal line spanning first to last devo1 center
+    const centers = rects.map(r => r.left + r.width / 2 - parentRect.left);
+    ctx.beginPath();
+    ctx.moveTo(centers[0], 0);
+    ctx.lineTo(centers[centers.length - 1], 0);
+    ctx.stroke();
+
+    // Vertical ticks down from each center
+    for (const cx of centers) {
+      ctx.beginPath();
+      ctx.moveTo(cx, 0);
+      ctx.lineTo(cx, 20);
+      ctx.stroke();
+    }
+
+    // Center vertical line from top (parent connector)
+    const mid = parentRect.width / 2;
+    ctx.beginPath();
+    ctx.moveTo(mid, 0);
+    ctx.lineTo(mid, 0);
+    ctx.stroke();
+
+    linesDiv.innerHTML = '';
+    linesDiv.appendChild(canvas);
+  });
+
+  tree.appendChild(layout);
+  return tree;
+}
+
+// ---- Previous stage lookup ----
+function getPrevStages(selectedFile, dir, selectedSet, concept) {
+  const stages = [];
+
+  if (selectedFile.startsWith('devo1_')) {
+    // devo1 → show base
+    const baseName = selectedSet.has(`base_${concept?.base?.name_en}.png`)
+      ? `base_${concept?.base?.name_en}.png` : null;
+    if (baseName) {
+      stages.push({
+        src: imgUrl(dir, 'selected', baseName),
+        label: concept?.base?.name_kr || 'Wild',
+        name: baseName,
+      });
+    }
+  } else if (selectedFile.startsWith('devo2_')) {
+    // devo2 → show base + parent devo1
+    const devoMatch = selectedFile.match(/^devo2_(\d+)_(.+)\.png$/);
+    if (devoMatch) {
+      const devo2Idx = parseInt(devoMatch[1]);
+      const devo2PerDevo1 = concept?.devolutions_2
+        ? Math.ceil(concept.devolutions_2.length / (concept?.devolutions_1?.length || 1))
+        : 2;
+      const parentDevo1Idx = Math.floor(devo2Idx / devo2PerDevo1);
+
+      // base
+      const baseName = `base_${concept?.base?.name_en}.png`;
+      if (selectedSet.has(baseName)) {
+        stages.push({
+          src: imgUrl(dir, 'selected', baseName),
+          label: concept?.base?.name_kr || 'Wild',
+          name: baseName,
+        });
+      }
+
+      // parent devo1
+      const parentDevo1 = concept?.devolutions_1?.[parentDevo1Idx];
+      if (parentDevo1) {
+        const devo1Name = `devo1_${parentDevo1Idx}_${parentDevo1.name_en}.png`;
+        if (selectedSet.has(devo1Name)) {
+          stages.push({
+            src: imgUrl(dir, 'selected', devo1Name),
+            label: parentDevo1.name_kr || parentDevo1.name_en,
+            name: devo1Name,
+          });
+        }
+      }
+    }
+  }
+
+  return stages;
+}
+
+// ---- Flip & save to original ----
+async function flipAndSave(dir, filename, imgEl, btn) {
+  btn.textContent = '...';
+  try {
+    // Load image onto canvas and flip
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.src = imgUrl(dir, 'all_images', filename) + '?t=' + Date.now();
+    await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(image, 0, 0);
+
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // Immediately update the displayed image
+    imgEl.src = dataUrl;
+
+    // Save flipped image back to all_images original file
+    const res = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/flip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, imageData: dataUrl }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      toast(`반전 저장: ${filename}`);
+    } else {
+      toast(`오류: ${data.error}`);
+    }
+  } catch (err) {
+    toast(`반전 실패: ${err.message}`);
+  }
+  btn.innerHTML = '&#8646;';
+}
+
+// ---- Override flow ----
+function confirmOverride(dir, sourceFile, targetFile) {
+  pendingOverride = { dir, source: sourceFile, target: targetFile };
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-old').src = imgUrl(dir, 'selected', targetFile);
+  document.getElementById('modal-new').src = imgUrl(dir, 'all_images', sourceFile) + '?t=' + Date.now();
+  document.getElementById('modal-flip-label').style.display = 'none';
+  modal.classList.add('show');
+}
+
+document.getElementById('modal-confirm').onclick = async () => {
+  if (!pendingOverride) return;
+  const { dir, source, target } = pendingOverride;
+  const res = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/override`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source, target }),
+  });
+  const data = await res.json();
+  document.getElementById('modal').classList.remove('show');
+  if (data.ok) {
+    toast(`교체 완료: ${source} → ${target}`);
+    selectMonster(dir);
+  } else {
+    toast(`오류: ${data.error}`);
+  }
+  pendingOverride = null;
+};
+
+document.getElementById('modal-cancel').onclick = () => {
+  document.getElementById('modal').classList.remove('show');
+  pendingOverride = null;
+};
+
+document.getElementById('modal').onclick = (e) => {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('show');
+    pendingOverride = null;
+  }
+};
+
+// ---- Init ----
+loadCandidates();
+</script>
+</body>
+</html>

@@ -78,7 +78,10 @@
       "Bash(cd \"D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline\" && rm -rf candidates && mkdir candidates && rm -f progress.json && echo \"완료\")",
       "Bash(cd \"D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline\" && rm -rf candidates/01_howl_wolf/selected candidates/01_howl_wolf/all_images candidates/01_howl_wolf/concept.json candidates/01_howl_wolf/roster.json candidates/01_howl_wolf/README.md && rmdir candidates/01_howl_wolf 2>/dev/null; rm -f progress.json && ls candidates/ 2>/dev/null; echo \"완료\")",
       "Bash(cd D:/Weeks/Devolution-Idle-Game && npm install sharp)",
-      "WebFetch(domain:lmstudio.ai)"
+      "WebFetch(domain:lmstudio.ai)",
+      "Bash(for dir:*)",
+      "Bash(taskkill //F //PID 35580 2>/dev/null; true)",
+      "Bash(cmd.exe //c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -ano ^| findstr :3456 ^| findstr LISTENING'\\) do taskkill /PID %a /F\")"
     ],
     "additionalDirectories": [
       "\\tmp"
