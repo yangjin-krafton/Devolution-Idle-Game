@@ -25,5 +25,11 @@ export function initDebug(getState) {
       }
       showDialog(data, () => console.log(`[dialog:${sceneName}] 완료`));
     },
+    reset() {
+      localStorage.clear();
+      console.log('localStorage 완전 초기화 완료. 새로고침하면 첫 접속 상태로 시작됩니다.');
+      console.log('자동 새로고침...');
+      setTimeout(() => location.reload(), 500);
+    },
   };
 }

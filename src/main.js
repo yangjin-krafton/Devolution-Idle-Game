@@ -27,6 +27,7 @@ import { initDialog, showDialog, tickDialog } from './ui/dialogUI.js';
 import { initDebug } from './debug.js';
 import { DIALOG_SCENES } from './data/dialogs/index.js';
 import { ENCOUNTER_DIALOGS } from './data/dialogs/encounters/index.js';
+import { JOIN_DIALOGS } from './data/dialogs/join/index.js';
 import { CombatSystem } from './combat.js';
 import { TeamManager } from './team.js';
 
@@ -239,8 +240,19 @@ function endBattle() {
 
   _showScreenTracked('result');
   renderResult(result.state, combat.enemy, xpLogs, devoLogs, () => {
-    if (result.state === 'defeat') showGameOverScreen();
-    else showTeamScreen();
+    if (result.state === 'defeat') { showGameOverScreen(); return; }
+
+    // First join dialog for captured monster (once per species)
+    const joinKey = `devo_joined_${combat.enemy.id}`;
+    const joinBuilder = JOIN_DIALOGS[combat.enemy.id];
+    if (result.state === 'victory' && joinBuilder && !localStorage.getItem(joinKey)) {
+      showDialog(joinBuilder(combat.enemy.img), () => {
+        localStorage.setItem(joinKey, '1');
+        showTeamScreen();
+      });
+    } else {
+      showTeamScreen();
+    }
   });
 }
 

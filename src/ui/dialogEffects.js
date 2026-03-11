@@ -45,6 +45,7 @@ let activeTweens = [];        // running animations
 let flashOverlay = null;
 let tintOverlay = null;
 let bgLayer = null;           // gradient background layer
+let activeBubbles = [];        // emoji bubbles for cleanup
 
 // ============================================================
 // Init — call once, returns container to add to dialog overlay
@@ -80,6 +81,12 @@ export function initEffectsLayer() {
 // Clear — reset all effects between dialogs
 // ============================================================
 
+export function cleanupBubbles() {
+  activeBubbles.forEach(b => { if (b.parent) b.parent.removeChild(b); });
+  activeBubbles = [];
+  // Also cancel bubble tweens (those referencing removed bubbles will just no-op)
+}
+
 export function clearEffects() {
   activeTweens = [];
   Object.values(sprites).forEach(s => {
@@ -89,6 +96,8 @@ export function clearEffects() {
   flashOverlay.alpha = 0; flashOverlay.visible = false;
   tintOverlay.alpha = 0; tintOverlay.visible = false;
   bgLayer.removeChildren(); bgLayer.visible = false;
+  activeBubbles.forEach(b => { if (b.parent) b.parent.removeChild(b); });
+  activeBubbles = [];
   stageContainer.x = 0; stageContainer.y = 0;
   stageContainer.scale.set(1);
 }
@@ -305,9 +314,10 @@ function showEmoji(fx) {
   txt.anchor.set(0.5);
   bubble.addChild(txt);
 
-  // Insert into stage
+  // Insert into stage + track for cleanup
   const insertIdx = Math.max(0, stageContainer.children.length - 2);
   stageContainer.addChildAt(bubble, insertIdx);
+  activeBubbles.push(bubble);
 
   // Animate: pop in → float up → fade out
   const dur = fx.dur || 1200;
@@ -333,7 +343,10 @@ function showEmoji(fx) {
       bubble.scale.set(1.2 - f * 0.3);
       bubble.y = startY - (t - 0.15) * 30;
     }
-    if (t >= 1 && bubble.parent) bubble.parent.removeChild(bubble);
+    if (t >= 1) {
+      if (bubble.parent) bubble.parent.removeChild(bubble);
+      activeBubbles = activeBubbles.filter(b => b !== bubble);
+    }
   });
 }
 

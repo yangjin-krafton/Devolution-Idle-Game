@@ -14,7 +14,7 @@
 
 import { W, H, S, lbl } from './theme.js';
 import { monster } from './sprites.js';
-import { initEffectsLayer, clearEffects, playEffects, tickEffects } from './dialogEffects.js';
+import { initEffectsLayer, clearEffects, cleanupBubbles, playEffects, tickEffects } from './dialogEffects.js';
 
 // ---- Dark palette (matches title/combat) ----
 const D = {
@@ -146,6 +146,9 @@ export function closeDialog() {
 }
 
 function startLine(line) {
+  // Clean up leftover emoji bubbles from previous line
+  cleanupBubbles();
+
   // Speaker badge
   speakerLabel.removeChildren();
   if (line.speaker) {
