@@ -23,6 +23,10 @@ import {
   initGameOver, renderGameOver,
 } from './ui/teamUI.js';
 import { loadMonsterTextures } from './ui/sprites.js';
+import { initDialog, showDialog, tickDialog } from './ui/dialogUI.js';
+import { initDebug } from './debug.js';
+import { DIALOG_SCENES } from './data/dialogs/index.js';
+import { ENCOUNTER_DIALOGS } from './data/dialogs/encounters/index.js';
 import { CombatSystem } from './combat.js';
 import { TeamManager } from './team.js';
 
@@ -71,6 +75,10 @@ addScreen('team', teamScr);
 addScreen('devo', devoScr);
 addScreen('gameover', goScr);
 
+// Dialog overlay — on top of all screens
+const dialogOverlay = initDialog();
+app.stage.addChild(dialogOverlay);
+
 // ============================================================
 // Game State
 // ============================================================
@@ -90,14 +98,30 @@ const _showScreenTracked = (name) => { _currentScreen = name; _origShowScreen(na
 // ============================================================
 _showScreenTracked('title');
 
+// First-time tutorial dialog
+if (!localStorage.getItem('devo_tutorial_done')) {
+  showDialog(DIALOG_SCENES.tutorial, () => {
+    localStorage.setItem('devo_tutorial_done', '1');
+  });
+}
+
 titleScr._startBtn.on('pointerdown', () => {
   const selectedIds = titleScr.getSelectedTeam();
-  if (selectedIds.length < 6) return; // need full team
+  if (selectedIds.length < 3) return; // need at least 3 monsters
   teamManager = new TeamManager(selectedIds);
   battleCount = 0;
   capturedCount = 0;
   pendingDevoReveals = [];
-  startBattle();
+
+  // First battle dialog (once only)
+  if (!localStorage.getItem('devo_first_battle_done')) {
+    showDialog(DIALOG_SCENES.first_battle, () => {
+      localStorage.setItem('devo_first_battle_done', '1');
+      startBattle();
+    });
+  } else {
+    startBattle();
+  }
 });
 
 // ============================================================
@@ -130,9 +154,21 @@ function startBattle() {
     confirm: handleConfirm,
   });
 
-  _showScreenTracked('combat');
-  renderEnemy(combat.enemy);
-  refreshCombatUI();
+  // First encounter dialog for this wild monster (once per species)
+  const encKey = `devo_met_${enemy.id}`;
+  const encBuilder = ENCOUNTER_DIALOGS[enemy.id];
+  if (encBuilder && !localStorage.getItem(encKey)) {
+    _showScreenTracked('combat');
+    renderEnemy(combat.enemy);
+    refreshCombatUI();
+    showDialog(encBuilder(enemy.img), () => {
+      localStorage.setItem(encKey, '1');
+    });
+  } else {
+    _showScreenTracked('combat');
+    renderEnemy(combat.enemy);
+    refreshCombatUI();
+  }
 }
 
 function refreshCombatUI() {
@@ -319,6 +355,16 @@ window.__BRIDGE = {
 };
 
 // ============================================================
+// Debug Console Commands
+// ============================================================
+initDebug(() => ({
+  combat,
+  currentScreen: _currentScreen,
+  refreshCombatUI,
+  endBattle,
+}));
+
+// ============================================================
 // Animation Loop
 // ============================================================
 let tick = 0;
@@ -326,6 +372,7 @@ app.ticker.add(() => {
   tick += 0.016;
   tickCombat(tick);
   tickDevo(tick);
+  tickDialog(tick);
 });
 
 })();

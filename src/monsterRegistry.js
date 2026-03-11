@@ -19,6 +19,8 @@ const ROLE_LABEL = {
 // Fields absent from current data are null — UI should handle gracefully.
 
 function normalizeAlly(a) {
+  const skillPool = a.skillPool || a.actions || [];
+  const equipped = a.equipped || skillPool.slice(0, 3).map(skill => skill.id);
   return {
     id: a.id,
     name: a.name,
@@ -31,6 +33,8 @@ function normalizeAlly(a) {
     hp: a.hp, maxHp: a.maxHp,
     stats: { ...a.stats },
     actions: a.actions,
+    skillPool,
+    equipped,
 
     // Devolution
     devolved: a.devolved,

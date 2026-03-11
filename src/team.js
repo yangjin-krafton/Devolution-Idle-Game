@@ -3,17 +3,23 @@
 // ============================================================
 
 import { ALLY_MONSTERS, ENEMY_MONSTERS, GENERIC_LOGS } from './data/index.js';
+import { normalizeSkillLoadout } from './data/skills.js';
 
 export class TeamManager {
   constructor(orderedIds) {
     const source = orderedIds
       ? orderedIds.map(id => ALLY_MONSTERS.find(a => a.id === id)).filter(Boolean)
       : ALLY_MONSTERS;
-    this.allies = source.map(a => ({
-      ...a,
-      actions: a.actions.map(ac => ({ ...ac })),
-      stats: { ...a.stats },
-    }));
+    this.allies = source.map(a => {
+      const loadout = normalizeSkillLoadout(a);
+      return {
+        ...a,
+        skillPool: loadout.skillPool,
+        equipped: [...loadout.equipped],
+        actions: loadout.actions,
+        stats: { ...a.stats },
+      };
+    });
     this.collection = [];
     this.eggTimers = new Map();
     // First 3 are active, last 3 are bench
