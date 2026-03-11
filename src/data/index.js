@@ -50,5 +50,6 @@ export const ALL_CODEX_ENTRIES = ALL_MONSTERS.flatMap(m => [
 ]);
 
 // Starter monsters: 3 unlocked at game start (attacker + tank + support)
-// These match devo1[0].id for howl_wolf (#01), rot_toad (#03), echo_bat (#05)
-export const STARTER_IDS = ['howl_wolf_d1_0', 'rot_toad_d1_0', 'echo_bat_d1_0'];
+// Covers 3 sensory axes: sound / smell / temperature
+// howl_wolf (#01) attacker, rot_toad (#03) tank, frost_moth (#06) support
+export const STARTER_IDS = ['howl_wolf_d1_0', 'rot_toad_d1_0', 'frost_moth_d1_0'];
