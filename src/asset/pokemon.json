@@ -3,7 +3,7 @@
     "inputs": {
       "filename_prefix": "z-image",
       "images": [
-        "99",
+        "48",
         0
       ]
     },
@@ -62,12 +62,12 @@
   },
   "49": {
     "inputs": {
-      "seed": 455406412862393,
+      "seed": 698258455824756,
       "steps": 7,
       "cfg": 1,
       "sampler_name": "ddim",
       "scheduler": "ddim_uniform",
-      "denoise": 1.0,
+      "denoise": 1,
       "model": [
         "95",
         0
@@ -92,7 +92,7 @@
   },
   "50": {
     "inputs": {
-      "text": "pokemon stlye, monster",
+      "text": "a pokemon art style monster with white background, ken sugimori style, single creature only, one character, solo, small round proportions, oversized head, big eyes, young small creature sitting pose stubby legs obsidian black fur with glowing indigo markings and silver claw accents clean",
       "clip": [
         "44",
         0
@@ -122,24 +122,6 @@
     "class_type": "EmptyLatentImage",
     "_meta": {
       "title": "빈 잠재 이미지"
-    }
-  },
-  "99": {
-    "inputs": {
-      "rem_mode": "RMBG-1.4",
-      "image_output": "Preview",
-      "save_prefix": "ComfyUI",
-      "torchscript_jit": false,
-      "add_background": "none",
-      "refine_foreground": false,
-      "images": [
-        "48",
-        0
-      ]
-    },
-    "class_type": "easy imageRemBg",
-    "_meta": {
-      "title": "Image Remove Bg"
     }
   }
 }

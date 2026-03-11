@@ -230,8 +230,8 @@ async function processOne(rosterEntry, progress) {
   const allForms = buildFormsFromRoster(rosterData);
   log(`[Phase 0] ${allForms.length}개 형태 빌드 완료`);
 
-  // ── Phase A: LM Studio 8프롬프트 번역 → ComfyUI 시드변형 큐 적재 ──
-  log(`[Phase A] LM Studio ${promptsPerForm}프롬프트 번역 + ComfyUI ×${seedsPerPrompt}시드 큐 적재`);
+  // ── Phase A: 프롬프트 준비 + ComfyUI 시드변형 큐 적재 ──
+  // image_prompts_en이 있으면 LM Studio 번역 건너뛰고 바로 ComfyUI 적재
 
   // reactions/actions를 번역과 동시에 백그라운드 실행
   const supplementaryPromise = generateReactionsAndActions(rosterData);
@@ -240,32 +240,59 @@ async function processOne(rosterEntry, progress) {
   // ComfyUI 이미지 생성 promise 배열 (await 하지 않고 쌓아둠)
   const imagePromises = []; // { form, promise: Promise<result> }
 
+  // 사전 번역된 프롬프트가 있는 형태 수 확인
+  const preTranslatedCount = allForms.filter(f => f.image_prompts_en && f.image_prompts_en.length > 0).length;
+  if (preTranslatedCount > 0) {
+    log(`[Phase A] ${preTranslatedCount}/${allForms.length}형태 사전 번역 프롬프트 사용 (LM Studio 번역 건너뛰기)`);
+  }
+  if (preTranslatedCount < allForms.length) {
+    log(`[Phase A] ${allForms.length - preTranslatedCount}형태 LM Studio 번역 필요`);
+  }
+
   for (let i = 0; i < allForms.length; i++) {
     const form = allForms[i];
     form.image_prompts = [];
 
-    // LM Studio: 8개 프롬프트 한 번에 생성
-    log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" ${promptsPerForm}프롬프트 번역 중...`);
-    const prompts = await generatePromptVariants(
-      form.image_desc, form.name_kr, promptsPerForm, form.type,
-      (batch) => {
-        // 8개 프롬프트 완료 → ComfyUI에 한 번에 보냄 (각 ×4시드)
-        const imageForm = {
-          ...form,
-          image_prompt: batch[0],
-          image_prompts: batch,
-        };
-        log(`  → [ComfyUI] form[${i}] ${batch.length}프롬프트 × ${seedsPerPrompt}시드 = ${batch.length * seedsPerPrompt}장 큐 적재`);
-        const imagePromise = generateImages(imageForm);
-        imagePromises.push({ form, promise: imagePromise });
-      }
-    );
-    form.image_prompts = prompts;
-    form.image_prompt = prompts[0];
-    log(`  ✓ form[${i}] 번역 완료 (${prompts.length}프롬프트 → ${prompts.length * seedsPerPrompt}장 예정)`);
+    // 사전 번역된 프롬프트가 있는지 확인
+    if (form.image_prompts_en && form.image_prompts_en.length > 0) {
+      // ── 사전 번역 프롬프트 사용 (LM Studio 건너뛰기) ──
+      const prompts = form.image_prompts_en;
+      form.image_prompts = prompts;
+      form.image_prompt = prompts[0];
+      log(`  [Pre-translated] form[${i}] "${form.name_kr}" ${prompts.length}프롬프트 (첫번째: ${prompts[0]?.substring(0, 60)}...)`);
+
+      // 바로 ComfyUI에 적재
+      const imageForm = {
+        ...form,
+        image_prompt: prompts[0],
+        image_prompts: prompts,
+      };
+      log(`  → [ComfyUI] form[${i}] ${prompts.length}프롬프트 × ${seedsPerPrompt}시드 = ${prompts.length * seedsPerPrompt}장 큐 적재`);
+      const imagePromise = generateImages(imageForm);
+      imagePromises.push({ form, promise: imagePromise });
+    } else {
+      // ── LM Studio 번역 필요 ──
+      log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" ${promptsPerForm}프롬프트 번역 중...`);
+      const prompts = await generatePromptVariants(
+        form.image_desc, form.name_kr, promptsPerForm, form.type,
+        (batch) => {
+          const imageForm = {
+            ...form,
+            image_prompt: batch[0],
+            image_prompts: batch,
+          };
+          log(`  → [ComfyUI] form[${i}] ${batch.length}프롬프트 × ${seedsPerPrompt}시드 = ${batch.length * seedsPerPrompt}장 큐 적재`);
+          const imagePromise = generateImages(imageForm);
+          imagePromises.push({ form, promise: imagePromise });
+        }
+      );
+      form.image_prompts = prompts;
+      form.image_prompt = prompts[0];
+      log(`  ✓ form[${i}] 번역 완료 (${prompts.length}프롬프트 → ${prompts.length * seedsPerPrompt}장 예정)`);
+    }
   }
 
-  log(`[Phase A 완료] ${allForms.length}개 형태 번역 완료, ${imagePromises.length}개 ComfyUI 작업 큐 적재됨`);
+  log(`[Phase A 완료] ${allForms.length}개 형태 완료, ${imagePromises.length}개 ComfyUI 작업 큐 적재됨`);
 
   // ── Phase B: ComfyUI 결과 일괄 수집 ──
   log(`[Phase B] ComfyUI 결과 수집 대기 중...`);
@@ -354,10 +381,18 @@ async function runWildOnly(roster) {
     startSilenceWatch(`Wild #${id} ${w.name_en}`);
 
     try {
-      // image_desc → 8개 영어 프롬프트 생성
-      const imageDesc = w.visual?.image_desc || w.desc_kr;
-      log(`[Wild] ${CONFIG.PROMPTS_PER_FORM}프롬프트 × ${CONFIG.SEEDS_PER_PROMPT}시드 = ${CONFIG.IMAGES_PER_CONCEPT}장 생성`);
-      const prompts = await generatePromptVariants(imageDesc, w.name_kr, CONFIG.PROMPTS_PER_FORM);
+      // 사전 번역된 프롬프트 확인
+      const preTranslated = w.visual?.image_prompts_en;
+      let prompts;
+
+      if (preTranslated && preTranslated.length > 0) {
+        prompts = preTranslated;
+        log(`[Wild] 사전 번역 프롬프트 ${prompts.length}개 사용 (LM Studio 건너뛰기)`);
+      } else {
+        const imageDesc = w.visual?.image_desc || w.desc_kr;
+        log(`[Wild] ${CONFIG.PROMPTS_PER_FORM}프롬프트 × ${CONFIG.SEEDS_PER_PROMPT}시드 = ${CONFIG.IMAGES_PER_CONCEPT}장 생성`);
+        prompts = await generatePromptVariants(imageDesc, w.name_kr, CONFIG.PROMPTS_PER_FORM);
+      }
 
       const wildForm = {
         name_en: w.name_en,

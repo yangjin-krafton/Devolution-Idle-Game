@@ -265,6 +265,7 @@ function buildFormsFromRoster(rosterData) {
     name_en: w.name_en,
     name_kr: w.name_kr,
     image_desc: w.visual?.image_desc || w.desc_kr,
+    image_prompts_en: w.visual?.image_prompts_en || null,
     type: 'base',
   });
 
@@ -274,6 +275,7 @@ function buildFormsFromRoster(rosterData) {
       name_en: d1.name_en,
       name_kr: d1.name_kr,
       image_desc: d1.visual?.image_desc || d1.desc_kr,
+      image_prompts_en: d1.visual?.image_prompts_en || null,
       type: `devo1_${i}`,
     });
 
@@ -284,6 +286,7 @@ function buildFormsFromRoster(rosterData) {
           name_en: d2.name_en,
           name_kr: d2.name_kr,
           image_desc: d2.visual?.image_desc || d2.desc_kr,
+          image_prompts_en: d2.visual?.image_prompts_en || null,
           type: `devo2_${i}_${j}`,
           parent: d1.name_en,
         });
