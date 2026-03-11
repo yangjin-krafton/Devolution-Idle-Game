@@ -14,8 +14,8 @@ export const CONFIG = {
 
   // 생성 설정
   PROMPTS_PER_FORM: 4,          // LM Studio가 생성하는 프롬프트 수 (배리에이션)
-  SEEDS_PER_PROMPT: 4,          // ComfyUI에서 프롬프트당 시드 변형 수
-  IMAGES_PER_CONCEPT: 16,       // 총 이미지 수 = PROMPTS_PER_FORM × SEEDS_PER_PROMPT
+  SEEDS_PER_PROMPT: 8,          // ComfyUI에서 프롬프트당 시드 변형 수
+  IMAGES_PER_CONCEPT: 32,       // 총 이미지 수 = PROMPTS_PER_FORM × SEEDS_PER_PROMPT
   DEVOLUTION_DEPTH_1_COUNT: 3,  // 퇴화1 배리에이션 수
   DEVOLUTION_DEPTH_2_COUNT: 2,  // 퇴화1당 퇴화2 배리에이션 수
 
