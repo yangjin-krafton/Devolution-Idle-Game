@@ -303,3 +303,109 @@ equipped: ['sound-stimulate', 'sound-capture', 'behavior-defend']
 | `sound-recover` | 안정 리듬 | `heal` | sound | 4 | 4 | -3 | heal 7 / def 2 | team 대상, priority 1 |
 | `smell-sanctuary` | 향기 은신처 | `stabilize` | smell | 5 | 4 | -7 | heal 2 / def 4 | team 대상, calm 30% |
 | `temperature-anchor` | 체온 닻내리기 | `swap_guard` | temperature | 4 | 3 | -5 | heal 4 / def 5 | team 대상, priority 2, swap in 보너스 |
+
+### Expanded combinations
+
+- Total skills expanded from `39` to `123`
+- Stimulate: `20 -> 64`
+- Capture: `8 -> 28`
+- Defend: `11 -> 31`
+
+#### Expanded stimulate skills
+
+| ID | Name | Role | Axis | PP | Power | Escape Risk | Condition / Synergy |
+|---|---|---|---|---:|---:|---:|---|
+| `sound-cadence` | Resonant Cadence | `basic_stimulate` | sound | 7 | 8 | 3 | calm 22% |
+| `sound-hush` | Resonant Hush | `emotion_setup` | sound | 7 | 7 | 2 | calm 30%, bonus vs rage |
+| `sound-spiral` | Resonant Spiral | `emotion_setup` | sound | 6 | 9 | 3 | trust 18%, combo on calm |
+| `sound-spark` | Resonant Spark | `high_risk_stimulate` | sound | 5 | 12 | 6 | curious 20% |
+| `sound-tether` | Resonant Tether | `swap_setup` | sound | 5 | 6 | 1 | calm 15%, swap in bonus |
+| `sound-veil` | Resonant Veil | `emotion_setup` | sound | 6 | 8 | 2 | trust 14% |
+| `sound-sweep` | Resonant Sweep | `basic_stimulate` | sound | 6 | 10 | 4 | calm 18% |
+| `sound-lure` | Resonant Lure | `emotion_setup` | sound | 5 | 10 | 4 | calm 24% |
+| `sound-surge` | Resonant Surge | `high_risk_stimulate` | sound | 4 | 13 | 7 | rage 12%, escape <= 75% |
+| `sound-bridge` | Resonant Bridge | `swap_setup` | sound | 5 | 7 | 1 | curious 16%, swap out combo |
+| `sound-bloom` | Resonant Bloom | `emotion_setup` | sound | 5 | 9 | 3 | trust 20%, same-emotion bonus |
+| `temperature-cadence` | Thermal Cadence | `basic_stimulate` | temperature | 7 | 8 | 3 | curious 22% |
+| `temperature-hush` | Thermal Hush | `emotion_setup` | temperature | 7 | 7 | 2 | calm 30%, bonus vs rage |
+| `temperature-spiral` | Thermal Spiral | `emotion_setup` | temperature | 6 | 9 | 3 | calm 18%, combo on curious |
+| `temperature-spark` | Thermal Spark | `high_risk_stimulate` | temperature | 5 | 12 | 6 | curious 20% |
+| `temperature-tether` | Thermal Tether | `swap_setup` | temperature | 5 | 6 | 1 | curious 15%, swap in bonus |
+| `temperature-veil` | Thermal Veil | `emotion_setup` | temperature | 6 | 8 | 2 | calm 14% |
+| `temperature-sweep` | Thermal Sweep | `basic_stimulate` | temperature | 6 | 10 | 4 | calm 18% |
+| `temperature-lure` | Thermal Lure | `emotion_setup` | temperature | 5 | 10 | 4 | curious 24% |
+| `temperature-surge` | Thermal Surge | `high_risk_stimulate` | temperature | 4 | 13 | 7 | rage 12%, escape <= 75% |
+| `temperature-bridge` | Thermal Bridge | `swap_setup` | temperature | 5 | 7 | 1 | curious 16%, swap out combo |
+| `temperature-bloom` | Thermal Bloom | `emotion_setup` | temperature | 5 | 9 | 3 | calm 20%, same-emotion bonus |
+| `smell-cadence` | Aromatic Cadence | `basic_stimulate` | smell | 7 | 8 | 3 | charmed 22% |
+| `smell-hush` | Aromatic Hush | `emotion_setup` | smell | 7 | 7 | 2 | calm 30%, bonus vs rage |
+| `smell-spiral` | Aromatic Spiral | `emotion_setup` | smell | 6 | 9 | 3 | curious 18%, combo on charmed |
+| `smell-spark` | Aromatic Spark | `high_risk_stimulate` | smell | 5 | 12 | 6 | curious 20% |
+| `smell-tether` | Aromatic Tether | `swap_setup` | smell | 5 | 6 | 1 | charmed 15%, swap in bonus |
+| `smell-veil` | Aromatic Veil | `emotion_setup` | smell | 6 | 8 | 2 | curious 14% |
+| `smell-sweep` | Aromatic Sweep | `basic_stimulate` | smell | 6 | 10 | 4 | calm 18% |
+| `smell-lure` | Aromatic Lure | `emotion_setup` | smell | 5 | 10 | 4 | charmed 24% |
+| `smell-surge` | Aromatic Surge | `high_risk_stimulate` | smell | 4 | 13 | 7 | rage 12%, escape <= 75% |
+| `smell-bridge` | Aromatic Bridge | `swap_setup` | smell | 5 | 7 | 1 | curious 16%, swap out combo |
+| `smell-bloom` | Aromatic Bloom | `emotion_setup` | smell | 5 | 9 | 3 | curious 20%, same-emotion bonus |
+| `behavior-cadence` | Instinctive Cadence | `basic_stimulate` | behavior | 7 | 8 | 3 | trust 22% |
+| `behavior-hush` | Instinctive Hush | `emotion_setup` | behavior | 7 | 7 | 2 | calm 30%, bonus vs rage |
+| `behavior-spiral` | Instinctive Spiral | `emotion_setup` | behavior | 6 | 9 | 3 | charmed 18%, combo on trust |
+| `behavior-spark` | Instinctive Spark | `high_risk_stimulate` | behavior | 5 | 12 | 6 | curious 20% |
+| `behavior-tether` | Instinctive Tether | `swap_setup` | behavior | 5 | 6 | 1 | trust 15%, swap in bonus |
+| `behavior-veil` | Instinctive Veil | `emotion_setup` | behavior | 6 | 8 | 2 | charmed 14% |
+| `behavior-sweep` | Instinctive Sweep | `basic_stimulate` | behavior | 6 | 10 | 4 | calm 18% |
+| `behavior-lure` | Instinctive Lure | `emotion_setup` | behavior | 5 | 10 | 4 | trust 24% |
+| `behavior-surge` | Instinctive Surge | `high_risk_stimulate` | behavior | 4 | 13 | 7 | rage 12%, escape <= 75% |
+| `behavior-bridge` | Instinctive Bridge | `swap_setup` | behavior | 5 | 7 | 1 | curious 16%, swap out combo |
+| `behavior-bloom` | Instinctive Bloom | `emotion_setup` | behavior | 5 | 9 | 3 | charmed 20%, same-emotion bonus |
+
+#### Expanded capture skills
+
+| ID | Name | Role | Axis | PP | Power | Escape Risk | Condition / Synergy |
+|---|---|---|---|---:|---:|---:|---|
+| `sound-snare` | Resonant Snare | `capture_finisher` | sound | 3 | 16 | 11 | calm bonus |
+| `sound-clasp` | Resonant Clasp | `conditional_finisher` | sound | 3 | 17 | 12 | taming 60%+, calm/trust |
+| `sound-pact` | Resonant Pact | `conditional_finisher` | sound | 2 | 18 | 13 | taming 70%+, escape <= 75% |
+| `sound-sealburst` | Resonant Sealburst | `high_risk_finisher` | sound | 2 | 19 | 15 | taming 72%+, calm/trust bonus |
+| `sound-keystone` | Resonant Keystone | `conditional_finisher` | sound | 2 | 18 | 10 | taming 65%+, escape <= 65% |
+| `temperature-snare` | Thermal Snare | `capture_finisher` | temperature | 3 | 16 | 11 | curious bonus |
+| `temperature-clasp` | Thermal Clasp | `conditional_finisher` | temperature | 3 | 17 | 12 | taming 60%+, calm/curious |
+| `temperature-pact` | Thermal Pact | `conditional_finisher` | temperature | 2 | 18 | 13 | taming 70%+, escape <= 75% |
+| `temperature-sealburst` | Thermal Sealburst | `high_risk_finisher` | temperature | 2 | 19 | 15 | taming 72%+, calm/curious bonus |
+| `temperature-keystone` | Thermal Keystone | `conditional_finisher` | temperature | 2 | 18 | 10 | taming 65%+, escape <= 65% |
+| `smell-snare` | Aromatic Snare | `capture_finisher` | smell | 3 | 16 | 11 | charmed bonus |
+| `smell-clasp` | Aromatic Clasp | `conditional_finisher` | smell | 3 | 17 | 12 | taming 60%+, curious/charmed |
+| `smell-pact` | Aromatic Pact | `conditional_finisher` | smell | 2 | 18 | 13 | taming 70%+, escape <= 75% |
+| `smell-sealburst` | Aromatic Sealburst | `high_risk_finisher` | smell | 2 | 19 | 15 | taming 72%+, curious/charmed bonus |
+| `smell-keystone` | Aromatic Keystone | `conditional_finisher` | smell | 2 | 18 | 10 | taming 65%+, escape <= 65% |
+| `behavior-snare` | Instinctive Snare | `capture_finisher` | behavior | 3 | 16 | 11 | trust bonus |
+| `behavior-clasp` | Instinctive Clasp | `conditional_finisher` | behavior | 3 | 17 | 12 | taming 60%+, trust/charmed |
+| `behavior-pact` | Instinctive Pact | `conditional_finisher` | behavior | 2 | 18 | 13 | taming 70%+, escape <= 75% |
+| `behavior-sealburst` | Instinctive Sealburst | `high_risk_finisher` | behavior | 2 | 19 | 15 | taming 72%+, trust/charmed bonus |
+| `behavior-keystone` | Instinctive Keystone | `conditional_finisher` | behavior | 2 | 18 | 10 | taming 65%+, escape <= 65% |
+
+#### Expanded defend skills
+
+| ID | Name | Role | Axis | PP | Power | Escape Risk | Heal / Defense | Condition / Synergy |
+|---|---|---|---|---:|---:|---:|---|---|
+| `sound-ward` | Resonant Ward | `guard` | sound | 5 | 5 | -5 | heal 3 / def 5 | heal 3 / def 5, calm 18% |
+| `sound-shelter` | Resonant Shelter | `stabilize` | sound | 5 | 4 | -6 | heal 4 / def 4 | heal 4 / def 4, calm 22% |
+| `sound-mend` | Resonant Mend | `heal` | sound | 4 | 4 | -3 | heal 8 / def 2 | heal 8 / def 2 |
+| `sound-pivot` | Resonant Pivot | `swap_guard` | sound | 4 | 3 | -5 | heal 4 / def 5 | heal 4 / def 5, swap in bonus |
+| `sound-reserve` | Resonant Reserve | `stabilize` | sound | 4 | 5 | -7 | heal 2 / def 6 | heal 2 / def 6, calm 14% |
+| `temperature-ward` | Thermal Ward | `guard` | temperature | 5 | 5 | -5 | heal 3 / def 5 | heal 3 / def 5, curious 18% |
+| `temperature-shelter` | Thermal Shelter | `stabilize` | temperature | 5 | 4 | -6 | heal 4 / def 4 | heal 4 / def 4, calm 22% |
+| `temperature-mend` | Thermal Mend | `heal` | temperature | 4 | 4 | -3 | heal 8 / def 2 | heal 8 / def 2 |
+| `temperature-pivot` | Thermal Pivot | `swap_guard` | temperature | 4 | 3 | -5 | heal 4 / def 5 | heal 4 / def 5, swap in bonus |
+| `temperature-reserve` | Thermal Reserve | `stabilize` | temperature | 4 | 5 | -7 | heal 2 / def 6 | heal 2 / def 6, curious 14% |
+| `smell-ward` | Aromatic Ward | `guard` | smell | 5 | 5 | -5 | heal 3 / def 5 | heal 3 / def 5, trust 18% |
+| `smell-shelter` | Aromatic Shelter | `stabilize` | smell | 5 | 4 | -6 | heal 4 / def 4 | heal 4 / def 4, calm 22% |
+| `smell-mend` | Aromatic Mend | `heal` | smell | 4 | 4 | -3 | heal 8 / def 2 | heal 8 / def 2 |
+| `smell-pivot` | Aromatic Pivot | `swap_guard` | smell | 4 | 3 | -5 | heal 4 / def 5 | heal 4 / def 5, swap in bonus |
+| `smell-reserve` | Aromatic Reserve | `stabilize` | smell | 4 | 5 | -7 | heal 2 / def 6 | heal 2 / def 6, trust 14% |
+| `behavior-ward` | Instinctive Ward | `guard` | behavior | 5 | 5 | -5 | heal 3 / def 5 | heal 3 / def 5, calm 18% |
+| `behavior-shelter` | Instinctive Shelter | `stabilize` | behavior | 5 | 4 | -6 | heal 4 / def 4 | heal 4 / def 4, calm 22% |
+| `behavior-mend` | Instinctive Mend | `heal` | behavior | 4 | 4 | -3 | heal 8 / def 2 | heal 8 / def 2 |
+| `behavior-pivot` | Instinctive Pivot | `swap_guard` | behavior | 4 | 3 | -5 | heal 4 / def 5 | heal 4 / def 5, swap in bonus |
+| `behavior-reserve` | Instinctive Reserve | `stabilize` | behavior | 4 | 5 | -7 | heal 2 / def 6 | heal 2 / def 6, calm 14% |
