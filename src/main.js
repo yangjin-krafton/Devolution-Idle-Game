@@ -23,6 +23,7 @@ import {
   initGameOver, renderGameOver,
 } from './ui/teamUI.js';
 import { loadMonsterTextures } from './ui/sprites.js';
+import { initTeamEdit, renderTeamEdit } from './ui/teamEditUI.js';
 import { initDialog, showDialog, tickDialog } from './ui/dialogUI.js';
 import { initDebug } from './debug.js';
 import { DIALOG_SCENES } from './data/dialogs/index.js';
@@ -68,12 +69,14 @@ const resultScr = initResult();
 const teamScr = initTeam();
 const devoScr = initDevo();
 const goScr = initGameOver();
+const teamEditScr = initTeamEdit();
 
 addScreen('title', titleScr);
 addScreen('combat', combatScr);
 addScreen('result', resultScr);
 addScreen('team', teamScr);
 addScreen('devo', devoScr);
+addScreen('teamEdit', teamEditScr);
 addScreen('gameover', goScr);
 
 // Dialog overlay — on top of all screens
@@ -242,18 +245,39 @@ function endBattle() {
   renderResult(result.state, combat.enemy, xpLogs, devoLogs, () => {
     if (result.state === 'defeat') { showGameOverScreen(); return; }
 
-    // First join dialog for captured monster (once per species)
-    const joinKey = `devo_joined_${combat.enemy.id}`;
-    const joinBuilder = JOIN_DIALOGS[combat.enemy.id];
-    if (result.state === 'victory' && joinBuilder && !localStorage.getItem(joinKey)) {
-      showDialog(joinBuilder(combat.enemy.img), () => {
-        localStorage.setItem(joinKey, '1');
-        showTeamScreen();
-      });
+    if (result.state === 'victory') {
+      // First join dialog, then team edit screen
+      const joinKey = `devo_joined_${combat.enemy.id}`;
+      const joinBuilder = JOIN_DIALOGS[combat.enemy.id];
+      if (joinBuilder && !localStorage.getItem(joinKey)) {
+        showDialog(joinBuilder(combat.enemy.img), () => {
+          localStorage.setItem(joinKey, '1');
+          showTeamEditScreen(combat.enemy);
+        });
+      } else {
+        showTeamEditScreen(combat.enemy);
+      }
     } else {
-      showTeamScreen();
+      // Escaped — go to team edit without captured monster
+      showTeamEditScreen(null);
     }
   });
+}
+
+function showTeamEditScreen(capturedEnemy) {
+  teamManager.healTeam();
+  _showScreenTracked('teamEdit');
+  renderTeamEdit(teamManager, capturedEnemy,
+    // onRecruit — add captured monster to team
+    () => {
+      if (capturedEnemy && teamManager.canRecruit()) {
+        teamManager.recruitMonster(capturedEnemy.id);
+        renderTeamEdit(teamManager, null, null, onNextBattle);
+      }
+    },
+    // onSkip — proceed to next battle
+    onNextBattle,
+  );
 }
 
 // ============================================================
@@ -356,7 +380,7 @@ window.__BRIDGE = {
     if (_currentScreen === 'result') {
       // renderResult에서 nextBtn에 등록된 pointerdown 콜백 실행
       resultScr.children.forEach(c => { if (c.cursor === 'pointer') c.emit('pointerdown'); });
-    } else if (_currentScreen === 'team') {
+    } else if (_currentScreen === 'team' || _currentScreen === 'teamEdit') {
       onNextBattle();
     } else if (_currentScreen === 'gameover') {
       battleCount = 0; capturedCount = 0; pendingDevoReveals = [];

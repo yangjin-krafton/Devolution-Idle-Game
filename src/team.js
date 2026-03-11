@@ -2,7 +2,7 @@
 // Team Management — 6마리 팀 + 퇴화 + 스탯 시스템
 // ============================================================
 
-import { ALLY_MONSTERS, ENEMY_MONSTERS, GENERIC_LOGS } from './data/index.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS, ALL_MONSTERS, GENERIC_LOGS } from './data/index.js';
 import { normalizeSkillLoadout } from './data/skills.js';
 
 export class TeamManager {
@@ -132,4 +132,47 @@ export class TeamManager {
       captured: true,
     });
   }
+
+  // Convert wild enemy to ally and add to roster (returns ally entry or null if full)
+  recruitMonster(enemyId) {
+    if (this.allies.length >= 6) return null;
+    // Find the monster family and get devo1[0] as the ally form
+    const family = ALL_MONSTERS.find(m => m.wild.id === enemyId);
+    if (!family || !family.devo1[0]) return null;
+    const template = family.devo1[0];
+    const loadout = normalizeSkillLoadout(template);
+    const ally = {
+      ...template,
+      skillPool: loadout.skillPool,
+      equipped: [...loadout.equipped],
+      actions: loadout.actions,
+      stats: { ...template.stats },
+    };
+    this.allies.push(ally);
+    return ally;
+  }
+
+  swapSlots(i, j) {
+    if (i < 0 || j < 0 || i >= this.allies.length || j >= this.allies.length) return;
+    const tmp = this.allies[i];
+    this.allies[i] = this.allies[j];
+    this.allies[j] = tmp;
+  }
+
+  removeFromRoster(idx) {
+    if (idx < 0 || idx >= this.allies.length || this.allies.length <= 3) return false;
+    this.allies.splice(idx, 1);
+    // Fix activeSlots references
+    this.activeSlots = this.activeSlots
+      .map(s => s > idx ? s - 1 : s)
+      .filter(s => s < this.allies.length);
+    while (this.activeSlots.length < Math.min(3, this.allies.length)) {
+      for (let i = 0; i < this.allies.length; i++) {
+        if (!this.activeSlots.includes(i)) { this.activeSlots.push(i); break; }
+      }
+    }
+    return true;
+  }
+
+  canRecruit() { return this.allies.length < 6; }
 }
