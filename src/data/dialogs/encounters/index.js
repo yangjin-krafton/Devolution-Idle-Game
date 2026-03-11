@@ -11,10 +11,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '어둠 속에서 낮고 긴 울음소리가 들린다...', effects: [
       { type: 'bg', preset: 'night', dur: 600 },
       { type: 'tint', color: 0x2222aa, alpha: 0.2, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 60, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '달빛 아래, 울부짖는 늑대가 모습을 드러냈다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 60, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 500 },
+      { type: 'reveal', target: 'mon', dur: 500 },
       { type: 'move', target: 'mon', fromY: cy + 60, toY: cy, dur: 600, ease: 'easeOut' },
       { type: 'flash', color: 0xccccff, dur: 200 },
     ]},
@@ -27,10 +28,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '땅에서 열기가 솟아오른다...', effects: [
       { type: 'bg', preset: 'lava', dur: 600 },
       { type: 'tint', color: 0xff4400, alpha: 0.15, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 80, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '용암 도롱뇽이 불꽃을 일렁이며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 80, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromY: cy + 80, toY: cy, dur: 700, ease: 'easeOut' },
       { type: 'flash', color: 0xff6600, dur: 250 },
     ]},
@@ -42,10 +44,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '코를 찌르는 독한 냄새가 퍼진다...', effects: [
       { type: 'bg', preset: 'swamp', dur: 600 },
       { type: 'tint', color: 0x44aa00, alpha: 0.15, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 40, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '썩은향 두꺼비가 느릿느릿 모습을 드러냈다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 40, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 600 },
+      { type: 'reveal', target: 'mon', dur: 600 },
       { type: 'move', target: 'mon', fromY: cy + 40, toY: cy, dur: 800, ease: 'easeOut' },
     ]},
     { text: '거대한 몸에서 뿜어지는 악취가 주변을 뒤덮는다.', effects: [
@@ -57,10 +60,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '풀잎이 스르륵... 소리 없이 흔들린다.', effects: [
       { type: 'bg', preset: 'shadow', dur: 600 },
       { type: 'tint', color: 0x003322, alpha: 0.2, dur: 600 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '그림자 사마귀가 어느새 바로 앞에 서 있다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 200 },
+      { type: 'reveal', target: 'mon', dur: 200 },
       { type: 'flash', color: 0xffffff, dur: 150 },
       { type: 'shake', dur: 200, intensity: 6 },
     ]},
@@ -73,10 +77,11 @@ export const ENCOUNTER_DIALOGS = {
       { type: 'bg', preset: 'cave', dur: 600 },
       { type: 'tint', color: 0x220044, alpha: 0.2, dur: 800 },
       { type: 'shake', dur: 200, intensity: 3 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy - 80, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '초음파 박쥐가 천장에서 내려왔다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy - 80, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromY: cy - 80, toY: cy, dur: 500, ease: 'bounce' },
     ]},
     { text: '거대한 날개가 공기를 가르며 펄럭인다.', effects: [
@@ -87,10 +92,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '공기가 차갑게 변하고, 눈꽃이 흩날린다...', effects: [
       { type: 'bg', preset: 'ice', dur: 600 },
       { type: 'tint', color: 0x88ccff, alpha: 0.15, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '서리 나방이 투명한 날개를 펼치며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 0.9, dur: 600 },
+      { type: 'reveal', target: 'mon', dur: 600 },
       { type: 'zoom', target: 'mon', from: 0.5, to: 1, dur: 500 },
     ]},
     { text: '날개에 내려앉은 서리가 빛나고 있다.', effects: [
@@ -101,10 +107,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '시야가 뿌옇게 흐려진다...', effects: [
       { type: 'bg', preset: 'fog', dur: 600 },
       { type: 'tint', color: 0xaabbcc, alpha: 0.25, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 30, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '안개 해파리가 공중에 유유히 떠 있다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 30, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 0.85, dur: 700 },
+      { type: 'reveal', target: 'mon', dur: 700 },
       { type: 'move', target: 'mon', fromY: cy + 30, toY: cy - 10, dur: 800, ease: 'easeInOut' },
     ]},
     { text: '촉수에서 차가운 안개가 흘러내린다.', effects: [
@@ -116,10 +123,11 @@ export const ENCOUNTER_DIALOGS = {
       { type: 'bg', preset: 'forest', dur: 600 },
       { type: 'tint', color: 0x224400, alpha: 0.2, dur: 600 },
       { type: 'shake', dur: 300, intensity: 3 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy - 60, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '덩굴 거미가 거미줄 사이에서 모습을 드러냈다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy - 60, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromY: cy - 60, toY: cy, dur: 500, ease: 'bounce' },
     ]},
     { text: '냄새나는 덩굴이 사방으로 뻗어 있다.', effects: [] },
@@ -128,10 +136,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '주변 풍경이 살짝 일그러진다...', effects: [
       { type: 'bg', preset: 'twilight', dur: 600 },
       { type: 'flash', color: 0xffffff, dur: 400 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '거울 카멜레온이 투명함을 풀며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 800 },
+      { type: 'reveal', target: 'mon', dur: 800 },
     ]},
     { text: '호기심 가득한 눈이 이쪽을 관찰하고 있다.', effects: [
       { type: 'zoom', target: 'mon', from: 1, to: 1.15, dur: 400 },
@@ -141,10 +150,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '맑은 종소리 같은 울림이 숲에 퍼진다...', effects: [
       { type: 'bg', preset: 'crystal', dur: 600 },
       { type: 'tint', color: 0xaaccff, alpha: 0.1, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx + 80, y: cy, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '수정 사슴이 기품 있게 걸어 나왔다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx + 80, y: cy, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 500 },
+      { type: 'reveal', target: 'mon', dur: 500 },
       { type: 'move', target: 'mon', fromX: cx + 80, toX: cx, dur: 600, ease: 'easeOut' },
     ]},
     { text: '수정 뿔에서 무지개빛이 반사된다.', effects: [
@@ -155,10 +165,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '바위가 녹아내리는 소리가 들린다...', effects: [
       { type: 'bg', preset: 'lava', dur: 600 },
       { type: 'tint', color: 0xff2200, alpha: 0.15, dur: 600 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 50, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '용암 집게가 뜨거운 집게를 딱딱 부딪히며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 50, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromY: cy + 50, toY: cy, dur: 500 },
       { type: 'shake', dur: 300, intensity: 5 },
     ]},
@@ -170,10 +181,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '알록달록한 포자가 공중에 흩날린다...', effects: [
       { type: 'bg', preset: 'spirit', dur: 600 },
       { type: 'tint', color: 0xaa44cc, alpha: 0.15, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx - 60, y: cy, size: 130, alpha: 0.7, silhouette: true },
     ]},
     { text: '포자 여우가 꼬리를 흔들며 장난스럽게 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx - 60, y: cy, size: 130, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromX: cx - 60, toX: cx, dur: 500, ease: 'bounce' },
     ]},
     { text: '환각 포자에 정신이 살짝 흐려진다.', effects: [
@@ -185,23 +197,25 @@ export const ENCOUNTER_DIALOGS = {
     { text: '쿵... 쿵... 무거운 발소리가 다가온다.', effects: [
       { type: 'bg', preset: 'mountain', dur: 600 },
       { type: 'shake', dur: 500, intensity: 4 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx + 100, y: cy, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '강철 멧돼지가 갈기를 세우며 길을 막았다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx + 100, y: cy, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 300 },
+      { type: 'reveal', target: 'mon', dur: 300 },
       { type: 'move', target: 'mon', fromX: cx + 100, toX: cx, dur: 400, ease: 'easeOut' },
       { type: 'shake', dur: 300, intensity: 8 },
     ]},
     { text: '강철처럼 단단한 몸이 햇빛을 반사한다.', effects: [
       { type: 'flash', color: 0xcccccc, dur: 200 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 20, size: 140, alpha: 0.7, silhouette: true },
     ]},
   ],
   stone_tortoise: (img) => [
     { text: '돌더미인 줄 알았던 것이 움직인다...', effects: [
       { type: 'bg', preset: 'desert', dur: 600 },] },
     { text: '바위 거북이 천천히 고개를 들었다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 20, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 800 },
+      { type: 'reveal', target: 'mon', dur: 800 },
       { type: 'move', target: 'mon', fromY: cy + 20, toY: cy, dur: 1000, ease: 'easeOut' },
     ]},
     { text: '등에 자란 이끼에서 오랜 세월이 느껴진다.', effects: [
@@ -212,10 +226,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '땅이 크게 진동한다... 쿵, 쿵!', effects: [
       { type: 'bg', preset: 'mountain', dur: 600 },
       { type: 'shake', dur: 600, intensity: 8 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 60, size: 150, alpha: 0.7, silhouette: true },
     ]},
     { text: '진동 곰이 거대한 몸을 일으켜 세웠다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 60, size: 150, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromY: cy + 60, toY: cy, dur: 500, ease: 'easeOut' },
       { type: 'zoom', target: 'mon', from: 0.7, to: 1, dur: 500 },
     ]},
@@ -228,10 +243,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '발밑에서 뭔가 바스락거린다...', effects: [
       { type: 'bg', preset: 'forest', dur: 600 },
       { type: 'tint', color: 0x443300, alpha: 0.1, dur: 600 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 40, size: 120, alpha: 0.7, silhouette: true },
     ]},
     { text: '가시 고슴도치가 독가시를 곤두세우며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 40, size: 120, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromY: cy + 40, toY: cy, dur: 400 },
       { type: 'zoom', target: 'mon', from: 0.8, to: 1.1, dur: 300 },
     ]},
@@ -244,10 +260,11 @@ export const ENCOUNTER_DIALOGS = {
       { type: 'bg', preset: 'storm', dur: 600 },
       { type: 'shake', dur: 400, intensity: 7 },
       { type: 'pan', x: -20, dur: 300 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy - 100, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '폭풍 매가 하늘에서 급강하했다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy - 100, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 200 },
+      { type: 'reveal', target: 'mon', dur: 200 },
       { type: 'move', target: 'mon', fromY: cy - 100, toY: cy, dur: 300, ease: 'easeIn' },
       { type: 'flash', color: 0xffffff, dur: 150 },
       { type: 'shake', dur: 200, intensity: 6 },
@@ -261,10 +278,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '그림자가 살랑살랑 일렁거린다...', effects: [
       { type: 'bg', preset: 'shadow', dur: 600 },
       { type: 'tint', color: 0x220033, alpha: 0.2, dur: 600 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 120, alpha: 0.7, silhouette: true },
     ]},
     { text: '그림자 고양이가 호기심 가득한 눈으로 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 120, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 0.8, dur: 600 },
+      { type: 'reveal', target: 'mon', dur: 600 },
     ]},
     { text: '몸이 그림자처럼 흔들리며 형태를 바꾼다.', effects: [
       { type: 'fade', target: 'mon', from: 0.8, to: 1, dur: 300 },
@@ -275,10 +293,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '물속에서 화려한 빛이 반짝인다...', effects: [
       { type: 'bg', preset: 'ocean', dur: 600 },
       { type: 'tint', color: 0xff88aa, alpha: 0.1, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx - 50, y: cy + 30, size: 120, alpha: 0.7, silhouette: true },
     ]},
     { text: '산호 해마가 우아하게 헤엄치며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx - 50, y: cy + 30, size: 120, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 500 },
+      { type: 'reveal', target: 'mon', dur: 500 },
       { type: 'move', target: 'mon', fromX: cx - 50, fromY: cy + 30, toX: cx, toY: cy, dur: 700, ease: 'easeInOut' },
     ]},
     { text: '물 온도가 미세하게 변하며 감정을 전하고 있다.', effects: [
@@ -290,10 +309,11 @@ export const ENCOUNTER_DIALOGS = {
       { type: 'bg', preset: 'wind', dur: 600 },
       { type: 'pan', x: -30, dur: 500 },
       { type: 'tint', color: 0x226644, alpha: 0.15, dur: 600 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx + 60, y: cy - 20, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '바람 뱀이 공중에서 또아리를 틀며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx + 60, y: cy - 20, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 400 },
+      { type: 'reveal', target: 'mon', dur: 400 },
       { type: 'move', target: 'mon', fromX: cx + 60, toX: cx, dur: 500, ease: 'easeOut' },
       { type: 'pan', x: 30, dur: 500 },
     ]},
@@ -305,10 +325,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '발밑이 질척이며 독한 점액이 보인다...', effects: [
       { type: 'bg', preset: 'swamp', dur: 600 },
       { type: 'tint', color: 0x334400, alpha: 0.2, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 60, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '늪지 거머리가 거대한 몸을 드러냈다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 60, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 500 },
+      { type: 'reveal', target: 'mon', dur: 500 },
       { type: 'move', target: 'mon', fromY: cy + 60, toY: cy, dur: 700, ease: 'easeOut' },
     ]},
     { text: '끈적한 점액이 흘러내리며 악취를 풍긴다.', effects: [
@@ -320,10 +341,11 @@ export const ENCOUNTER_DIALOGS = {
       { type: 'bg', preset: 'ocean', dur: 600 },
       { type: 'flash', color: 0xffff00, dur: 150 },
       { type: 'shake', dur: 200, intensity: 5 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 140, alpha: 0.7, silhouette: true },
     ]},
     { text: '번개 장어가 전류를 뿜으며 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 140, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 300 },
+      { type: 'reveal', target: 'mon', dur: 300 },
       { type: 'flash', color: 0xffffaa, dur: 200 },
     ]},
     { text: '주변 물이 전기로 부글부글 끓어오른다.', effects: [
@@ -335,10 +357,11 @@ export const ENCOUNTER_DIALOGS = {
     { text: '연기가 피어오르더니... 사라졌다?', effects: [
       { type: 'bg', preset: 'fog', dur: 600 },
       { type: 'tint', color: 0x666666, alpha: 0.3, dur: 600 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 120, alpha: 0.7, silhouette: true },
     ]},
     { text: '연기 족제비가 어느새 뒤에 나타났다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy, size: 120, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 200 },
+      { type: 'reveal', target: 'mon', dur: 200 },
       { type: 'flash', color: 0xffffff, dur: 100 },
       { type: 'tint', color: 0x666666, alpha: 0, dur: 300 },
     ]},
@@ -352,10 +375,11 @@ export const ENCOUNTER_DIALOGS = {
       { type: 'bg', preset: 'ruins', dur: 600 },
       { type: 'shake', dur: 700, intensity: 8 },
       { type: 'tint', color: 0x334422, alpha: 0.15, dur: 800 },
+    
+      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 80, size: 160, alpha: 0.7, silhouette: true },
     ]},
     { text: '이끼 골렘이 거대한 몸을 일으켰다!', effects: [
-      { type: 'sprite', img, id: 'mon', x: cx, y: cy + 80, size: 160, alpha: 0 },
-      { type: 'fade', target: 'mon', from: 0, to: 1, dur: 500 },
+      { type: 'reveal', target: 'mon', dur: 500 },
       { type: 'move', target: 'mon', fromY: cy + 80, toY: cy, dur: 800, ease: 'easeOut' },
       { type: 'zoom', target: 'mon', from: 0.6, to: 1, dur: 700 },
     ]},

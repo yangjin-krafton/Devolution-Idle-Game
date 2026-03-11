@@ -84,7 +84,8 @@
       "Bash(cmd.exe //c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -ano ^| findstr :3456 ^| findstr LISTENING'\\) do taskkill /PID %a /F\")",
       "Bash(cd \"D:\\\\Weeks\\\\Devolution-Idle-Game\" && grep -oP '\\(?<=\"skillFocus\": \"\\)[^\"]+' tools/monster-pipeline/roster/*.json | sed 's/.*://' | tr '/' '\\\\n' | sed 's/^ *//;s/ *$//' | sort -u)",
       "Bash(node -e \"import\\(''''./src/ui/skillCard.js''''\\)\")",
-      "Bash(cd D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline/roster && for f in *.json; do node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('$f','utf-8'\\)\\); JSON.stringify\\(d\\)\" 2>&1 && echo \"$f: valid JSON ✓\" || echo \"$f: INVALID JSON ✗\"; done)"
+      "Bash(cd D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline/roster && for f in *.json; do node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('$f','utf-8'\\)\\); JSON.stringify\\(d\\)\" 2>&1 && echo \"$f: valid JSON ✓\" || echo \"$f: INVALID JSON ✗\"; done)",
+      "Bash(grep -c \"''reveal''\" \"f:/Workspace/Devolution-Idle-Game/src/data/dialogs/encounters/index.js\")"
     ],
     "additionalDirectories": [
       "\\tmp"

@@ -113,6 +113,8 @@ export function playEffects(effects) {
       case 'flash':  tweenFlash(fx); break;
       case 'tint':   tweenTint(fx); break;
       case 'bg':     setBg(fx); break;
+      case 'reveal': tweenReveal(fx); break;
+      case 'emoji':  showEmoji(fx); break;
     }
   }
 }
@@ -142,6 +144,10 @@ function spawnSprite(fx) {
   spr.y = fx.y ?? H / 2 - 100;
   spr.alpha = fx.alpha ?? 1;
   if (fx.scale) spr.scale.set(fx.scale);
+  // Silhouette mode: tint all sprite children black
+  if (fx.silhouette) {
+    spr.children.forEach(c => { if (c.tint !== undefined) c.tint = 0x000000; });
+  }
   // Insert before overlays (flash/tint are last children)
   const insertIdx = Math.max(0, stageContainer.children.length - 2);
   stageContainer.addChildAt(spr, insertIdx);
@@ -254,6 +260,95 @@ function tweenTint(fx) {
   });
 }
 
+
+// ---- Emoji bubble (말풍선 감정 표현) ----
+// { type: 'emoji', target: 'mon', emoji: '❤️', dur: 1200 }
+// { type: 'emoji', target: 'mon', emoji: 'angry', dur: 1000 }  — preset name
+// Pops up above the target sprite with a speech bubble, floats up, fades out
+const EMOJI_PRESETS = {
+  // 감정
+  happy:    '😊', love:     '❤️', angry:    '😡', sad:      '😢',
+  scared:   '😨', curious:  '🤔', trust:    '🤝', calm:     '😌',
+  confused: '😵', sleepy:   '💤', excited:  '✨', shock:    '❗',
+  // 상태
+  sweat:    '💦', fire:     '🔥', ice:      '❄️', poison:   '☠️',
+  music:    '🎵', heart:    '💕', sparkle:  '⭐', warning:  '⚠️',
+  question: '❓', idea:     '💡', strong:   '💪', run:      '💨',
+};
+
+function showEmoji(fx) {
+  const target = getTarget(fx);
+  const emojiChar = EMOJI_PRESETS[fx.emoji] || fx.emoji || '❤️';
+  const size = fx.size || 14;
+
+  // Create emoji container with bubble
+  const bubble = new PIXI.Container();
+  const targetX = target.x || cx || W / 2;
+  const targetY = (target.y || cy || H / 2) - (fx.offsetY ?? 50);
+  bubble.x = targetX + (fx.offsetX ?? 0);
+  bubble.y = targetY;
+
+  // Speech bubble background
+  const bw = size * 2.5, bh = size * 2.2;
+  const bg = new PIXI.Graphics();
+  bg.roundRect(-bw / 2, -bh / 2, bw, bh, bh / 3).fill({ color: 0xffffff, alpha: 0.9 });
+  bg.roundRect(-bw / 2, -bh / 2, bw, bh, bh / 3).stroke({ color: 0xdddddd, width: 1 });
+  // Tail (small triangle pointing down)
+  bg.moveTo(-4, bh / 2).lineTo(0, bh / 2 + 6).lineTo(4, bh / 2).fill({ color: 0xffffff, alpha: 0.9 });
+  bubble.addChild(bg);
+
+  // Emoji text
+  const txt = new PIXI.Text({
+    text: emojiChar,
+    style: { fontSize: size * 2, fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif' },
+  });
+  txt.anchor.set(0.5);
+  bubble.addChild(txt);
+
+  // Insert into stage
+  const insertIdx = Math.max(0, stageContainer.children.length - 2);
+  stageContainer.addChildAt(bubble, insertIdx);
+
+  // Animate: pop in → float up → fade out
+  const dur = fx.dur || 1200;
+  const startY = targetY;
+  bubble.alpha = 0;
+  bubble.scale.set(0.3);
+
+  addTween(dur, 'linear', (_e, t) => {
+    if (t < 0.15) {
+      // Pop in
+      const p = t / 0.15;
+      bubble.alpha = p;
+      bubble.scale.set(0.3 + 0.9 * p);
+    } else if (t < 0.7) {
+      // Hold + gentle float
+      bubble.alpha = 1;
+      bubble.scale.set(1.2);
+      bubble.y = startY - (t - 0.15) * 30;
+    } else {
+      // Fade out + float up
+      const f = (t - 0.7) / 0.3;
+      bubble.alpha = 1 - f;
+      bubble.scale.set(1.2 - f * 0.3);
+      bubble.y = startY - (t - 0.15) * 30;
+    }
+    if (t >= 1 && bubble.parent) bubble.parent.removeChild(bubble);
+  });
+}
+
+// ---- Reveal (silhouette → full color) ----
+// { type: 'reveal', target: 'mon', dur: 600 }
+// Animates sprite tint from black (0x000000) to white (0xffffff)
+function tweenReveal(fx) {
+  const target = getTarget(fx);
+  addTween(fx.dur || 600, fx.ease || 'easeOut', (e) => {
+    const v = Math.round(e * 255);
+    const color = (v << 16) | (v << 8) | v;
+    target.children.forEach(c => { if (c.tint !== undefined) c.tint = color; });
+  });
+}
+
 // ---- Background gradient (Pokemon-style) ----
 // { type: 'bg', colors: [topColor, bottomColor] }
 // { type: 'bg', colors: [top, mid, bottom] }  — 3-stop gradient
@@ -310,24 +405,35 @@ function setBg(fx) {
     colors = BG_PRESETS.dark;
   }
 
-  // Draw gradient using horizontal strips
+  // Oversized to prevent edge gaps during pan/shake
+  const PAD_BG = 60;
+  const bgW = W + PAD_BG * 2;
+  const bgH = H + PAD_BG * 2;
   const strips = 32;
-  const stripH = Math.ceil(H / strips);
-  const g = new PIXI.Graphics();
+  const stripH = Math.ceil(bgH / strips);
 
+  // Pre-compute target colors per strip
+  const targetColors = [];
   for (let i = 0; i < strips; i++) {
-    const t = i / (strips - 1);
-    const color = lerpGradient(colors, t);
-    g.rect(0, i * stripH, W, stripH + 1).fill({ color });
+    targetColors.push(lerpGradient(colors, i / (strips - 1)));
   }
 
+  // Draw initial black background (fully opaque, no game screen visible)
+  const g = new PIXI.Graphics();
+  for (let i = 0; i < strips; i++) {
+    g.rect(-PAD_BG, -PAD_BG + i * stripH, bgW, stripH + 1).fill({ color: 0x000000 });
+  }
   bgLayer.addChild(g);
-  bgLayer.alpha = 0;
+  bgLayer.alpha = 1;
   bgLayer.visible = true;
 
-  // Fade in
+  // Animate: black → target gradient colors
   addTween(fx.dur || 500, fx.ease || 'easeOut', (e) => {
-    bgLayer.alpha = e;
+    g.clear();
+    for (let i = 0; i < strips; i++) {
+      const color = lerpColor(0x000000, targetColors[i], e);
+      g.rect(-PAD_BG, -PAD_BG + i * stripH, bgW, stripH + 1).fill({ color });
+    }
   });
 }
 

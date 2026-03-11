@@ -24,7 +24,7 @@ function normalizeAlly(a) {
   return {
     id: a.id,
     name: a.name,
-    nameEn: null,            // roster: name_en
+    nameEn: a.nameEn || null,
     desc: a.desc,
     img: a.img,
     type: 'ally',
@@ -57,11 +57,11 @@ function normalizeAlly(a) {
     reactions: null,
 
     // Roster-only (null until roster integrated)
-    role: null,
-    habitat: null,
-    skillFocus: null,
-    wildMechanic: null,
-    visual: null,
+    role: a.role || null,
+    habitat: a.habitat || null,
+    skillFocus: a.skillFocus || null,
+    wildMechanic: a.wildMechanic || null,
+    visual: a.visual || null,
 
     // Raw source reference
     _raw: a,
@@ -72,13 +72,13 @@ function normalizeEnemy(e) {
   return {
     id: e.id,
     name: e.name,
-    nameEn: null,
+    nameEn: e.nameEn || null,
     desc: e.desc,
     img: e.img,
     type: 'enemy',
 
-    hp: null, maxHp: null,
-    stats: null,
+    hp: e.hp ?? null, maxHp: e.maxHp ?? e.hp ?? null,
+    stats: e.stats ? { ...e.stats } : null,
     actions: null,
 
     devolved: false,
@@ -98,11 +98,11 @@ function normalizeEnemy(e) {
     personality: e.personality,
     reactions: e.reactions,
 
-    role: null,
-    habitat: null,
-    skillFocus: null,
-    wildMechanic: null,
-    visual: null,
+    role: e.role || null,
+    habitat: e.habitat || null,
+    skillFocus: e.skillFocus || null,
+    wildMechanic: e.wildMechanic || null,
+    visual: e.visual || null,
 
     _raw: e,
   };
