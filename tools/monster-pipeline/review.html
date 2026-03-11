@@ -195,7 +195,7 @@
     font-size: 11px;
   }
   .info-panel .info-image-desc::before {
-    content: 'IMAGE REF'; display: block; font-size: 9px; color: #58a6ff;
+    content: '이미지 참고'; display: block; font-size: 9px; color: #58a6ff;
     font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; font-style: normal;
   }
   .info-section { margin-bottom: 10px; }
@@ -274,7 +274,7 @@
   }
   .mini-tree:hover { border-color: #e94560; box-shadow: 0 0 12px rgba(233,69,96,0.3); }
   .mini-tree::after {
-    content: 'Tree'; position: absolute; bottom: 2px; right: 4px;
+    content: '퇴화트리'; position: absolute; bottom: 2px; right: 4px;
     font-size: 7px; color: #555; letter-spacing: 0.5px; text-transform: uppercase;
   }
   .mini-tree .mt-row { display: flex; justify-content: center; align-items: flex-start; gap: 4px; }
@@ -528,7 +528,7 @@ function getFormInfo(selectedFile, concept, roster) {
     const rw = roster?.wild;
     const data = b || rw || {};
     info.label = data.name_kr || 'Base';
-    info.tag = 'Wild';
+    info.tag = '야생';
     info.desc = data.desc_kr || '';
     info.statsHtml = buildBaseInfoPanel(data, rw);
   } else {
@@ -542,7 +542,7 @@ function getFormInfo(selectedFile, concept, roster) {
       const rd = roster?.devo1?.[i];
       const data = cd || rd || {};
       info.label = data.name_kr || name;
-      info.tag = `Devo1 #${idx}`;
+      info.tag = `퇴화1 #${idx}`;
       info.desc = data.desc_kr || '';
       info.statsHtml = buildDevo1InfoPanel(data, rd);
     } else {
@@ -565,7 +565,7 @@ function getFormInfo(selectedFile, concept, roster) {
       }
       data = data || {};
       info.label = data.name_kr || name;
-      info.tag = `Devo2`;
+      info.tag = `퇴화2`;
       info.desc = data.desc_kr || '';
       info.statsHtml = buildDevo2InfoPanel(data);
     }
@@ -574,20 +574,26 @@ function getFormInfo(selectedFile, concept, roster) {
 }
 
 // ---- Info panel builders ----
+const ROLE_KR = { attacker: '공격수', tank: '탱커', support: '서포터', speedster: '속공형' };
+const AXIS_KR = { sound: '소리', temperature: '온도', smell: '냄새', behavior: '행동' };
+const CAT_KR = { stimulate: '자극', capture: '포획', defend: '방어' };
+const PERSONALITY_KR = { aggressive: '공격적', timid: '소심', calm: '온순', cunning: '교활', territorial: '영역적' };
+const SENSORY_KR = { sound: '소리', temperature: '온도', smell: '냄새', behavior: '행동' };
+
 function roleBadge(role) {
   if (!role) return '';
   const cls = `role-${role}`;
-  return `<span class="role-badge ${cls}">${role}</span>`;
+  return `<span class="role-badge ${cls}">${ROLE_KR[role] || role}</span>`;
 }
 
 function statBars(stats, maxVal) {
   if (!stats) return '';
   maxVal = maxVal || 20;
   const entries = [
-    ['Gentleness', stats.gentleness, 'gentleness'],
-    ['Empathy', stats.empathy, 'empathy'],
-    ['Resilience', stats.resilience, 'resilience'],
-    ['Agility', stats.agility, 'agility'],
+    ['온화', stats.gentleness, 'gentleness'],
+    ['공감', stats.empathy, 'empathy'],
+    ['인내', stats.resilience, 'resilience'],
+    ['민첩', stats.agility, 'agility'],
   ];
   let html = '<div class="stat-bars">';
   for (const [label, val, key] of entries) {
@@ -614,9 +620,9 @@ function colorSwatches(colors) {
     '황혼 자주': '#5d3a6e', '안개 보라': '#9370db', '달빛 은색': '#d3d3d3',
   };
   const items = [
-    ['primary', colors.primary],
-    ['secondary', colors.secondary],
-    ['accent', colors.accent],
+    ['기본', colors.primary],
+    ['보조', colors.secondary],
+    ['강조', colors.accent],
   ];
   let html = '<div class="color-swatches">';
   for (const [type, name] of items) {
@@ -651,28 +657,28 @@ function buildBaseInfoPanel(data, rosterWild) {
 
   // Quick stats
   html += '<div class="quick-stats">';
-  if (data.hp != null) html += `<div class="quick-stat">HP <span>${data.hp}</span></div>`;
-  if (data.attackPower != null) html += `<div class="quick-stat">ATK <span>${data.attackPower}</span></div>`;
-  if (data.tamingThreshold != null) html += `<div class="quick-stat">Taming <span>${data.tamingThreshold}</span></div>`;
-  if (data.escapeThreshold != null) html += `<div class="quick-stat">Escape <span>${data.escapeThreshold}</span></div>`;
-  if (data.sensoryType) html += `<div class="quick-stat">Sensory <span>${data.sensoryType.join(', ')}</span></div>`;
-  if (data.personality) html += `<div class="quick-stat">Personality <span>${data.personality}</span></div>`;
+  if (data.hp != null) html += `<div class="quick-stat">체력 <span>${data.hp}</span></div>`;
+  if (data.attackPower != null) html += `<div class="quick-stat">공격력 <span>${data.attackPower}</span></div>`;
+  if (data.tamingThreshold != null) html += `<div class="quick-stat">순화 임계 <span>${data.tamingThreshold}</span></div>`;
+  if (data.escapeThreshold != null) html += `<div class="quick-stat">도주 임계 <span>${data.escapeThreshold}</span></div>`;
+  if (data.sensoryType) html += `<div class="quick-stat">감각 <span>${data.sensoryType.map(s => SENSORY_KR[s] || s).join(', ')}</span></div>`;
+  if (data.personality) html += `<div class="quick-stat">성격 <span>${PERSONALITY_KR[data.personality] || data.personality}</span></div>`;
   html += '</div>';
 
   // Stat bars
   if (data.stats) {
-    html += `<div class="info-section"><div class="info-section-title">Stats</div>${statBars(data.stats)}</div>`;
+    html += `<div class="info-section"><div class="info-section-title">능력치</div>${statBars(data.stats)}</div>`;
   }
 
   // Colors
   if (data.visual?.colors) {
-    html += `<div class="info-section"><div class="info-section-title">Color Palette</div>${colorSwatches(data.visual.colors)}</div>`;
+    html += `<div class="info-section"><div class="info-section-title">색상 팔레트</div>${colorSwatches(data.visual.colors)}</div>`;
   }
 
   // Wild mechanic
   const wm = data.wildMechanic || rosterWild?.wildMechanic;
   if (wm) {
-    html += `<div class="info-section"><div class="info-section-title">Wild Mechanic</div>
+    html += `<div class="info-section"><div class="info-section-title">야생 메커니즘</div>
       <div class="wild-mechanic"><span class="wm-name">${escapeHtml(wm.name_kr || wm.id)}</span> — ${escapeHtml(wm.desc_kr || '')}</div>
     </div>`;
   }
@@ -698,34 +704,34 @@ function buildDevo1InfoPanel(conceptData, rosterData) {
 
   // Quick stats
   html += '<div class="quick-stats">';
-  if (data.hp != null) html += `<div class="quick-stat">HP <span>${data.hp}</span></div>`;
-  if (data.role) html += `<div class="quick-stat">Role <span>${data.role}</span></div>`;
-  if (data.skillFocus) html += `<div class="quick-stat">Focus <span>${data.skillFocus}</span></div>`;
+  if (data.hp != null) html += `<div class="quick-stat">체력 <span>${data.hp}</span></div>`;
+  if (data.role) html += `<div class="quick-stat">역할 <span>${ROLE_KR[data.role] || data.role}</span></div>`;
+  if (data.skillFocus) html += `<div class="quick-stat">스킬 포커스 <span>${data.skillFocus}</span></div>`;
   html += '</div>';
 
   // Stat bars
   if (data.stats) {
-    html += `<div class="info-section"><div class="info-section-title">Stats</div>${statBars(data.stats)}</div>`;
+    html += `<div class="info-section"><div class="info-section-title">능력치</div>${statBars(data.stats)}</div>`;
   }
 
   // Colors
   if (data.visual?.colors) {
-    html += `<div class="info-section"><div class="info-section-title">Color Palette</div>${colorSwatches(data.visual.colors)}</div>`;
+    html += `<div class="info-section"><div class="info-section-title">색상 팔레트</div>${colorSwatches(data.visual.colors)}</div>`;
   }
 
   // Actions/Skills
   if (data.actions && data.actions.length > 0) {
-    html += `<div class="info-section"><div class="info-section-title">Actions (${data.actions.length})</div><div class="skill-cards">`;
+    html += `<div class="info-section"><div class="info-section-title">스킬 (${data.actions.length}개)</div><div class="skill-cards">`;
     for (const a of data.actions) {
       const aName = a.name_kr || a.name || a.id;
       html += `<div class="skill-card">
         <div class="sk-name">${escapeHtml(aName)}</div>
-        <div class="sk-row"><span class="sk-axis">${a.axis || ''}</span> / <span class="sk-cat">${a.category || a.type || ''}</span></div>
-        <div class="sk-row">Power <span>${a.power ?? '?'}</span> | PP <span>${a.pp ?? '?'}/${a.maxPp ?? '?'}</span> | Escape <span>${a.escapeRisk ?? '?'}</span></div>`;
-      if (a.healAmount) html += `<div class="sk-row">Heal <span>${a.healAmount}</span></div>`;
-      if (a.defenseBoost) html += `<div class="sk-row">Def+ <span>${a.defenseBoost}</span></div>`;
+        <div class="sk-row"><span class="sk-axis">${AXIS_KR[a.axis] || a.axis || ''}</span> / <span class="sk-cat">${CAT_KR[a.category] || a.category || a.type || ''}</span></div>
+        <div class="sk-row">위력 <span>${a.power ?? '?'}</span> | PP <span>${a.pp ?? '?'}/${a.maxPp ?? '?'}</span> | 도주 <span>${a.escapeRisk ?? '?'}</span></div>`;
+      if (a.healAmount) html += `<div class="sk-row">회복 <span>${a.healAmount}</span></div>`;
+      if (a.defenseBoost) html += `<div class="sk-row">방어+ <span>${a.defenseBoost}</span></div>`;
       if (a.effects && a.effects.length > 0) {
-        const effs = a.effects.map(e => `${e.type}(${Math.round((e.chance||0)*100)}%, ${e.turns||0}t)`).join(', ');
+        const effs = a.effects.map(e => `${e.type}(${Math.round((e.chance||0)*100)}%, ${e.turns||0}턴)`).join(', ');
         html += `<div class="sk-effects">${effs}</div>`;
       }
       if (a.log) html += `<div class="sk-log">${escapeHtml(a.log)}</div>`;
@@ -751,19 +757,19 @@ function buildDevo2InfoPanel(data) {
 
   // Quick stats
   html += '<div class="quick-stats">';
-  if (data.hp != null) html += `<div class="quick-stat">HP <span>${data.hp}</span></div>`;
-  if (data.role) html += `<div class="quick-stat">Role <span>${data.role}</span></div>`;
-  if (data.skillFocus) html += `<div class="quick-stat">Focus <span>${data.skillFocus}</span></div>`;
+  if (data.hp != null) html += `<div class="quick-stat">체력 <span>${data.hp}</span></div>`;
+  if (data.role) html += `<div class="quick-stat">역할 <span>${ROLE_KR[data.role] || data.role}</span></div>`;
+  if (data.skillFocus) html += `<div class="quick-stat">스킬 포커스 <span>${data.skillFocus}</span></div>`;
   html += '</div>';
 
   // Stat bars
   if (data.stats) {
-    html += `<div class="info-section"><div class="info-section-title">Stats</div>${statBars(data.stats)}</div>`;
+    html += `<div class="info-section"><div class="info-section-title">능력치</div>${statBars(data.stats)}</div>`;
   }
 
   // Colors
   if (data.visual?.colors) {
-    html += `<div class="info-section"><div class="info-section-title">Color Palette</div>${colorSwatches(data.visual.colors)}</div>`;
+    html += `<div class="info-section"><div class="info-section-title">색상 팔레트</div>${colorSwatches(data.visual.colors)}</div>`;
   }
 
   html += '</div>';
@@ -815,7 +821,7 @@ function buildMiniTree(dir, concept, selectedSet, allImages, currentFile) {
 
   const wrap = document.createElement('div');
   wrap.className = 'mini-tree';
-  wrap.title = 'Devolution Tree (Click to scroll)';
+  wrap.title = '퇴화 트리 (클릭하면 상단으로 이동)';
   wrap.onclick = () => {
     const mainTree = document.getElementById('devo-tree-main');
     if (mainTree) mainTree.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -877,7 +883,7 @@ function buildMiniTree(dir, concept, selectedSet, allImages, currentFile) {
 function buildDevoTree(dir, concept, selectedSet, allImages) {
   const tree = document.createElement('div');
   tree.className = 'devo-tree';
-  tree.innerHTML = '<h2>Devolution Tree</h2>';
+  tree.innerHTML = '<h2>퇴화 트리</h2>';
 
   // Build list of actual selected filenames grouped by prefix
   const selArr = Array.from(selectedSet);
@@ -959,7 +965,7 @@ function buildDevoTree(dir, concept, selectedSet, allImages) {
   // Row 0: Base — find any file starting with "base_"
   const baseFile = findFile('base_');
   const baseLabel = concept?.base?.name_kr || 'Wild';
-  layout.appendChild(makeNode(baseFile, baseLabel, 'wild'));
+  layout.appendChild(makeNode(baseFile, baseLabel, '야생'));
 
   // Connector line down
   layout.appendChild(makeLineV());
@@ -982,7 +988,7 @@ function buildDevoTree(dir, concept, selectedSet, allImages) {
     // Devo1 node — find file matching "devo1_{i}_"
     const d1FileInfo = findFile(`devo1_${i}_`);
     const d1Label = d1Concept?.name_kr || d1Concept?.name_en || (d1FileInfo?.file || `devo1_${i}`);
-    col.appendChild(makeNode(d1FileInfo, d1Label, d1Concept?.role));
+    col.appendChild(makeNode(d1FileInfo, d1Label, ROLE_KR[d1Concept?.role] || d1Concept?.role));
 
     // Line down to devo2
     col.appendChild(makeLineV());
