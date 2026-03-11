@@ -424,7 +424,7 @@ async function runWildOnly(roster) {
         type: 'base',
       };
 
-      // 이미지 생성 (8프롬프트 × 4시드 = 32장)
+      // 이미지 생성 (4프롬프트 × 4시드 = 16장)
       log(`[Wild] ${prompts.length}프롬프트 × ${CONFIG.SEEDS_PER_PROMPT}시드 이미지 생성 중...`);
       const result = await generateImages(wildForm);
 
