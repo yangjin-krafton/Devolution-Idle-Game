@@ -63,7 +63,7 @@
   "49": {
     "inputs": {
       "seed": 698258455824756,
-      "steps": 7,
+      "steps": 16,
       "cfg": 1,
       "sampler_name": "ddim",
       "scheduler": "ddim_uniform",

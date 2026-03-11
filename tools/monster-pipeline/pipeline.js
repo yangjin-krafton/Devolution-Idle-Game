@@ -197,13 +197,22 @@ function generateReadme(id, roster, concept, selectedImages) {
   return md;
 }
 
-// ── 1종 처리 (roster) — LM Studio 메인 루프 + ComfyUI 큐 적재 ──
-// LM Studio(번역)가 메인 루프, ComfyUI(이미지)는 큐에 쌓아놓고 나중에 수집:
-//   Phase A: LM Studio가 번역하는 즉시 ComfyUI 큐에 fire-and-forget
-//   Phase B: 모든 번역 완료 후 ComfyUI 결과 일괄 수집
-//   Phase C: 이미지 심사 (LM Studio)
-//   reactions/actions는 Phase A 시작과 동시에 백그라운드 실행
-async function processOne(rosterEntry, progress) {
+// ============================================================
+// 파이프라인 v5 — 별형(star) 구조
+// ============================================================
+// 몬스터 A의 ComfyUI 이미지 생성과 몬스터 B의 LM Studio 토너먼트가
+// 동시에 진행되는 파이프라인 구조:
+//
+//   몬스터 1: [ComfyUI 이미지 생성] → [LM Studio 토너먼트 + 저장]
+//   몬스터 2:                         [ComfyUI 이미지 생성] → [LM Studio 토너먼트 + 저장]
+//   몬스터 3:                                                  [ComfyUI 이미지 생성] → ...
+//
+// Phase 1 (generateMonsterImages): 프롬프트 준비 + ComfyUI 큐 적재 + 결과 수집
+// Phase 2 (reviewAndSaveMonster):  LM Studio 토너먼트 심사 + concept 조립 + 저장
+// ============================================================
+
+// ── Phase 1: 이미지 생성 (ComfyUI 중심) ──
+async function generateMonsterImages(rosterEntry) {
   const { data: rosterData } = rosterEntry;
   const id = rosterData.id;
   const w = rosterData.wild;
@@ -220,107 +229,120 @@ async function processOne(rosterEntry, progress) {
   console.log(`  ${w.personality} | ${w.sensoryType.join('+')} | ${w.habitat}`);
   console.log(`  devo1: ${devo1Count}종 | devo2: ${devo2Count}종 | 총: ${totalForms}형태`);
   console.log(`  이미지: ${totalForms} × (${promptsPerForm}프롬프트 × ${seedsPerPrompt}시드) = ${totalForms * imagesPerForm}장`);
-  console.log(`  ⚡ LM Studio 8프롬프트 → ComfyUI 시드변형 4장씩`);
   if (w.wildMechanic) console.log(`  메커니즘: ${w.wildMechanic.name_kr}`);
   console.log(`${'='.repeat(60)}\n`);
 
-  startSilenceWatch(`#${id} ${w.name_en}`);
+  startSilenceWatch(`#${id} ${w.name_en} [이미지]`);
 
-  // ── Phase 0: roster → allForms 빌드 ──
+  // ── roster → allForms 빌드 ──
   const allForms = buildFormsFromRoster(rosterData);
-  log(`[Phase 0] ${allForms.length}개 형태 빌드 완료`);
+  log(`[#${id} 이미지] ${allForms.length}개 형태 빌드 완료`);
 
-  // ── Phase A: 프롬프트 준비 + ComfyUI 시드변형 큐 적재 ──
-  // image_prompts_en이 있으면 LM Studio 번역 건너뛰고 바로 ComfyUI 적재
-
-  // reactions/actions를 번역과 동시에 백그라운드 실행
+  // reactions/actions 백그라운드 시작
   const supplementaryPromise = generateReactionsAndActions(rosterData);
   log(`  [LM Studio] reactions/actions 백그라운드 시작`);
 
-  // ComfyUI 이미지 생성 promise 배열 (await 하지 않고 쌓아둠)
-  const imagePromises = []; // { form, promise: Promise<result> }
+  // ── 모든 형태 ComfyUI 큐 적재 (한 세트 일괄) ──
+  const imagePromises = [];
 
-  // 사전 번역된 프롬프트가 있는 형태 수 확인
   const preTranslatedCount = allForms.filter(f => f.image_prompts_en && f.image_prompts_en.length > 0).length;
   if (preTranslatedCount > 0) {
-    log(`[Phase A] ${preTranslatedCount}/${allForms.length}형태 사전 번역 프롬프트 사용 (LM Studio 번역 건너뛰기)`);
-  }
-  if (preTranslatedCount < allForms.length) {
-    log(`[Phase A] ${allForms.length - preTranslatedCount}형태 LM Studio 번역 필요`);
+    log(`[#${id} 이미지] ${preTranslatedCount}/${allForms.length}형태 사전 번역 프롬프트 → 바로 ComfyUI 큐 적재`);
   }
 
   for (let i = 0; i < allForms.length; i++) {
     const form = allForms[i];
-    form.image_prompts = [];
+    let prompts;
 
-    // 사전 번역된 프롬프트가 있는지 확인
     if (form.image_prompts_en && form.image_prompts_en.length > 0) {
-      // ── 사전 번역 프롬프트 사용 (LM Studio 건너뛰기) ──
-      const prompts = form.image_prompts_en;
-      form.image_prompts = prompts;
-      form.image_prompt = prompts[0];
-      log(`  [Pre-translated] form[${i}] "${form.name_kr}" ${prompts.length}프롬프트 (첫번째: ${prompts[0]?.substring(0, 60)}...)`);
-
-      // 바로 ComfyUI에 적재
-      const imageForm = {
-        ...form,
-        image_prompt: prompts[0],
-        image_prompts: prompts,
-      };
-      log(`  → [ComfyUI] form[${i}] ${prompts.length}프롬프트 × ${seedsPerPrompt}시드 = ${prompts.length * seedsPerPrompt}장 큐 적재`);
-      const imagePromise = generateImages(imageForm);
-      imagePromises.push({ form, promise: imagePromise });
+      // 사전 번역 프롬프트 사용
+      prompts = form.image_prompts_en;
+      log(`  [Pre] form[${i}] "${form.name_kr}" ${prompts.length}프롬프트`);
     } else {
-      // ── LM Studio 번역 필요 ──
-      log(`  [LM Studio] form[${i}/${allForms.length - 1}] "${form.name_kr}" ${promptsPerForm}프롬프트 번역 중...`);
-      const prompts = await generatePromptVariants(
-        form.image_desc, form.name_kr, promptsPerForm, form.type,
-        (batch) => {
-          const imageForm = {
-            ...form,
-            image_prompt: batch[0],
-            image_prompts: batch,
-          };
-          log(`  → [ComfyUI] form[${i}] ${batch.length}프롬프트 × ${seedsPerPrompt}시드 = ${batch.length * seedsPerPrompt}장 큐 적재`);
-          const imagePromise = generateImages(imageForm);
-          imagePromises.push({ form, promise: imagePromise });
-        }
+      // LM Studio 번역 필요
+      log(`  [LM Studio] form[${i}] "${form.name_kr}" ${promptsPerForm}프롬프트 번역 중...`);
+      prompts = await generatePromptVariants(
+        form.image_desc, form.name_kr, promptsPerForm, form.type
       );
-      form.image_prompts = prompts;
-      form.image_prompt = prompts[0];
-      log(`  ✓ form[${i}] 번역 완료 (${prompts.length}프롬프트 → ${prompts.length * seedsPerPrompt}장 예정)`);
+      log(`  ✓ form[${i}] 번역 완료 (${prompts.length}프롬프트)`);
     }
+
+    form.image_prompts = prompts;
+    form.image_prompt = prompts[0];
+
+    // ComfyUI 큐 적재 (await 하지 않음 — fire-and-forget)
+    const imageForm = { ...form, image_prompt: prompts[0], image_prompts: prompts };
+    log(`  → [ComfyUI] form[${i}] ${prompts.length}프롬프트 × ${seedsPerPrompt}시드 = ${prompts.length * seedsPerPrompt}장 큐 적재`);
+    imagePromises.push({ form, promise: generateImages(imageForm) });
   }
 
-  log(`[Phase A 완료] ${allForms.length}개 형태 완료, ${imagePromises.length}개 ComfyUI 작업 큐 적재됨`);
+  log(`[#${id} 이미지] ${allForms.length}형태 전부 ComfyUI 큐 적재 완료`);
 
-  // ── Phase B: ComfyUI 결과 일괄 수집 ──
-  log(`[Phase B] ComfyUI 결과 수집 대기 중...`);
+  // ── 형태 단위 스트리밍: 수집 즉시 토너먼트 시작 ──
+  // ComfyUI에서 form[0] 32장 수집 완료 → 즉시 LM Studio 토너먼트 시작
+  // 동시에 ComfyUI form[1] 수집 진행 → 완료되면 다음 토너먼트...
+  log(`[#${id}] 형태 단위 수집+심사 파이프라인 시작 (ComfyUI ∥ LM Studio)`);
+
   const allImageResults = [];
+  const selectedImages = [];
+  let pendingTournament = null; // { form, promise }
+
   for (let i = 0; i < imagePromises.length; i++) {
     const { form, promise } = imagePromises[i];
+
+    // ComfyUI 결과 수집 (이 동안 이전 형태 토너먼트는 LM Studio에서 진행 중)
     const result = await promise;
     allImageResults.push({ form, result });
     log(`  ✓ [ComfyUI] form[${i}] "${form.name_kr}" ${result.images.length}장 수집 완료`);
-  }
 
-  // ── Phase C: 이미지 심사 ──
-  log(`[Phase C] 토너먼트 심사...`);
-  const selectedImages = [];
-  for (const { form, result } of allImageResults) {
-    let winner;
-    if (flags.skipReview) {
-      winner = result.images[0] || null;
-      if (winner) log(`  [Skip] "${form.name_en}" 첫번째 이미지`);
-    } else {
-      log(`  [LM Studio] "${form.name_kr}" 심사 중...`);
-      winner = await reviewAndSelectBest(result, null);
+    // 이전 형태 토너먼트 결과 대기 (아직 안 끝났으면)
+    if (pendingTournament) {
+      const prevResult = await pendingTournament.promise;
+      selectedImages.push(prevResult);
+      log(`  ✓ [심사완료] "${prevResult.form.name_kr}" 승자: #${prevResult.winner?.index ?? 'none'}`);
+      pendingTournament = null;
     }
-    selectedImages.push({ form, winner });
+
+    // 현재 형태 토너먼트 즉시 시작 (백그라운드)
+    if (flags.skipReview) {
+      const winner = result.images[0] || null;
+      if (winner) log(`  [Skip] "${form.name_en}" 첫번째 이미지`);
+      selectedImages.push({ form, winner });
+    } else {
+      log(`  → [LM Studio] "${form.name_kr}" ${result.images.length}장 토너먼트 시작 (백그라운드)`);
+      pendingTournament = {
+        form,
+        promise: (async () => {
+          const winner = await reviewAndSelectBest(result, null);
+          return { form, winner };
+        })(),
+      };
+    }
   }
 
-  // ── Phase D: reactions 수집 + concept 조립 + 저장 ──
-  log(`[Phase D] 최종 조립 + 저장`);
+  // 마지막 형태 토너먼트 완료 대기
+  if (pendingTournament) {
+    const lastResult = await pendingTournament.promise;
+    selectedImages.push(lastResult);
+    log(`  ✓ [심사완료] "${lastResult.form.name_kr}" 승자: #${lastResult.winner?.index ?? 'none'}`);
+  }
+
+  stopSilenceWatch();
+  const totalImages = allImageResults.reduce((s, r) => s + r.result.images.length, 0);
+  log(`[#${id}] 전체 ${totalImages}장 수집, ${selectedImages.length}형태 심사 완료`);
+
+  return { rosterEntry, rosterData, allForms, allImageResults, selectedImages, supplementaryPromise };
+}
+
+// ── Phase 2: concept 조립 + 저장 ──
+async function saveMonsterResult(imageData, progress) {
+  const { rosterEntry, rosterData, allForms, allImageResults, selectedImages, supplementaryPromise } = imageData;
+  const id = rosterData.id;
+  const w = rosterData.wild;
+
+  startSilenceWatch(`#${id} ${w.name_en} [저장]`);
+  log(`[#${id} 저장] concept 조립 중...`);
+
   const supplementary = await supplementaryPromise;
   log(`  ✓ reactions + ${Object.keys(supplementary.actions || {}).length}종 actions 완료`);
 
@@ -341,6 +363,12 @@ async function processOne(rosterEntry, progress) {
   await saveProgress(progress);
 
   log(`✓ #${String(id).padStart(2, '0')} ${w.name_kr} 완료 → candidates/${dirName}/`);
+}
+
+// ── 하위 호환용 processOne (wild-only 등에서 사용) ──
+async function processOne(rosterEntry, progress) {
+  const imageData = await generateMonsterImages(rosterEntry);
+  await saveMonsterResult(imageData, progress);
 }
 
 // ── 야생(base) 이미지만 재생성 ──
@@ -523,8 +551,8 @@ async function runPipeline() {
   }, 0);
 
   console.log('╔══════════════════════════════════════════════════════╗');
-  console.log('║     Monster Generation Pipeline v4                  ║');
-  console.log('║     (roster 완성형 데이터 기반)                     ║');
+  console.log('║     Monster Generation Pipeline v5 — 별형(Star)     ║');
+  console.log('║     ComfyUI 이미지 ∥ LM Studio 토너먼트 병렬       ║');
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log(`║  Model:       ${CONFIG.TEXT_MODEL.padEnd(37)}║`);
   console.log(`║  ComfyUI:     ${CONFIG.COMFYUI_URL.padEnd(37)}║`);
@@ -540,6 +568,10 @@ async function runPipeline() {
   await mkdir(resolve(__dirname, CONFIG.CANDIDATES_DIR), { recursive: true });
 
   const retryCount = {};
+
+  // ── 별형(Star) 파이프라인 메인 루프 ──
+  // 몬스터 N의 ComfyUI 이미지 생성과 몬스터 N-1의 LM Studio 토너먼트가 동시 진행
+  let pendingReview = null; // { imageData, progress, id, name }
 
   for (const entry of toProcess) {
     const id = entry.data.id;
@@ -564,7 +596,29 @@ async function runPipeline() {
       }
 
       try {
-        await processOne(entry, progress);
+        // Phase 1: 현재 몬스터 이미지 생성 (ComfyUI)
+        // 이전 몬스터 심사가 아직 진행 중이어도 ComfyUI는 독립적으로 동작
+        const imageData = await generateMonsterImages(entry);
+
+        // Phase 2 준비: 이전 몬스터 저장이 끝날 때까지 대기
+        if (pendingReview) {
+          log(`[대기] 이전 몬스터 #${pendingReview.id} 저장 완료 대기...`);
+          await pendingReview.promise;
+          log(`[대기] ✓ #${pendingReview.id} ${pendingReview.name} 저장 완료`);
+          pendingReview = null;
+        }
+
+        // Phase 2: 현재 몬스터 저장을 백그라운드로 시작
+        // (토너먼트는 이미 generateMonsterImages 내에서 완료됨)
+        // (다음 몬스터 이미지 생성과 병렬 진행)
+        const savePromise = saveMonsterResult(imageData, progress);
+        pendingReview = {
+          promise: savePromise,
+          id: String(id).padStart(2, '0'),
+          name: w.name_kr,
+        };
+        log(`[별형] #${pendingReview.id} ${w.name_kr} 저장 백그라운드 → 다음 몬스터 이미지 생성 진행`);
+
         success = true;
       } catch (err) {
         stopSilenceWatch();
@@ -578,6 +632,13 @@ async function runPipeline() {
     }
 
     progress = await loadProgress();
+  }
+
+  // 마지막 몬스터 저장 완료 대기
+  if (pendingReview) {
+    log(`[대기] 마지막 몬스터 #${pendingReview.id} 저장 완료 대기...`);
+    await pendingReview.promise;
+    log(`[대기] ✓ #${pendingReview.id} ${pendingReview.name} 저장 완료`);
   }
 
   // 최종 요약
