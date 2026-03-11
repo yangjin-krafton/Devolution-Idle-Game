@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_shadow_cat.png',
     attackPower: 4, tamingThreshold: 52, escapeThreshold: 65,
     sensoryType: ['behavior'], personality: 'timid',
+    habitat: 'volcano',
+    hp: 20, maxHp: 20, stats: { gentleness: 5, empathy: 5, resilience: 2, agility: 8 },
+    wildMechanic: { id: 'smoke_screen', nameKr: '연막 은폐', descKr: '탈출 게이지가 보이지 않는다. 행동 축 자극으로 연막을 걷어낼 수 있다.', trigger: 'passive', effect: 'hide_escape_gauge' },
+    skills: ['behavior-stimulate', 'behavior-defend', 'behavior-capture'],
     reactions: REACTIONS.timid,
   },
 

@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_abyss_wolf.png',
     attackPower: 8, tamingThreshold: 80, escapeThreshold: 105,
     sensoryType: ['sound', 'behavior'], personality: 'stubborn',
+    habitat: 'cave',
+    hp: 34, maxHp: 34, stats: { gentleness: 6, empathy: 3, resilience: 6, agility: 5 },
+    wildMechanic: { id: 'intimidation_roar', nameKr: '위협 포효', descKr: 'HP가 30% 이하일 때 포효하여 모든 아군의 순화 효율이 1턴간 50% 감소한다.', trigger: 'hp_below_30', effect: 'reduce_all_taming_efficiency' },
+    skills: ['sound-stimulate', 'behavior-defend', 'sound-capture'],
     reactions: REACTIONS.stubborn,
   },
 

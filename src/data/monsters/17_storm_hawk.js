@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_echo_bat.png',
     attackPower: 6, tamingThreshold: 72, escapeThreshold: 80,
     sensoryType: ['sound', 'temperature'], personality: 'aggressive',
+    habitat: 'sky',
+    hp: 22, maxHp: 22, stats: { gentleness: 6, empathy: 4, resilience: 3, agility: 7 },
+    wildMechanic: { id: 'wind_shift', nameKr: '기류 전환', descKr: '매 2턴마다 유효한 감각축이 바뀐다 (소리↔온도). 상황에 맞춰 전략 변경 필요.', trigger: 'every_2_turns', effect: 'swap_effective_sensory_axis' },
+    skills: ['sound-stimulate', 'sound-defend', 'sound-capture'],
     reactions: REACTIONS.aggressive,
   },
 

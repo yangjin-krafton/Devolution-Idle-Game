@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_stone_turtle.png',
     attackPower: 7, tamingThreshold: 82, escapeThreshold: 115,
     sensoryType: ['smell', 'sound'], personality: 'stubborn',
+    habitat: 'swamp',
+    hp: 42, maxHp: 42, stats: { gentleness: 3, empathy: 3, resilience: 9, agility: 5 },
+    wildMechanic: { id: 'moss_regen', nameKr: '이끼 재생', descKr: '매 턴 순화도가 5% 자연 감소한다. 지속적인 자극 유지가 필요하다.', trigger: 'every_turn', effect: 'taming_gauge_passive_decay' },
+    skills: ['sound-stimulate', 'smell-defend', 'smell-capture'],
     reactions: REACTIONS.stubborn,
   },
 

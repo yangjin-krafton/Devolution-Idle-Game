@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_fog_jellyfish.png',
     attackPower: 7, tamingThreshold: 78, escapeThreshold: 110,
     sensoryType: ['smell'], personality: 'aggressive',
+    habitat: 'swamp',
+    hp: 35, maxHp: 35, stats: { gentleness: 4, empathy: 3, resilience: 8, agility: 5 },
+    wildMechanic: { id: 'toxic_spread', nameKr: '독기 확산', descKr: '매 턴 독 안개가 퍼져 순화도가 소량 감소한다. 냄새 계열 스킬로 독기를 중화할 수 있다.', trigger: 'every_turn', effect: 'taming_gauge_decay' },
+    skills: ['smell-stimulate', 'smell-defend', 'smell-capture'],
     reactions: REACTIONS.aggressive,
   },
 

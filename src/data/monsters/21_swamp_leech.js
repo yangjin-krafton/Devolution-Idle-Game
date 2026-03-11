@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_fog_jellyfish.png',
     attackPower: 5, tamingThreshold: 75, escapeThreshold: 105,
     sensoryType: ['smell', 'behavior'], personality: 'stubborn',
+    habitat: 'swamp',
+    hp: 30, maxHp: 30, stats: { gentleness: 4, empathy: 6, resilience: 6, agility: 4 },
+    wildMechanic: { id: 'blood_drain', nameKr: '흡혈 부착', descKr: '아군 한 마리에 부착되어 매 턴 HP를 흡수하면서 탈출 게이지가 천천히 증가한다. 행동 자극으로 떼어낼 수 있다.', trigger: 'attach_to_ally', effect: 'drain_hp_increase_escape' },
+    skills: ['smell-stimulate', 'smell-defend', 'smell-capture'],
     reactions: REACTIONS.stubborn,
   },
 

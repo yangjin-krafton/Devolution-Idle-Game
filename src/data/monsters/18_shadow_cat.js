@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_shadow_cat.png',
     attackPower: 5, tamingThreshold: 55, escapeThreshold: 70,
     sensoryType: ['behavior', 'temperature'], personality: 'curious',
+    habitat: 'cave',
+    hp: 22, maxHp: 22, stats: { gentleness: 5, empathy: 5, resilience: 3, agility: 7 },
+    wildMechanic: { id: 'shadow_leap', nameKr: '그림자 도약', descKr: '탈출 게이지가 50% 이상이면 매 턴 탈출 시도 확률이 2배가 된다. 탈출 게이지 관리 필수.', trigger: 'escape_above_50', effect: 'double_escape_chance' },
+    skills: ['behavior-stimulate', 'behavior-defend', 'behavior-capture'],
     reactions: REACTIONS.curious,
   },
 

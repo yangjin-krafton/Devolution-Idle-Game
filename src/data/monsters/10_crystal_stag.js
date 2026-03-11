@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_crystal_deer.png',
     attackPower: 5, tamingThreshold: 65, escapeThreshold: 75,
     sensoryType: ['sound', 'smell'], personality: 'curious',
+    habitat: 'forest',
+    hp: 26, maxHp: 26, stats: { gentleness: 7, empathy: 5, resilience: 4, agility: 4 },
+    wildMechanic: { id: 'crystal_reflect', nameKr: '수정 반사', descKr: '소리 축 자극을 반사해 순화도 대신 탈출 게이지가 상승한다. 다른 축을 사용해야 한다.', trigger: 'on_sound_stimulate', effect: 'reflect_to_escape_gauge' },
+    skills: ['sound-stimulate', 'smell-defend', 'sound-capture'],
     reactions: REACTIONS.curious,
   },
 

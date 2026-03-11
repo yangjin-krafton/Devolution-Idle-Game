@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_iron_boar.png',
     attackPower: 8, tamingThreshold: 80, escapeThreshold: 100,
     sensoryType: ['temperature'], personality: 'aggressive',
+    habitat: 'volcano',
+    hp: 24, maxHp: 24, stats: { gentleness: 8, empathy: 3, resilience: 4, agility: 5 },
+    wildMechanic: { id: 'lava_armor', nameKr: '용암 갑옷', descKr: '온도 자극에 대한 저항이 턴마다 올라간다. 냄새/행동 축으로 우회해야 한다.', trigger: 'passive_scaling', effect: 'temperature_resist_increase' },
+    skills: ['temperature-stimulate', 'temperature-defend', 'temperature-capture'],
     reactions: REACTIONS.aggressive,
   },
 

@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_glass_moth.png',
     attackPower: 6, tamingThreshold: 70, escapeThreshold: 80,
     sensoryType: ['behavior'], personality: 'aggressive',
+    habitat: 'forest',
+    hp: 22, maxHp: 22, stats: { gentleness: 5, empathy: 5, resilience: 2, agility: 8 },
+    wildMechanic: { id: 'ambush_stealth', nameKr: '은닉 매복', descKr: '무작위 턴에 숨기를 시전한다. 숨은 동안 행동 축 자극만 유효하다.', trigger: 'random_turns', effect: 'stealth_immune_except_behavior' },
+    skills: ['behavior-stimulate', 'sound-defend', 'behavior-capture'],
     reactions: REACTIONS.aggressive,
   },
 

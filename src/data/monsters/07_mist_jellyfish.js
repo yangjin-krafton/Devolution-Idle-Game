@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_fog_jellyfish.png',
     attackPower: 3, tamingThreshold: 50, escapeThreshold: 65,
     sensoryType: ['smell', 'temperature'], personality: 'timid',
+    habitat: 'sea',
+    hp: 24, maxHp: 24, stats: { gentleness: 5, empathy: 7, resilience: 5, agility: 3 },
+    wildMechanic: { id: 'tentacle_counter', nameKr: '촉수 반격', descKr: '행동 축 자극 시 30% 확률로 촉수가 반격해 자극한 아군의 HP를 감소시킨다.', trigger: 'on_behavior_stimulate', effect: 'counter_hp_damage' },
+    skills: ['temperature-stimulate', 'smell-defend', 'smell-capture'],
     reactions: REACTIONS.timid,
   },
 

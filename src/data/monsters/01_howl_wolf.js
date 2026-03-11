@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_abyss_wolf.png',
     attackPower: 7, tamingThreshold: 75, escapeThreshold: 95,
     sensoryType: ['sound'], personality: 'aggressive',
+    habitat: 'forest',
+    hp: 26, maxHp: 26, stats: { gentleness: 7, empathy: 4, resilience: 4, agility: 5 },
+    wildMechanic: { id: 'sonic_buildup', nameKr: '음파 축적', descKr: '매 턴 음파 게이지가 쌓이며, 3턴마다 전체 탈출 게이지가 크게 상승한다. 빠른 순화가 필요하다.', trigger: 'every_3_turns', effect: 'escape_gauge_burst' },
+    skills: ['sound-stimulate', 'behavior-defend', 'sound-capture'],
     reactions: REACTIONS.aggressive,
   },
 

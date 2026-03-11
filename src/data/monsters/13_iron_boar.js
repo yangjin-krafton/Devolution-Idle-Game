@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_iron_boar.png',
     attackPower: 9, tamingThreshold: 85, escapeThreshold: 120,
     sensoryType: ['smell', 'temperature'], personality: 'stubborn',
+    habitat: 'cave',
+    hp: 38, maxHp: 38, stats: { gentleness: 3, empathy: 3, resilience: 9, agility: 5 },
+    wildMechanic: { id: 'iron_charge', nameKr: '철벽 돌진', descKr: '2턴마다 돌진 준비 자세를 취하고, 다음 턴에 탈출 게이지가 폭증한다. 준비 턴에 행동 자극으로 중단 가능.', trigger: 'every_2_turns_charge', effect: 'escape_burst_next_turn_interruptible' },
+    skills: ['smell-stimulate', 'smell-defend', 'behavior-capture'],
     reactions: REACTIONS.stubborn,
   },
 

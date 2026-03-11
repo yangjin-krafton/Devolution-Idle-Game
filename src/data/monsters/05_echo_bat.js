@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_echo_bat.png',
     attackPower: 4, tamingThreshold: 55, escapeThreshold: 70,
     sensoryType: ['sound'], personality: 'timid',
+    habitat: 'cave',
+    hp: 20, maxHp: 20, stats: { gentleness: 5, empathy: 6, resilience: 2, agility: 7 },
+    wildMechanic: { id: 'sonar_disruption', nameKr: '초음파 교란', descKr: '소리 자극이 빗나가면 아군 한 마리가 1턴 혼란 상태에 빠진다.', trigger: 'on_sound_miss', effect: 'ally_confusion' },
+    skills: ['sound-stimulate', 'smell-defend', 'sound-capture'],
     reactions: REACTIONS.timid,
   },
 

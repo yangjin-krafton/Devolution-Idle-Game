@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_iron_boar.png',
     attackPower: 5, tamingThreshold: 60, escapeThreshold: 85,
     sensoryType: ['temperature', 'behavior'], personality: 'curious',
+    habitat: 'volcano',
+    hp: 34, maxHp: 34, stats: { gentleness: 4, empathy: 4, resilience: 7, agility: 5 },
+    wildMechanic: { id: 'molten_shell', nameKr: '용암 껍질', descKr: 'HP가 50% 이하가 되면 방어력이 2배로 증가한다. 온도 축 자극으로만 해제 가능하다.', trigger: 'hp_below_50', effect: 'double_defense_until_temp_stimulate' },
+    skills: ['behavior-stimulate', 'temperature-defend', 'temperature-capture'],
     reactions: REACTIONS.curious,
   },
 

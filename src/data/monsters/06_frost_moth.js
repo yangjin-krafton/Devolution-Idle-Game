@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_glass_moth.png',
     attackPower: 3, tamingThreshold: 50, escapeThreshold: 65,
     sensoryType: ['temperature'], personality: 'timid',
+    habitat: 'sky',
+    hp: 22, maxHp: 22, stats: { gentleness: 4, empathy: 7, resilience: 5, agility: 4 },
+    wildMechanic: { id: 'frost_barrier', nameKr: '서리 결계', descKr: '순화도가 40% 이상이 되면 서리 방벽을 생성해 다음 자극 1회를 무효화한다.', trigger: 'taming_threshold_40', effect: 'block_next_stimulation' },
+    skills: ['temperature-stimulate', 'temperature-defend', 'behavior-capture'],
     reactions: REACTIONS.timid,
   },
 

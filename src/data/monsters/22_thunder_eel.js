@@ -14,6 +14,10 @@ export default {
     img: IMG + 'enemy_dune_stalker.png',
     attackPower: 5, tamingThreshold: 58, escapeThreshold: 72,
     sensoryType: ['sound', 'temperature'], personality: 'timid',
+    habitat: 'sea',
+    hp: 22, maxHp: 22, stats: { gentleness: 8, empathy: 4, resilience: 3, agility: 5 },
+    wildMechanic: { id: 'electric_charge', nameKr: '전기 충전', descKr: '3턴간 충전 후 방전하여 전체 아군의 스킬 쿨다운이 +1턴 증가한다.', trigger: 'every_3_turns_charge', effect: 'increase_all_cooldowns' },
+    skills: ['sound-stimulate', 'temperature-defend', 'temperature-capture'],
     reactions: REACTIONS.timid,
   },
 
