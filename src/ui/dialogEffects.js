@@ -44,6 +44,7 @@ let sprites = {};             // named sprites: { id: PIXI.Container }
 let activeTweens = [];        // running animations
 let flashOverlay = null;
 let tintOverlay = null;
+let bgLayer = null;           // gradient background layer
 
 // ============================================================
 // Init — call once, returns container to add to dialog overlay
@@ -64,6 +65,11 @@ export function initEffectsLayer() {
   tintOverlay.alpha = 0;
   tintOverlay.visible = false;
 
+  // Gradient background layer (behind everything)
+  bgLayer = new PIXI.Container();
+  bgLayer.visible = false;
+  stageContainer.addChildAt(bgLayer, 0);
+
   stageContainer.addChild(tintOverlay);
   stageContainer.addChild(flashOverlay);
 
@@ -82,6 +88,7 @@ export function clearEffects() {
   sprites = {};
   flashOverlay.alpha = 0; flashOverlay.visible = false;
   tintOverlay.alpha = 0; tintOverlay.visible = false;
+  bgLayer.removeChildren(); bgLayer.visible = false;
   stageContainer.x = 0; stageContainer.y = 0;
   stageContainer.scale.set(1);
 }
@@ -105,6 +112,7 @@ export function playEffects(effects) {
       case 'pan':    tweenPan(fx); break;
       case 'flash':  tweenFlash(fx); break;
       case 'tint':   tweenTint(fx); break;
+      case 'bg':     setBg(fx); break;
     }
   }
 }
@@ -244,4 +252,99 @@ function tweenTint(fx) {
   addTween(fx.dur || 300, fx.ease, (e) => {
     tintOverlay.alpha = targetAlpha * e;
   });
+}
+
+// ---- Background gradient (Pokemon-style) ----
+// { type: 'bg', colors: [topColor, bottomColor] }
+// { type: 'bg', colors: [top, mid, bottom] }  — 3-stop gradient
+// { type: 'bg', preset: 'dark' | 'fire' | 'ice' | 'poison' | 'electric' | 'forest' | 'ocean' | 'night' | 'dawn' }
+const BG_PRESETS = {
+  // 기본
+  dark:     [0x0a0a1e, 0x1a1a3e, 0x0d0d22],
+  light:    [0x3a4466, 0x556688, 0x445577],
+
+  // 시간대
+  day:      [0x4488cc, 0x66aadd, 0x88ccee],
+  night:    [0x05051a, 0x10103a, 0x080822],
+  dawn:     [0x2a1530, 0x553344, 0xff8855],
+  sunset:   [0x1a0a22, 0x662244, 0xff6633],
+  twilight: [0x110a2a, 0x331a55, 0x221144],
+
+  // 날씨
+  rain:     [0x1a2233, 0x2a3344, 0x1a2838],
+  snow:     [0x3a4455, 0x556677, 0x667788],
+  storm:    [0x0a0a1a, 0x222244, 0x111133],
+  wind:     [0x2a3344, 0x445566, 0x334455],
+  fog:      [0x3a3a44, 0x555566, 0x444455],
+
+  // 지형
+  forest:   [0x0a1a0d, 0x1a3322, 0x0d2215],
+  ocean:    [0x0a0a2e, 0x102244, 0x0d1530],
+  cave:     [0x0a0a0f, 0x1a1a22, 0x0d0d15],
+  lava:     [0x1a0500, 0x441100, 0x2a0800],
+  swamp:    [0x0d1a0a, 0x1a2a11, 0x112208],
+  mountain: [0x2a2a33, 0x445566, 0x334455],
+  desert:   [0x3a2a10, 0x554422, 0x443316],
+  space:    [0x000008, 0x0a0a22, 0x000010],
+  ruins:    [0x1a1a1a, 0x2a2a2e, 0x1a1a20],
+
+  // 속성
+  fire:     [0x1a0500, 0x441100, 0x2a0800],
+  ice:      [0x0a1a2e, 0x1a3a5e, 0x0e2240],
+  poison:   [0x0a1a0a, 0x1a3a1a, 0x0d220d],
+  electric: [0x1a1a00, 0x3a3a10, 0x22220a],
+  shadow:   [0x080810, 0x15152a, 0x0a0a18],
+  crystal:  [0x1a2233, 0x334466, 0x223355],
+  spirit:   [0x1a0a22, 0x331a44, 0x220d33],
+};
+
+function setBg(fx) {
+  bgLayer.removeChildren();
+
+  let colors;
+  if (fx.preset && BG_PRESETS[fx.preset]) {
+    colors = BG_PRESETS[fx.preset];
+  } else if (fx.colors) {
+    colors = fx.colors;
+  } else {
+    colors = BG_PRESETS.dark;
+  }
+
+  // Draw gradient using horizontal strips
+  const strips = 32;
+  const stripH = Math.ceil(H / strips);
+  const g = new PIXI.Graphics();
+
+  for (let i = 0; i < strips; i++) {
+    const t = i / (strips - 1);
+    const color = lerpGradient(colors, t);
+    g.rect(0, i * stripH, W, stripH + 1).fill({ color });
+  }
+
+  bgLayer.addChild(g);
+  bgLayer.alpha = 0;
+  bgLayer.visible = true;
+
+  // Fade in
+  addTween(fx.dur || 500, fx.ease || 'easeOut', (e) => {
+    bgLayer.alpha = e;
+  });
+}
+
+function lerpGradient(colors, t) {
+  if (colors.length === 2) return lerpColor(colors[0], colors[1], t);
+  // 3+ stop gradient
+  const segments = colors.length - 1;
+  const seg = Math.min(Math.floor(t * segments), segments - 1);
+  const localT = (t * segments) - seg;
+  return lerpColor(colors[seg], colors[seg + 1], localT);
+}
+
+function lerpColor(a, b, t) {
+  const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
+  const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return (r << 16) | (g << 8) | bl;
 }
