@@ -78,11 +78,16 @@ const server = http.createServer(async (req, res) => {
         .sort();
       const result = dirs.map(dir => {
         const conceptPath = path.join(CANDIDATES_DIR, dir, 'concept.json');
+        const rosterPath = path.join(CANDIDATES_DIR, dir, 'roster.json');
         let concept = null;
+        let roster = null;
         if (fs.existsSync(conceptPath)) {
           concept = JSON.parse(fs.readFileSync(conceptPath, 'utf-8'));
         }
-        return { dir, concept };
+        if (fs.existsSync(rosterPath)) {
+          roster = JSON.parse(fs.readFileSync(rosterPath, 'utf-8'));
+        }
+        return { dir, concept, roster };
       });
       return json(res, result);
     }
