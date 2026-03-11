@@ -1,0 +1,48 @@
+import { defineSkill } from '../../core/schema.js';
+
+export default {
+  'sound-capture': defineSkill('sound-capture', {
+    name: '소리 교감',
+    category: 'capture',
+    role: 'capture_finisher',
+    axis: 'sound',
+    power: 15,
+    pp: 3,
+    escapeRisk: 12,
+    log: '소리의 결을 맞추며 교감을 시도한다!',
+    tags: ['starter', 'capture'],
+  }),
+  'temperature-capture': defineSkill('temperature-capture', {
+    name: '체온 교감',
+    category: 'capture',
+    role: 'capture_finisher',
+    axis: 'temperature',
+    power: 15,
+    pp: 3,
+    escapeRisk: 12,
+    log: '체온을 맞추며 교감을 시도한다!',
+    tags: ['starter', 'capture'],
+  }),
+  'smell-capture': defineSkill('smell-capture', {
+    name: '향기 교감',
+    category: 'capture',
+    role: 'capture_finisher',
+    axis: 'smell',
+    power: 15,
+    pp: 3,
+    escapeRisk: 12,
+    log: '향기를 맞추며 교감을 시도한다!',
+    tags: ['starter', 'capture'],
+  }),
+  'behavior-capture': defineSkill('behavior-capture', {
+    name: '몸짓 교감',
+    category: 'capture',
+    role: 'capture_finisher',
+    axis: 'behavior',
+    power: 15,
+    pp: 3,
+    escapeRisk: 12,
+    log: '행동을 맞추며 교감을 시도한다!',
+    tags: ['starter', 'capture'],
+  }),
+};
