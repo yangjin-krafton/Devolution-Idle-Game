@@ -287,7 +287,7 @@ async function selectMonster(dir) {
   main.appendChild(title);
 
   // Devolution tree overview
-  main.appendChild(buildDevoTree(dir, concept, selectedSet));
+  main.appendChild(buildDevoTree(dir, concept, selectedSet, allImages));
 
   // Render each form group
   for (const [selectedFile, variants] of Object.entries(groups)) {
@@ -427,30 +427,57 @@ function getFormInfo(selectedFile, concept) {
 }
 
 // ---- Devolution tree overview ----
-function buildDevoTree(dir, concept, selectedSet) {
+function buildDevoTree(dir, concept, selectedSet, allImages) {
   const tree = document.createElement('div');
   tree.className = 'devo-tree';
   tree.innerHTML = '<h2>Devolution Tree</h2>';
 
-  const devo1s = concept?.devolutions_1 || [];
-  const devo2s = concept?.devolutions_2 || [];
-  const devo2PerDevo1 = devo1s.length > 0 ? Math.ceil(devo2s.length / devo1s.length) : 0;
+  // Build list of actual selected filenames grouped by prefix
+  const selArr = Array.from(selectedSet);
+  const allArr = allImages || [];
 
-  function makeNode(filename, label, sublabel) {
+  // Find actual files by prefix pattern (e.g. "base_", "devo1_0_", "devo2_1_0_")
+  function findFile(prefix) {
+    // First try selected
+    const sel = selArr.find(f => f.startsWith(prefix));
+    if (sel) return { file: sel, folder: 'selected', found: true };
+    // Fallback: find from all_images (strip _N suffix to match)
+    const allMatch = allArr.find(f => toSelectedName(f).startsWith(prefix));
+    if (allMatch) return { file: allMatch, folder: 'all_images', found: false };
+    return null;
+  }
+
+  // Collect actual devo1 and devo2 files from selected+allImages
+  function collectByPrefix(prefix) {
+    // Gather unique selected names matching prefix
+    const matched = new Set();
+    for (const f of selArr) {
+      if (f.startsWith(prefix)) matched.add(f);
+    }
+    for (const f of allArr) {
+      const sel = toSelectedName(f);
+      if (sel.startsWith(prefix)) matched.add(sel);
+    }
+    return Array.from(matched).sort();
+  }
+
+  function makeNode(fileInfo, label, sublabel) {
     const branch = document.createElement('div');
     branch.className = 'devo-tree-branch';
-    const hasSel = selectedSet.has(filename);
     const img = document.createElement('img');
-    if (hasSel) {
-      img.src = imgUrl(dir, 'selected', filename) + '?t=' + Date.now();
+    if (fileInfo) {
+      img.src = imgUrl(dir, fileInfo.folder, fileInfo.file) + '?t=' + Date.now();
+      if (!fileInfo.found) img.style.opacity = '0.3';
+      img.title = fileInfo.file;
+      const scrollTarget = fileInfo.found ? fileInfo.file : toSelectedName(fileInfo.file);
+      img.onclick = () => {
+        const target = document.getElementById('sel-' + scrollTarget);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
     } else {
       img.style.opacity = '0.3';
+      img.title = label;
     }
-    img.title = filename;
-    img.onclick = () => {
-      const target = document.getElementById('sel-' + filename);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
     branch.appendChild(img);
     const nameEl = document.createElement('div');
     nameEl.className = 'tree-name';
@@ -482,39 +509,61 @@ function buildDevoTree(dir, concept, selectedSet) {
   const layout = document.createElement('div');
   layout.className = 'devo-tree-layout';
 
-  // Row 0: Base
-  const baseName = `base_${concept?.base?.name_en}.png`;
-  layout.appendChild(makeNode(baseName, concept?.base?.name_kr || 'Wild', 'wild'));
+  // Row 0: Base — find any file starting with "base_"
+  const baseFile = findFile('base_');
+  const baseLabel = concept?.base?.name_kr || 'Wild';
+  layout.appendChild(makeNode(baseFile, baseLabel, 'wild'));
 
   // Connector line down
   layout.appendChild(makeLineV());
+
+  // Collect devo1 files from actual filesystem
+  const devo1Files = collectByPrefix('devo1_');
+  const devo1s = concept?.devolutions_1 || [];
 
   // Row 1: Devo1 with connector lines drawn via canvas
   const d1Row = document.createElement('div');
   d1Row.className = 'devo-tree-group-d1';
 
   // Each devo1 column (devo1 + its devo2s)
-  for (let i = 0; i < devo1s.length; i++) {
-    const d1 = devo1s[i];
+  const d1Count = Math.max(devo1s.length, devo1Files.length);
+  for (let i = 0; i < d1Count; i++) {
+    const d1Concept = devo1s[i];
     const col = document.createElement('div');
     col.className = 'devo-tree-d1-col';
 
-    // Devo1 node
-    const d1Name = `devo1_${i}_${d1.name_en}.png`;
-    col.appendChild(makeNode(d1Name, d1.name_kr || d1.name_en, d1.role));
+    // Devo1 node — find file matching "devo1_{i}_"
+    const d1FileInfo = findFile(`devo1_${i}_`);
+    const d1Label = d1Concept?.name_kr || d1Concept?.name_en || (d1FileInfo?.file || `devo1_${i}`);
+    col.appendChild(makeNode(d1FileInfo, d1Label, d1Concept?.role));
 
     // Line down to devo2
     col.appendChild(makeLineV());
 
-    // Devo2 row
+    // Devo2 row — find files matching "devo2_{i}_{j}_"
     const d2Row = document.createElement('div');
     d2Row.className = 'devo-tree-d2-row';
-    for (let j = 0; j < devo2PerDevo1; j++) {
-      const d2Idx = i * devo2PerDevo1 + j;
-      if (d2Idx >= devo2s.length) break;
-      const d2 = devo2s[d2Idx];
-      const d2Name = `devo2_${d2Idx}_${d2.name_en}.png`;
-      d2Row.appendChild(makeNode(d2Name, d2.name_kr || d2.name_en));
+    const d2Files = collectByPrefix(`devo2_${i}_`);
+    for (let j = 0; j < d2Files.length; j++) {
+      const d2FileInfo = findFile(`devo2_${i}_${j}_`);
+      // Extract label from concept or filename
+      const d2Match = d2Files[j]?.match(/^devo2_\d+_\d+_(.+)\.png$/);
+      const d2NameFromFile = d2Match ? d2Match[1] : `devo2_${i}_${j}`;
+      const d2Label = d2NameFromFile.replace(/_/g, ' ');
+      d2Row.appendChild(makeNode(d2FileInfo, d2Label));
+    }
+    // If no d2 files found, try flat index pattern (devo2_{flatIdx}_)
+    if (d2Files.length === 0) {
+      const devo2s = concept?.devolutions_2 || [];
+      const devo2PerDevo1 = devo1s.length > 0 ? Math.ceil(devo2s.length / devo1s.length) : 0;
+      for (let j = 0; j < devo2PerDevo1; j++) {
+        const flatIdx = i * devo2PerDevo1 + j;
+        if (flatIdx >= devo2s.length) break;
+        const d2FileInfo = findFile(`devo2_${flatIdx}_`);
+        const d2Concept = devo2s[flatIdx];
+        const d2Label = d2Concept?.name_kr || d2Concept?.name_en || `devo2_${flatIdx}`;
+        d2Row.appendChild(makeNode(d2FileInfo, d2Label));
+      }
     }
     col.appendChild(d2Row);
 
@@ -580,13 +629,20 @@ function buildDevoTree(dir, concept, selectedSet) {
 }
 
 // ---- Previous stage lookup ----
+// Find actual file from selectedSet by prefix
+function findSelectedByPrefix(selectedSet, prefix) {
+  for (const f of selectedSet) {
+    if (f.startsWith(prefix)) return f;
+  }
+  return null;
+}
+
 function getPrevStages(selectedFile, dir, selectedSet, concept) {
   const stages = [];
 
   if (selectedFile.startsWith('devo1_')) {
     // devo1 → show base
-    const baseName = selectedSet.has(`base_${concept?.base?.name_en}.png`)
-      ? `base_${concept?.base?.name_en}.png` : null;
+    const baseName = findSelectedByPrefix(selectedSet, 'base_');
     if (baseName) {
       stages.push({
         src: imgUrl(dir, 'selected', baseName),
@@ -596,35 +652,30 @@ function getPrevStages(selectedFile, dir, selectedSet, concept) {
     }
   } else if (selectedFile.startsWith('devo2_')) {
     // devo2 → show base + parent devo1
-    const devoMatch = selectedFile.match(/^devo2_(\d+)_(.+)\.png$/);
-    if (devoMatch) {
-      const devo2Idx = parseInt(devoMatch[1]);
-      const devo2PerDevo1 = concept?.devolutions_2
-        ? Math.ceil(concept.devolutions_2.length / (concept?.devolutions_1?.length || 1))
-        : 2;
-      const parentDevo1Idx = Math.floor(devo2Idx / devo2PerDevo1);
+    // Extract parent devo1 index: devo2_{parentIdx}_{siblingIdx}_...
+    const devoMatch = selectedFile.match(/^devo2_(\d+)_/);
+    const parentDevo1Idx = devoMatch ? devoMatch[1] : null;
 
-      // base
-      const baseName = `base_${concept?.base?.name_en}.png`;
-      if (selectedSet.has(baseName)) {
+    // base
+    const baseName = findSelectedByPrefix(selectedSet, 'base_');
+    if (baseName) {
+      stages.push({
+        src: imgUrl(dir, 'selected', baseName),
+        label: concept?.base?.name_kr || 'Wild',
+        name: baseName,
+      });
+    }
+
+    // parent devo1
+    if (parentDevo1Idx !== null) {
+      const devo1Name = findSelectedByPrefix(selectedSet, `devo1_${parentDevo1Idx}_`);
+      if (devo1Name) {
+        const d1Concept = concept?.devolutions_1?.[parseInt(parentDevo1Idx)];
         stages.push({
-          src: imgUrl(dir, 'selected', baseName),
-          label: concept?.base?.name_kr || 'Wild',
-          name: baseName,
+          src: imgUrl(dir, 'selected', devo1Name),
+          label: d1Concept?.name_kr || d1Concept?.name_en || devo1Name,
+          name: devo1Name,
         });
-      }
-
-      // parent devo1
-      const parentDevo1 = concept?.devolutions_1?.[parentDevo1Idx];
-      if (parentDevo1) {
-        const devo1Name = `devo1_${parentDevo1Idx}_${parentDevo1.name_en}.png`;
-        if (selectedSet.has(devo1Name)) {
-          stages.push({
-            src: imgUrl(dir, 'selected', devo1Name),
-            label: parentDevo1.name_kr || parentDevo1.name_en,
-            name: devo1Name,
-          });
-        }
       }
     }
   }
