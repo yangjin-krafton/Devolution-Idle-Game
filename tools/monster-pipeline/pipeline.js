@@ -242,12 +242,10 @@ async function generateMonsterImages(rosterEntry) {
   const supplementaryPromise = generateReactionsAndActions(rosterData);
   log(`  [LM Studio] reactions/actions 백그라운드 시작`);
 
-  // ── 모든 형태 ComfyUI 큐 적재 (한 세트 일괄) ──
-  const imagePromises = [];
-
+  // ── 형태별 프롬프트 사전 준비 (번역만, ComfyUI 적재 없음) ──
   const preTranslatedCount = allForms.filter(f => f.image_prompts_en && f.image_prompts_en.length > 0).length;
   if (preTranslatedCount > 0) {
-    log(`[#${id} 이미지] ${preTranslatedCount}/${allForms.length}형태 사전 번역 프롬프트 → 바로 ComfyUI 큐 적재`);
+    log(`[#${id} 이미지] ${preTranslatedCount}/${allForms.length}형태 사전 번역 프롬프트 보유`);
   }
 
   for (let i = 0; i < allForms.length; i++) {
@@ -255,11 +253,9 @@ async function generateMonsterImages(rosterEntry) {
     let prompts;
 
     if (form.image_prompts_en && form.image_prompts_en.length > 0) {
-      // 사전 번역 프롬프트 사용
       prompts = form.image_prompts_en;
       log(`  [Pre] form[${i}] "${form.name_kr}" ${prompts.length}프롬프트`);
     } else {
-      // LM Studio 번역 필요
       log(`  [LM Studio] form[${i}] "${form.name_kr}" ${promptsPerForm}프롬프트 번역 중...`);
       prompts = await generatePromptVariants(
         form.image_desc, form.name_kr, promptsPerForm, form.type
@@ -269,29 +265,27 @@ async function generateMonsterImages(rosterEntry) {
 
     form.image_prompts = prompts;
     form.image_prompt = prompts[0];
-
-    // ComfyUI 큐 적재 (await 하지 않음 — fire-and-forget)
-    const imageForm = { ...form, image_prompt: prompts[0], image_prompts: prompts };
-    log(`  → [ComfyUI] form[${i}] ${prompts.length}프롬프트 × ${seedsPerPrompt}시드 = ${prompts.length * seedsPerPrompt}장 큐 적재`);
-    imagePromises.push({ form, promise: generateImages(imageForm) });
   }
 
-  log(`[#${id} 이미지] ${allForms.length}형태 전부 ComfyUI 큐 적재 완료`);
+  log(`[#${id} 이미지] 프롬프트 준비 완료, 형태 단위 순차 생성 시작`);
 
-  // ── 형태 단위 스트리밍: 수집 즉시 토너먼트 시작 ──
-  // ComfyUI에서 form[0] 32장 수집 완료 → 즉시 LM Studio 토너먼트 시작
-  // 동시에 ComfyUI form[1] 수집 진행 → 완료되면 다음 토너먼트...
-  log(`[#${id}] 형태 단위 수집+심사 파이프라인 시작 (ComfyUI ∥ LM Studio)`);
+  // ── 형태 단위 순차 파이프라인 ──
+  // form[0] ComfyUI 32장 생성+수집 → 토너먼트(백그라운드) → form[1] 생성+수집 → ...
+  // 한 형태가 완전히 ComfyUI에서 끝나야 다음 형태 적재 → 큐 과부하 없음
+  log(`[#${id}] 형태 단위 순차 파이프라인 시작 (1형태씩 ComfyUI 집중)`);
 
   const allImageResults = [];
   const selectedImages = [];
   let pendingTournament = null; // { form, promise }
 
-  for (let i = 0; i < imagePromises.length; i++) {
-    const { form, promise } = imagePromises[i];
+  for (let i = 0; i < allForms.length; i++) {
+    const form = allForms[i];
+    const imageForm = { ...form, image_prompt: form.image_prompts[0], image_prompts: form.image_prompts };
 
-    // ComfyUI 결과 수집 (이 동안 이전 형태 토너먼트는 LM Studio에서 진행 중)
-    const result = await promise;
+    log(`  → [ComfyUI] form[${i}] "${form.name_kr}" ${form.image_prompts.length}프롬프트 × ${seedsPerPrompt}시드 = ${form.image_prompts.length * seedsPerPrompt}장 생성 시작`);
+
+    // ComfyUI 이미지 생성 (이 형태에만 집중, 이전 토너먼트는 LM Studio에서 병렬)
+    const result = await generateImages(imageForm);
     allImageResults.push({ form, result });
     log(`  ✓ [ComfyUI] form[${i}] "${form.name_kr}" ${result.images.length}장 수집 완료`);
 
@@ -303,7 +297,7 @@ async function generateMonsterImages(rosterEntry) {
       pendingTournament = null;
     }
 
-    // 현재 형태 토너먼트 즉시 시작 (백그라운드)
+    // 현재 형태 토너먼트 즉시 시작 (백그라운드 — 다음 형태 ComfyUI와 병렬)
     if (flags.skipReview) {
       const winner = result.images[0] || null;
       if (winner) log(`  [Skip] "${form.name_en}" 첫번째 이미지`);
