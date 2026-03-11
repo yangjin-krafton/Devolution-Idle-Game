@@ -4,7 +4,7 @@
 
 import { W, H, C, S, hex, lbl, cuteBtn, star, addSparkles } from './theme.js';
 import { monster } from './sprites.js';
-import { ALLY_MONSTERS, ENEMY_MONSTERS, STARTER_IDS } from '../data/index.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS, STARTER_IDS, AXIS_LABEL, ALL_MONSTERS } from '../data/index.js';
 import { PERSONALITY_LABEL } from '../monsterRegistry.js';
 import { buildSkillCard } from './skillCard.js';
 
@@ -20,14 +20,12 @@ const D = {
 
 // ---- Layout ----
 const PAD = 14;
-const DETAIL_Y = 8, DETAIL_H = 158;
+const DETAIL_Y = 8, DETAIL_H = 280;
 const SLOTS_Y = DETAIL_Y + DETAIL_H + 8;
 const SLOT_W = 128, SLOT_H = 105, SLOT_GAP = 16;
 const SLOT_LEFT = Math.round((W - (SLOT_W * 3 + SLOT_GAP * 2)) / 2);
 const MAIN_SLOTS_Y = SLOTS_Y + 24;
-const BENCH_LABEL_Y = MAIN_SLOTS_Y + SLOT_H + 6;
-const BENCH_SLOTS_Y = BENCH_LABEL_Y + 22;
-const CODEX_Y = BENCH_SLOTS_Y + SLOT_H + 8;
+const CODEX_Y = MAIN_SLOTS_Y + SLOT_H + 8;
 const CODEX_HEADER_H = 30;
 const CODEX_FILTER_H = 26;
 const CODEX_GRID_Y = CODEX_Y + CODEX_HEADER_H + CODEX_FILTER_H;
@@ -36,7 +34,7 @@ const CODEX_CARD_W = 95, CODEX_CARD_H = 105, CODEX_COLS = 4, CODEX_GAP = 12;
 const CODEX_LEFT = Math.round((W - (CODEX_CARD_W * CODEX_COLS + CODEX_GAP * (CODEX_COLS - 1))) / 2);
 
 // ---- State ----
-let teamSlots = [null, null, null, null, null, null];
+let teamSlots = [null, null, null];
 let selectedMonster = null;
 let codexEntries = {};
 let mode = 'idle';
@@ -54,7 +52,7 @@ let filteredList = [];     // cached for hit testing
 // ---- UI refs ----
 let ct, detailBody, slotGfx = [], codexContent, codexMask;
 let startOverlay, startBtnRef, removeIndicator;
-let slotsHeaderLabel, benchHeaderLabel, filterBarContainer;
+let slotsHeaderLabel, filterBarContainer;
 
 // ---- Helpers ----
 function darkCard(w, h, r, fill, border, hasShadow) {
@@ -135,7 +133,7 @@ function getFilteredMonsters() {
 
 // ---- State ----
 function resetState() {
-  teamSlots = [null, null, null, null, null, null];
+  teamSlots = [null, null, null];
   selectedMonster = null; scrollOffset = 0; mode = 'idle';
   codexFilter = 'all'; codexSort = 'default'; filteredList = [];
   codexEntries = {};
@@ -147,10 +145,10 @@ function resetState() {
 }
 
 function slotPos(i) {
-  return { x: SLOT_LEFT + (i % 3) * (SLOT_W + SLOT_GAP), y: i < 3 ? MAIN_SLOTS_Y : BENCH_SLOTS_Y };
+  return { x: SLOT_LEFT + i * (SLOT_W + SLOT_GAP), y: MAIN_SLOTS_Y };
 }
 function hitSlot(px, py) {
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 3; i++) {
     const p = slotPos(i);
     if (px >= p.x && px < p.x + SLOT_W && py >= p.y && py < p.y + SLOT_H) return i;
   }
@@ -227,106 +225,239 @@ function refreshDetail() {
   renderPageInfo(pw, mon);
 }
 
-// ---- Detail: Stats table + Skills table (single page) ----
+// ---- Detail: 3-section layout (Stats / Skills / Lineage) ----
+
+const ROLE_LABEL = { attacker: '공격', tank: '방어', support: '지원', speedster: '속도' };
+const ROLE_COLOR = { attacker: D.red, tank: D.blue, support: D.neon, speedster: 0x88ddbb };
+
+function drawTable(x, y, w, h, headers, dataRows, colColors) {
+  const cols = headers.length;
+  const colW = w / cols;
+  const rowCount = dataRows.length + 1;
+  const rowH = h / rowCount;
+
+  detailBody.addChild(new PIXI.Graphics()
+    .roundRect(x, y, w, h, 6).stroke({ color: D.sep, width: 1, alpha: 0.3 }));
+  detailBody.addChild(new PIXI.Graphics()
+    .roundRect(x, y, w, rowH, 6).fill({ color: D.sep, alpha: 0.15 }));
+  detailBody.addChild(new PIXI.Graphics()
+    .moveTo(x + 1, y + rowH).lineTo(x + w - 1, y + rowH)
+    .stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
+
+  for (let i = 1; i < cols; i++) {
+    detailBody.addChild(new PIXI.Graphics()
+      .moveTo(x + colW * i, y + 3).lineTo(x + colW * i, y + h - 3)
+      .stroke({ color: D.sep, width: 0.5, alpha: 0.2 }));
+  }
+
+  headers.forEach((txt, i) => {
+    const t = lbl(txt, 6, colColors?.[i] || D.dim, true);
+    t.anchor = { x: 0.5, y: 0.5 };
+    t.x = x + colW * i + colW / 2; t.y = y + rowH / 2;
+    detailBody.addChild(t);
+  });
+
+  dataRows.forEach((row, ri) => {
+    const ry = y + rowH * (ri + 1);
+    if (ri > 0) {
+      detailBody.addChild(new PIXI.Graphics()
+        .moveTo(x + 1, ry).lineTo(x + w - 1, ry)
+        .stroke({ color: D.sep, width: 0.5, alpha: 0.15 }));
+    }
+    row.forEach((cell, ci) => {
+      const t = lbl(cell.text, cell.size || 7, cell.color || D.text, cell.bold ?? false);
+      t.anchor = { x: 0.5, y: 0.5 };
+      t.x = x + colW * ci + colW / 2; t.y = ry + rowH / 2;
+      detailBody.addChild(t);
+    });
+  });
+}
+
+function drawSkillCards(x, y, w, h, actions) {
+  const cols = actions.length;
+  const cardGap = 6;
+  const cardW = (w - cardGap * (cols - 1)) / cols;
+  actions.forEach((action, i) => {
+    const card = buildSkillCard(action, cardW, h);
+    card.x = x + i * (cardW + cardGap);
+    card.y = y;
+    detailBody.addChild(card);
+  });
+}
+
+// ---- Lineage helpers ----
+
+function findMonsterFamily(mon) {
+  // Find the ALL_MONSTERS entry this mon belongs to
+  for (const fam of ALL_MONSTERS) {
+    if (fam.wild.id === mon.id) return { family: fam, stage: 'wild', self: fam.wild };
+    const d1 = fam.devo1.find(d => d.id === mon.id);
+    if (d1) return { family: fam, stage: 'devo1', self: d1 };
+    const d2 = fam.devo2.find(d => d.id === mon.id);
+    if (d2) return { family: fam, stage: 'devo2', self: d2 };
+  }
+  return null;
+}
+
+function drawLineage(x, y, pw, h, mon) {
+  const info = findMonsterFamily(mon);
+  if (!info) return;
+  const { family, stage } = info;
+
+  // Section label
+  detailBody.addChild(new PIXI.Graphics()
+    .moveTo(x, y).lineTo(x + pw, y).stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
+  const secLabel = lbl('퇴화 족보', 5, D.dim, true);
+  secLabel.x = x + 4; secLabel.y = y + 2;
+  detailBody.addChild(secLabel);
+
+  const rowY = y + 16;
+  const sprSize = 32;
+  const nodeW = 44;
+  const arrowW = 16;
+
+  // Collect lineage nodes: wild → devo1(s that relate) → devo2(s that relate)
+  let nodes = [];
+
+  if (stage === 'wild') {
+    // wild(self) → show first few devo1
+    nodes.push({ entry: family.wild, current: true, label: '야생' });
+    family.devo1.slice(0, 3).forEach(d => nodes.push({ entry: d, current: false, label: '1차' }));
+  } else if (stage === 'devo1') {
+    // wild → this devo1(highlighted) → devo2 children
+    nodes.push({ entry: family.wild, current: false, label: '야생' });
+    nodes.push({ entry: info.self, current: true, label: '1차' });
+    const children = family.devo2.filter(d => d.parentDevo1 === mon.id);
+    children.slice(0, 2).forEach(d => nodes.push({ entry: d, current: false, label: '2차' }));
+  } else {
+    // devo2: wild → parent devo1 → this devo2(highlighted)
+    nodes.push({ entry: family.wild, current: false, label: '야생' });
+    const parent = family.devo1.find(d => d.id === info.self.parentDevo1);
+    if (parent) nodes.push({ entry: parent, current: false, label: '1차' });
+    nodes.push({ entry: info.self, current: true, label: '2차' });
+  }
+
+  // Calculate total width and center
+  const totalW = nodes.length * nodeW + (nodes.length - 1) * arrowW;
+  let nx = x + Math.max(0, (pw - totalW) / 2);
+
+  nodes.forEach((node, i) => {
+    const cx = nx + nodeW / 2;
+    const cy = rowY + (h - 16) / 2;
+    const discovered = codexEntries[node.entry.id] === 'unlocked';
+
+    // Node background
+    const bgAlpha = node.current ? 0.12 : 0.04;
+    const bgColor = node.current ? D.neon : D.dim;
+    detailBody.addChild(new PIXI.Graphics()
+      .roundRect(nx, rowY, nodeW, h - 18, 8)
+      .fill({ color: bgColor, alpha: bgAlpha })
+      .stroke({ color: node.current ? D.neon : D.sep, width: node.current ? 1.5 : 0.5, alpha: node.current ? 0.6 : 0.3 }));
+
+    // Sprite or silhouette
+    const spr = monster(sprSize, node.entry.img);
+    spr.x = cx; spr.y = cy - 2;
+    if (!discovered) {
+      spr.alpha = 0.3;
+      if (spr.children[0]) spr.children[0].tint = 0x222233;
+    }
+    detailBody.addChild(spr);
+
+    // Name or ???
+    const nameT = lbl(discovered ? node.entry.name : '???', 4.5, discovered ? (node.current ? D.neon : D.text) : D.dimmer, node.current);
+    nameT.anchor = { x: 0.5, y: 0 }; nameT.x = cx; nameT.y = cy + sprSize / 2 + 1;
+    detailBody.addChild(nameT);
+
+    // Stage label
+    const stageT = lbl(node.label, 4, D.dimmer);
+    stageT.anchor = { x: 0.5, y: 0 }; stageT.x = cx; stageT.y = rowY + 1;
+    detailBody.addChild(stageT);
+
+    nx += nodeW;
+
+    // Arrow between nodes
+    if (i < nodes.length - 1) {
+      const arrowMid = nx + arrowW / 2;
+      const arrowY = cy;
+      detailBody.addChild(new PIXI.Graphics()
+        .moveTo(arrowMid - 5, arrowY).lineTo(arrowMid + 3, arrowY)
+        .stroke({ color: D.dim, width: 1, alpha: 0.4 }));
+      // Arrow head
+      detailBody.addChild(new PIXI.Graphics()
+        .moveTo(arrowMid + 1, arrowY - 3).lineTo(arrowMid + 4, arrowY).lineTo(arrowMid + 1, arrowY + 3)
+        .stroke({ color: D.dim, width: 1, alpha: 0.4 }));
+      nx += arrowW;
+    }
+  });
+}
+
+// ---- Main render ----
+
 function renderPageInfo(pw, mon) {
   const contentH = DETAIL_H;
   const gap = 4;
+  const LINEAGE_H = 68;
 
-  // ══ Helper: draw a grid table ══
-  function drawTable(x, y, w, h, headers, dataRows, colColors) {
-    const cols = headers.length;
-    const colW = w / cols;
-    const rowCount = dataRows.length + 1; // +1 header
-    const rowH = h / rowCount;
+  // ══ ALLY MONSTER ══
+  if (mon.actions && mon.stats) {
+    // --- 1) Name bar ---
+    const nameT = lbl(mon.name, 10, D.text, true); nameT.x = 2; nameT.y = 2;
+    detailBody.addChild(nameT);
 
-    // Outer border
-    detailBody.addChild(new PIXI.Graphics()
-      .roundRect(x, y, w, h, 6).stroke({ color: D.sep, width: 1, alpha: 0.3 }));
-
-    // Header bg
-    detailBody.addChild(new PIXI.Graphics()
-      .roundRect(x, y, w, rowH, 6).fill({ color: D.sep, alpha: 0.15 }));
-
-    // Header–body separator
-    detailBody.addChild(new PIXI.Graphics()
-      .moveTo(x + 1, y + rowH).lineTo(x + w - 1, y + rowH)
-      .stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
-
-    // Column separators
-    for (let i = 1; i < cols; i++) {
-      detailBody.addChild(new PIXI.Graphics()
-        .moveTo(x + colW * i, y + 3).lineTo(x + colW * i, y + h - 3)
-        .stroke({ color: D.sep, width: 0.5, alpha: 0.2 }));
+    if (mon.role) {
+      const badge = neonBadge(ROLE_LABEL[mon.role] || mon.role, ROLE_COLOR[mon.role] || D.dim);
+      badge.x = pw - badge.width - 4; badge.y = 4;
+      // approximate badge width
+      const bw = (ROLE_LABEL[mon.role] || mon.role).length * 5 * S + 14;
+      badge.x = pw - bw - 4;
+      detailBody.addChild(badge);
     }
 
-    // Headers
-    headers.forEach((txt, i) => {
-      const t = lbl(txt, 6, colColors?.[i] || D.dim, true);
-      t.anchor = { x: 0.5, y: 0.5 };
-      t.x = x + colW * i + colW / 2; t.y = y + rowH / 2;
-      detailBody.addChild(t);
-    });
+    const descT = lbl(mon.desc || '', 5, D.dimmer);
+    descT.x = 2; descT.y = 22;
+    detailBody.addChild(descT);
 
-    // Data rows
-    dataRows.forEach((row, ri) => {
-      const ry = y + rowH * (ri + 1);
-      // Row separator (between data rows)
-      if (ri > 0) {
-        detailBody.addChild(new PIXI.Graphics()
-          .moveTo(x + 1, ry).lineTo(x + w - 1, ry)
-          .stroke({ color: D.sep, width: 0.5, alpha: 0.15 }));
-      }
-      row.forEach((cell, ci) => {
-        const t = lbl(cell.text, cell.size || 7, cell.color || D.text, cell.bold ?? false);
-        t.anchor = { x: 0.5, y: 0.5 };
-        t.x = x + colW * ci + colW / 2; t.y = ry + rowH / 2;
-        detailBody.addChild(t);
-      });
-    });
-  }
-
-  // ══ Helper: draw skill cards (action panel style) ══
-  function drawSkillCards(x, y, w, h, actions) {
-    const cols = actions.length;
-    const cardGap = 6;
-    const cardW = (w - cardGap * (cols - 1)) / cols;
-
-    actions.forEach((action, i) => {
-      const card = buildSkillCard(action, cardW, h);
-      card.x = x + i * (cardW + cardGap);
-      card.y = y;
-      detailBody.addChild(card);
-    });
-  }
-
-  // ══ TOP: Stats Table ══
-  if (mon.actions && mon.stats) {
+    // --- 2) Stats table (HP included) ---
     const STAT = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
     const SCOL = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
     const statKeys = Object.keys(mon.stats);
-    const total = Object.values(mon.stats).reduce((s, v) => s + v, 0);
 
-    const sHeaders = [...statKeys.map(k => STAT[k]), '총합'];
-    const sColors = [...statKeys.map(k => SCOL[k]), D.dim];
+    const sHeaders = ['HP', ...statKeys.map(k => STAT[k])];
+    const sColors = [D.red, ...statKeys.map(k => SCOL[k])];
     const sRow = [
-      [...statKeys.map(k => ({ text: String(mon.stats[k]), size: 9, color: D.text, bold: true })),
-       { text: String(total), size: 9, color: D.text, bold: true }]
+      [{ text: String(mon.hp ?? mon.maxHp), size: 8, color: D.text, bold: true },
+       ...statKeys.map(k => ({ text: String(mon.stats[k]), size: 8, color: D.text, bold: true }))]
     ];
 
-    const statH = Math.round(contentH * 0.42);
-    drawTable(0, 0, pw, statH, sHeaders, sRow, sColors);
+    const statY = 38;
+    const statH = 42;
+    drawTable(0, statY, pw, statH, sHeaders, sRow, sColors);
 
-    // ══ BOT: Skill Cards (3 columns) ══
-    const skillY = statH + gap;
+    // --- 3) Lineage ---
+    const lineY = statY + statH + gap;
+    drawLineage(0, lineY, pw, LINEAGE_H, mon);
+
+    // --- 4) Skill cards ---
+    const skillY = lineY + LINEAGE_H + gap;
     const skillH = contentH - skillY;
     drawSkillCards(0, skillY, pw, skillH, mon.actions);
+
   } else if (mon.actions) {
-    // No stats, skills only
-    drawSkillCards(0, 0, pw, contentH, mon.actions);
+    drawLineage(0, 0, pw, LINEAGE_H, mon);
+    drawSkillCards(0, LINEAGE_H + gap, pw, contentH - LINEAGE_H - gap, mon.actions);
   }
 
-  // ══ Enemy: no skills → show enemy info table ══
+  // ══ Enemy: no skills → show enemy info + lineage ══
   if (!mon.actions) {
+    // Name + desc
+    const nameT = lbl(mon.name, 10, D.text, true); nameT.x = 2; nameT.y = 2;
+    detailBody.addChild(nameT);
+
+    const descT = lbl(mon.desc || '', 5, D.dimmer);
+    descT.x = 2; descT.y = 22;
+    detailBody.addChild(descT);
+
+    // Enemy info table
     const sensory = (mon.sensoryType || []).map(s => AXIS_LABEL[s] || s).join(', ');
     const pers = PERSONALITY_LABEL[mon.personality] || mon.personality || '';
 
@@ -339,7 +470,13 @@ function renderPageInfo(pw, mon) {
       { text: String(mon.escapeThreshold || '-'), size: 9, color: D.red, bold: true },
     ]];
 
-    drawTable(0, 0, pw, contentH, headers, row, colors);
+    const tableY = 38;
+    const tableH = 42;
+    drawTable(0, tableY, pw, tableH, headers, row, colors);
+
+    // Lineage (middle)
+    const lineY = tableY + tableH + gap;
+    drawLineage(0, lineY, pw, LINEAGE_H, mon);
   }
 }
 
@@ -347,25 +484,16 @@ function renderPageInfo(pw, mon) {
 
 function buildTeamSlots() {
   const mainHdr = new PIXI.Container(); mainHdr.y = SLOTS_Y;
-  mainHdr.addChild(Object.assign(lbl('주전 팀', 9, D.neon, true), { x: SLOT_LEFT }));
+  mainHdr.addChild(Object.assign(lbl('모험 팀', 9, D.neon, true), { x: SLOT_LEFT }));
   mainHdr.addChild(new PIXI.Graphics()
-    .moveTo(SLOT_LEFT + 72, 10).lineTo(W - SLOT_LEFT, 10).stroke({ color: D.neon, width: 0.5, alpha: 0.3 }));
+    .moveTo(SLOT_LEFT + 80, 10).lineTo(W - SLOT_LEFT, 10).stroke({ color: D.neon, width: 0.5, alpha: 0.3 }));
   slotsHeaderLabel = lbl('0/3', 6, D.dim);
   slotsHeaderLabel.x = W - SLOT_LEFT - 28; slotsHeaderLabel.y = 2;
   mainHdr.addChild(slotsHeaderLabel);
   ct.addChild(mainHdr);
 
-  const benchHdr = new PIXI.Container(); benchHdr.y = BENCH_LABEL_Y;
-  benchHdr.addChild(Object.assign(lbl('후보', 9, D.dim, true), { x: SLOT_LEFT }));
-  benchHdr.addChild(new PIXI.Graphics()
-    .moveTo(SLOT_LEFT + 44, 10).lineTo(W - SLOT_LEFT, 10).stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
-  benchHeaderLabel = lbl('0/3', 6, D.dimmer);
-  benchHeaderLabel.x = W - SLOT_LEFT - 28; benchHeaderLabel.y = 2;
-  benchHdr.addChild(benchHeaderLabel);
-  ct.addChild(benchHdr);
-
   slotGfx = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 3; i++) {
     const c = new PIXI.Container();
     const p = slotPos(i); c.x = p.x; c.y = p.y;
     ct.addChild(c); slotGfx.push(c);
@@ -378,12 +506,12 @@ function buildTeamSlots() {
 }
 
 function refreshSlots() {
-  let mainCount = 0, benchCount = 0;
-  for (let i = 0; i < 6; i++) {
+  let count = 0;
+  for (let i = 0; i < 3; i++) {
     const c = slotGfx[i]; c.removeChildren();
     const mon = teamSlots[i];
     const sel = selectedMonster && mon && selectedMonster.id === mon.id;
-    if (mon) { if (i < 3) mainCount++; else benchCount++; }
+    if (mon) count++;
 
     if (!mon) {
       // Empty slot
@@ -408,17 +536,6 @@ function refreshSlots() {
         .stroke({ color: D.neon, width: 2, alpha: 0.3 }));
     }
 
-    // Slot number
-    const numC = slotNum(i + 1, i < 3 ? D.neon : D.dim);
-    numC.x = 11; numC.y = 11; c.addChild(numC);
-
-    // HP bar
-    const hpR = (mon.hp ?? mon.maxHp) / mon.maxHp;
-    c.addChild(statBar(SLOT_W / 2 - 24, 4, 58, 5, hpR, hpR > 0.3 ? D.neon : D.red));
-    // XP bar
-    const xpR = (mon.xp || 0) / (mon.xpThreshold || 5);
-    c.addChild(statBar(SLOT_W / 2 - 24, 11, 58, 3, xpR, 0xffe060));
-
     // Sprite backdrop
     c.addChild(new PIXI.Graphics().circle(SLOT_W / 2, 47, 22).fill({ color: D.neon, alpha: 0.06 }));
     const spr = monster(48, mon.img); spr.x = SLOT_W / 2; spr.y = 47; c.addChild(spr);
@@ -426,10 +543,18 @@ function refreshSlots() {
     // Name
     const nm = lbl(mon.name, 6.5, D.text, true);
     nm.anchor = { x: 0.5, y: 0 }; nm.x = SLOT_W / 2; nm.y = SLOT_H - 24; c.addChild(nm);
+
+    // Grip handle (⋮⋮) — drag affordance
+    const grip = new PIXI.Graphics();
+    const gx = SLOT_W - 14, gy = SLOT_H / 2 - 10;
+    for (let row = 0; row < 3; row++) {
+      grip.circle(gx, gy + row * 7, 1.5).fill({ color: D.dim, alpha: 0.5 });
+      grip.circle(gx + 6, gy + row * 7, 1.5).fill({ color: D.dim, alpha: 0.5 });
+    }
+    c.addChild(grip);
   }
 
-  if (slotsHeaderLabel) slotsHeaderLabel.text = `${mainCount}/3`;
-  if (benchHeaderLabel) benchHeaderLabel.text = `${benchCount}/3`;
+  if (slotsHeaderLabel) slotsHeaderLabel.text = `${count}/3`;
   refreshStartBtn();
 }
 
@@ -625,7 +750,7 @@ function buildStartBtn() {
   startOverlay.addChild(new PIXI.Graphics()
     .circle(W / 2, cy - 5, 50).stroke({ color: D.neon, width: 1, alpha: 0.1 }));
 
-  const hint = lbl('팀 편성 완료!', 10, D.neon, true);
+  const hint = lbl('모험 준비 완료!', 10, D.neon, true);
   hint.anchor = { x: 0.5, y: 0.5 }; hint.x = W / 2; hint.y = cy - 35;
   startOverlay.addChild(hint);
 
@@ -633,7 +758,7 @@ function buildStartBtn() {
   startBtnRef = cuteBtn(W / 2 - 180, cy - 5, 180, 48, '▶ 모험 시작', D.neon, D.bg);
   startOverlay.addChild(startBtnRef);
 
-  const sub = lbl('주전 3 + 후보 0/3 준비 완료', 6, D.dim);
+  const sub = lbl('1마리 편성 완료', 6, D.dim);
   sub.anchor = { x: 0.5, y: 0 }; sub.x = W / 2; sub.y = cy + 50;
   startOverlay.addChild(sub);
   startOverlay._subLabel = sub;
@@ -644,12 +769,10 @@ function buildStartBtn() {
 
 function refreshStartBtn() {
   if (!startOverlay) return;
-  // Show start button when main team (slots 0-2) is full
-  const mainFull = teamSlots[0] !== null && teamSlots[1] !== null && teamSlots[2] !== null;
-  startOverlay.visible = mainFull;
-  if (mainFull && startOverlay._subLabel) {
-    const benchCount = [teamSlots[3], teamSlots[4], teamSlots[5]].filter(Boolean).length;
-    startOverlay._subLabel.text = `주전 3 + 후보 ${benchCount}/3 준비 완료`;
+  const count = teamSlots.filter(Boolean).length;
+  startOverlay.visible = count >= 3;
+  if (count >= 3 && startOverlay._subLabel) {
+    startOverlay._subLabel.text = `${count}마리 편성 완료`;
   }
 }
 
@@ -700,7 +823,7 @@ function onPointerUp(e) {
     if (dragSprite) { ct.removeChild(dragSprite); dragSprite = null; }
     slotGfx[pendingSlotIdx].alpha = 1;
     removeIndicator.visible = false;
-    if (pos.y > CODEX_Y) teamSlots[pendingSlotIdx] = null;
+    if (pos.y > CODEX_Y) { teamSlots[pendingSlotIdx] = null; selectedMonster = null; }
     else {
       const target = hitSlot(pos.x, pos.y);
       if (target >= 0 && target !== pendingSlotIdx) {
@@ -709,13 +832,34 @@ function onPointerUp(e) {
         teamSlots[pendingSlotIdx] = tmp;
       }
     }
-    refreshSlots(); refreshCodex();
+    refreshDetail(); refreshSlots(); refreshCodex();
   }
   if (mode === 'codex-pending') {
     const mon = hitCodexCard(pos.x, pos.y);
     if (mon) onCodexClick(mon);
   }
   mode = 'idle'; pendingSlotIdx = -1;
+}
+
+function pulseSlot(idx) {
+  const c = slotGfx[idx];
+  if (!c) return;
+  const p = slotPos(idx);
+  const dur = 300;
+  const start = performance.now();
+  const originY = p.y;
+  function tick() {
+    const t = Math.min(1, (performance.now() - start) / dur);
+    // Bounce ease: overshoot up then settle
+    const ease = t < 0.5
+      ? 1 - Math.pow(1 - t * 2, 3) // rise
+      : 1 - Math.abs(Math.sin((t - 0.5) * Math.PI * 2)) * (1 - t); // bounce back
+    c.y = originY - (1 - t) * 8 * (1 - ease);
+    c.scale.set(1 + (1 - t) * 0.04);
+    if (t < 1) requestAnimationFrame(tick);
+    else { c.y = originY; c.scale.set(1); }
+  }
+  requestAnimationFrame(tick);
 }
 
 function onCodexClick(mon) {
@@ -727,8 +871,12 @@ function onCodexClick(mon) {
   const empty = teamSlots.findIndex(s => s === null);
   if (empty >= 0) {
     teamSlots[empty] = { ...mon, actions: mon.actions.map(a => ({ ...a })), stats: { ...mon.stats } };
+    refreshSlots(); refreshCodex();
+    // Pulse bounce on newly placed slot
+    pulseSlot(empty);
+  } else {
+    refreshSlots(); refreshCodex();
   }
-  refreshSlots(); refreshCodex();
 }
 
 // ============================================================
