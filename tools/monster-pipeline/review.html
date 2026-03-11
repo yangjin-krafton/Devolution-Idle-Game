@@ -153,6 +153,17 @@
   }
   .toast.show { opacity: 1; }
 
+  /* Hover preview */
+  .hover-preview {
+    position: fixed; z-index: 300; pointer-events: none;
+    width: 512px; height: 512px; object-fit: contain;
+    background: #111; border: 2px solid #e94560; border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    opacity: 0; transition: opacity 0.12s;
+    image-rendering: auto;
+  }
+  .hover-preview.show { opacity: 1; }
+
   /* Action stats */
   .actions-table { margin-top: 8px; }
   .actions-table table {
@@ -200,6 +211,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<img class="hover-preview" id="hover-preview" />
 
 <script>
 const API = '';
@@ -764,6 +776,71 @@ document.getElementById('modal').onclick = (e) => {
     pendingOverride = null;
   }
 };
+
+// ---- Hover preview ----
+const hoverPreview = document.getElementById('hover-preview');
+let hoverTimeout = null;
+
+function showPreview(src, e) {
+  clearTimeout(hoverTimeout);
+  hoverPreview.src = src;
+  positionPreview(e);
+  hoverPreview.classList.add('show');
+}
+
+function positionPreview(e) {
+  const pad = 16;
+  const pw = 512, ph = 512;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x, y;
+
+  // Horizontal: prefer right of cursor, flip left if no room
+  if (e.clientX + pad + pw < vw) {
+    x = e.clientX + pad;
+  } else {
+    x = e.clientX - pad - pw;
+  }
+
+  // Vertical: center on cursor, clamp to viewport
+  y = e.clientY - ph / 2;
+  y = Math.max(pad, Math.min(y, vh - ph - pad));
+
+  hoverPreview.style.left = x + 'px';
+  hoverPreview.style.top = y + 'px';
+}
+
+function hidePreview() {
+  hoverPreview.classList.remove('show');
+  hoverPreview.src = '';
+}
+
+// Delegate hover events on images inside tree branches and candidate cards
+document.addEventListener('mouseover', (e) => {
+  const img = e.target;
+  // Tree branch images
+  if (img.tagName === 'IMG' && img.closest('.devo-tree-branch') && img.src) {
+    showPreview(img.src, e);
+    return;
+  }
+  // Candidate card images
+  if (img.tagName === 'IMG' && img.closest('.candidate-card') && img.src) {
+    showPreview(img.src, e);
+    return;
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (hoverPreview.classList.contains('show')) {
+    positionPreview(e);
+  }
+});
+
+document.addEventListener('mouseout', (e) => {
+  const img = e.target;
+  if (img.tagName === 'IMG' && (img.closest('.devo-tree-branch') || img.closest('.candidate-card'))) {
+    hidePreview();
+  }
+});
 
 // ---- Init ----
 loadCandidates();
