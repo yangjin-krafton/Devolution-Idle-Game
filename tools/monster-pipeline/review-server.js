@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CANDIDATES_DIR = path.join(__dirname, 'candidates');
 const PORT = 3456;
+const COMFY_URL = 'http://127.0.0.1:8188';
 const MAX_BODY = 50 * 1024 * 1024; // 50MB limit
 
 function json(res, data, status = 200) {
@@ -149,6 +150,38 @@ const server = http.createServer(async (req, res) => {
       if (!fs.existsSync(srcPath)) return json(res, { error: 'Source not found' }, 404);
       fs.copyFileSync(srcPath, dstPath);
       return json(res, { ok: true, source, target });
+    }
+
+    // ComfyUI proxy — forward /comfy/* to ComfyUI server
+    if (p.startsWith('/comfy/')) {
+      const comfyPath = p.slice(6); // strip "/comfy"
+      const comfyTarget = COMFY_URL + comfyPath + url.search;
+
+      if (req.method === 'GET') {
+        const comfyRes = await fetch(comfyTarget);
+        const ct = comfyRes.headers.get('content-type') || 'application/octet-stream';
+        res.writeHead(comfyRes.status, { 'Content-Type': ct });
+        const buf = Buffer.from(await comfyRes.arrayBuffer());
+        res.end(buf);
+        return;
+      }
+
+      if (req.method === 'POST') {
+        // Collect raw request body (may be JSON or multipart)
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const body = Buffer.concat(chunks);
+
+        const headers = {};
+        if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
+
+        const comfyRes = await fetch(comfyTarget, { method: 'POST', headers, body });
+        const ct = comfyRes.headers.get('content-type') || 'application/octet-stream';
+        res.writeHead(comfyRes.status, { 'Content-Type': ct });
+        const buf = Buffer.from(await comfyRes.arrayBuffer());
+        res.end(buf);
+        return;
+      }
     }
 
     // Serve images

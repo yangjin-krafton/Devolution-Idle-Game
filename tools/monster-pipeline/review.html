@@ -117,6 +117,60 @@
   .candidate-card:hover .flip-btn { opacity: 1; }
   .flip-btn:hover { background: #e94560; color: #fff; }
   .flip-btn.active { background: #e94560; color: #fff; opacity: 1; }
+  .rmbg-btn, .rmbg-undo-btn {
+    width: 22px; height: 22px; border: none; border-radius: 4px;
+    background: rgba(0,0,0,0.6); color: #ccc; cursor: pointer; font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .candidate-card:hover .rmbg-btn,
+  .candidate-card:hover .rmbg-undo-btn { opacity: 1; }
+  .rmbg-btn:hover { background: #2196f3; color: #fff; }
+  .rmbg-undo-btn:hover { background: #ff5722; color: #fff; }
+  .rmbg-undo-btn.has-history { background: #ff5722; color: #fff; opacity: 0.8; }
+  .rmbg-btn.processing { background: #ff9800; color: #fff; opacity: 1; animation: pulse 1s infinite; }
+  .rmbg-btn.done { background: #4caf50; color: #fff; opacity: 1; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* Point picker overlay */
+  .point-picker-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .point-picker-header {
+    color: #e0e0e0; font-size: 14px; margin-bottom: 12px; text-align: center;
+  }
+  .point-picker-header small { color: #888; font-size: 12px; }
+  .point-picker-canvas-wrap {
+    position: relative; cursor: crosshair; border: 2px solid #e94560; border-radius: 8px;
+    overflow: hidden; background: repeating-conic-gradient(#333 0% 25%, #222 0% 50%) 50%/16px 16px;
+  }
+  .point-picker-canvas-wrap canvas { display: block; }
+  .point-picker-actions {
+    margin-top: 12px; display: flex; gap: 10px;
+  }
+  .point-picker-actions .btn { font-size: 13px; padding: 6px 16px; }
+  .point-dot {
+    position: absolute; width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid #fff; transform: translate(-50%, -50%); pointer-events: none;
+    box-shadow: 0 0 4px rgba(0,0,0,0.8);
+  }
+  .point-dot.positive { background: #4caf50; }
+  .point-dot.negative { background: #f44336; }
+
+  /* ComfyUI settings bar */
+  .comfy-bar {
+    position: fixed; top: 0; right: 0; z-index: 50; background: #16213e;
+    border-bottom-left-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px;
+    border: 1px solid #333; font-size: 12px;
+  }
+  .comfy-bar label { color: #888; }
+  .comfy-bar input {
+    background: #222; border: 1px solid #444; color: #e0e0e0; padding: 3px 8px;
+    border-radius: 4px; font-size: 12px; width: 200px;
+  }
+  .comfy-dot { width: 8px; height: 8px; border-radius: 50%; background: #f44336; }
+  .comfy-dot.connected { background: #4caf50; }
   .candidate-card .label {
     font-size: 10px; color: #888; text-align: center; padding: 2px;
     background: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -296,6 +350,14 @@
 </head>
 <body>
 
+<!-- ComfyUI connection bar -->
+<div class="comfy-bar">
+  <div class="comfy-dot" id="comfy-dot"></div>
+  <label>ComfyUI:</label>
+  <input id="comfy-url" value="http://127.0.0.1:8188" placeholder="http://127.0.0.1:8188" />
+  <button class="btn" style="padding:3px 10px; font-size:11px;" onclick="checkComfyConnection()">연결 확인</button>
+</div>
+
 <div class="sidebar" id="sidebar">
   <h2>Candidates</h2>
 </div>
@@ -337,6 +399,342 @@ const API = '';
 let candidates = [];
 let currentDir = null;
 let pendingOverride = null;
+
+// ---- ComfyUI Background Removal ----
+const SAM3_WORKFLOW = {"1":{"inputs":{"precision":"auto","attention":"auto","compile":false},"class_type":"LoadSAM3Model","_meta":{"title":"(down)Load SAM3 Model"}},"10":{"inputs":{"image":"PLACEHOLDER.png"},"class_type":"LoadImage","_meta":{"title":"이미지 로드"}},"18":{"inputs":{"image":["10",0],"alpha":["19",0]},"class_type":"JoinImageWithAlpha","_meta":{"title":"알파와 함께 이미지 결합"}},"19":{"inputs":{"mask":["21",0]},"class_type":"InvertMask","_meta":{"title":"마스크 반전"}},"20":{"inputs":{"filename_prefix":"ComfyUI","images":["18",0]},"class_type":"SaveImage","_meta":{"title":"이미지 저장"}},"21":{"inputs":{"refinement_iterations":1,"use_multimask":false,"sam3_model":["1",0],"image":["10",0],"multi_prompts":["22",0]},"class_type":"SAM3MultipromptSegmentation","_meta":{"title":"SAM3 Multiprompt Segmentation"}},"22":{"inputs":{"multi_prompts_store":"[{\"positive_points\":[{\"x\":255,\"y\":246},{\"x\":254,\"y\":261}],\"negative_points\":[],\"positive_boxes\":[],\"negative_boxes\":[]}]","canvas":"","image":["10",0]},"class_type":"SAM3MultiRegionCollector","_meta":{"title":"SAM3 Multi-Region Collector"}}};
+
+function getComfyUrl() {
+  // Use local proxy to avoid CORS — all /comfy/* requests are forwarded by review-server
+  return '/comfy';
+}
+
+function getComfyDirectUrl() {
+  return document.getElementById('comfy-url').value.replace(/\/+$/, '');
+}
+
+async function checkComfyConnection() {
+  const dot = document.getElementById('comfy-dot');
+  try {
+    const res = await fetch(getComfyUrl() + '/system_stats', { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      dot.classList.add('connected');
+      toast('ComfyUI 연결 성공');
+    } else {
+      dot.classList.remove('connected');
+      toast('ComfyUI 응답 오류');
+    }
+  } catch {
+    dot.classList.remove('connected');
+    toast('ComfyUI 연결 실패');
+  }
+}
+
+async function uploadToComfy(dir, filename) {
+  // Fetch image from review server
+  const imgRes = await fetch(imgUrl(dir, 'all_images', filename));
+  const blob = await imgRes.blob();
+
+  // Upload to ComfyUI
+  const form = new FormData();
+  form.append('image', blob, filename);
+  form.append('overwrite', 'true');
+
+  const uploadRes = await fetch(getComfyUrl() + '/upload/image', {
+    method: 'POST',
+    body: form,
+  });
+  const data = await uploadRes.json();
+  return data.name; // uploaded filename
+}
+
+function buildSam3Prompt(uploadedFilename, positivePoints, negativePoints) {
+  const workflow = JSON.parse(JSON.stringify(SAM3_WORKFLOW));
+  workflow['10'].inputs.image = uploadedFilename;
+  workflow['22'].inputs.multi_prompts_store = JSON.stringify([{
+    positive_points: positivePoints,
+    negative_points: negativePoints || [],
+    positive_boxes: [],
+    negative_boxes: [],
+  }]);
+  workflow['20'].inputs.filename_prefix = 'rmbg_' + uploadedFilename.replace(/\.png$/i, '');
+  return workflow;
+}
+
+async function queueComfyPrompt(workflow) {
+  const res = await fetch(getComfyUrl() + '/prompt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: workflow }),
+  });
+  const data = await res.json();
+  return data.prompt_id;
+}
+
+async function waitForComfyResult(promptId) {
+  const comfyUrl = getComfyUrl();
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    const res = await fetch(comfyUrl + '/history/' + promptId);
+    const data = await res.json();
+    if (data[promptId]) {
+      const outputs = data[promptId].outputs;
+      const saveNode = outputs['20'];
+      if (saveNode && saveNode.images && saveNode.images.length > 0) {
+        const img = saveNode.images[0];
+        return `${comfyUrl}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder || '')}&type=${img.type || 'output'}`;
+      }
+      if (data[promptId].status?.status_str === 'error') {
+        throw new Error('ComfyUI 워크플로우 실행 오류');
+      }
+    }
+  }
+  throw new Error('ComfyUI 시간 초과 (2분)');
+}
+
+// ---- Image history for undo ----
+// key: "dir/filename" → array of data URLs (stack)
+const imageHistory = {};
+function historyKey(dir, filename) { return dir + '/' + filename; }
+
+function pushHistory(dir, filename, dataUrl) {
+  const k = historyKey(dir, filename);
+  if (!imageHistory[k]) imageHistory[k] = [];
+  imageHistory[k].push(dataUrl);
+}
+
+function popHistory(dir, filename) {
+  const k = historyKey(dir, filename);
+  if (!imageHistory[k] || imageHistory[k].length === 0) return null;
+  return imageHistory[k].pop();
+}
+
+function hasHistory(dir, filename) {
+  const k = historyKey(dir, filename);
+  return imageHistory[k] && imageHistory[k].length > 0;
+}
+
+// ---- Convert img src to data URL ----
+async function imgToDataUrl(src) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = src;
+  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
+// ---- Point Picker UI ----
+function openPointPicker(imageSrc) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'point-picker-overlay';
+
+    const header = document.createElement('div');
+    header.className = 'point-picker-header';
+    header.innerHTML = '좌클릭: <b style="color:#4caf50">유지할 영역</b> (초록) &nbsp;|&nbsp; 우클릭: <b style="color:#f44336">제거할 영역</b> (빨강)<br><small>포인트를 찍은 뒤 "실행"을 누르세요. 포인트 없이 실행하면 중앙 자동.</small>';
+    overlay.appendChild(header);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'point-picker-canvas-wrap';
+    overlay.appendChild(wrap);
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = imageSrc;
+    img.onload = () => {
+      // Scale to fit viewport (max 700px)
+      const maxSize = 700;
+      const scale = Math.min(1, maxSize / img.naturalWidth, maxSize / img.naturalHeight);
+      const cw = Math.round(img.naturalWidth * scale);
+      const ch = Math.round(img.naturalHeight * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, cw, ch);
+      wrap.appendChild(canvas);
+
+      const positivePoints = [];
+      const negativePoints = [];
+
+      function addDot(x, y, type) {
+        const dot = document.createElement('div');
+        dot.className = 'point-dot ' + type;
+        dot.style.left = x + 'px';
+        dot.style.top = y + 'px';
+        wrap.appendChild(dot);
+        return dot;
+      }
+
+      // Left click = positive (keep)
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        // Convert to original image coords
+        const ox = Math.round(x / scale);
+        const oy = Math.round(y / scale);
+        positivePoints.push({ x: ox, y: oy });
+        addDot(x, y, 'positive');
+      });
+
+      // Right click = negative (remove)
+      canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const ox = Math.round(x / scale);
+        const oy = Math.round(y / scale);
+        negativePoints.push({ x: ox, y: oy });
+        addDot(x, y, 'negative');
+      });
+
+      // Actions
+      const actions = document.createElement('div');
+      actions.className = 'point-picker-actions';
+
+      const runBtn = document.createElement('button');
+      runBtn.className = 'btn btn-primary';
+      runBtn.textContent = '실행';
+      runBtn.onclick = () => {
+        overlay.remove();
+        // If no points, use center
+        if (positivePoints.length === 0) {
+          positivePoints.push({
+            x: Math.round(img.naturalWidth / 2),
+            y: Math.round(img.naturalHeight / 2),
+          });
+        }
+        resolve({ positive: positivePoints, negative: negativePoints });
+      };
+
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'btn btn-cancel';
+      clearBtn.textContent = '초기화';
+      clearBtn.onclick = () => {
+        positivePoints.length = 0;
+        negativePoints.length = 0;
+        wrap.querySelectorAll('.point-dot').forEach(d => d.remove());
+      };
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn btn-cancel';
+      cancelBtn.textContent = '취소';
+      cancelBtn.onclick = () => {
+        overlay.remove();
+        resolve(null);
+      };
+
+      actions.appendChild(runBtn);
+      actions.appendChild(clearBtn);
+      actions.appendChild(cancelBtn);
+      overlay.appendChild(actions);
+    };
+
+    document.body.appendChild(overlay);
+  });
+}
+
+// ---- Remove BG with point picker ----
+async function removeBg(dir, filename, btn, cardImg, undoBtn) {
+  if (btn.classList.contains('processing')) return;
+
+  // Open point picker
+  const imgSrc = cardImg.src.startsWith('data:') ? cardImg.src : imgUrl(dir, 'all_images', filename) + '?t=' + Date.now();
+  const points = await openPointPicker(imgSrc);
+  if (!points) return; // cancelled
+
+  btn.classList.remove('done');
+  btn.classList.add('processing');
+  btn.textContent = '⏳';
+
+  try {
+    // Save current image to history for undo
+    const currentDataUrl = await imgToDataUrl(imgSrc);
+    pushHistory(dir, filename, currentDataUrl);
+    undoBtn.classList.add('has-history');
+
+    // 1. Upload image to ComfyUI
+    toast(`배경제거 시작: ${filename}`);
+    const uploadedName = await uploadToComfy(dir, filename);
+
+    // 2. Build workflow with user-picked points
+    const workflow = buildSam3Prompt(uploadedName, points.positive, points.negative);
+    const promptId = await queueComfyPrompt(workflow);
+
+    // 3. Wait for result
+    const resultUrl = await waitForComfyResult(promptId);
+
+    // 4. Fetch result
+    const resultRes = await fetch(resultUrl);
+    const resultBlob = await resultRes.blob();
+    const dataUrl = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(resultBlob);
+    });
+
+    // 5. Save back
+    const saveRes = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/flip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, imageData: dataUrl }),
+    });
+    const saveData = await saveRes.json();
+    if (saveData.ok) {
+      cardImg.src = dataUrl;
+      btn.classList.remove('processing');
+      btn.classList.add('done');
+      btn.textContent = '✓';
+      toast(`배경제거 완료: ${filename}`);
+    } else {
+      throw new Error(saveData.error || '저장 실패');
+    }
+  } catch (err) {
+    btn.classList.remove('processing');
+    btn.textContent = 'BG';
+    toast(`배경제거 실패: ${err.message}`);
+  }
+}
+
+// ---- Undo BG removal ----
+async function undoRemoveBg(dir, filename, cardImg, undoBtn, bgBtn) {
+  const prevDataUrl = popHistory(dir, filename);
+  if (!prevDataUrl) { toast('되돌릴 이미지가 없습니다'); return; }
+
+  try {
+    // Save previous data back to file
+    const saveRes = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/flip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, imageData: prevDataUrl }),
+    });
+    const saveData = await saveRes.json();
+    if (saveData.ok) {
+      cardImg.src = prevDataUrl;
+      bgBtn.classList.remove('done');
+      bgBtn.textContent = 'BG';
+      toast(`되돌리기 완료: ${filename}`);
+    } else {
+      // Push back if save failed
+      pushHistory(dir, filename, prevDataUrl);
+      toast(`되돌리기 실패: ${saveData.error}`);
+    }
+  } catch (err) {
+    pushHistory(dir, filename, prevDataUrl);
+    toast(`되돌리기 실패: ${err.message}`);
+  }
+
+  if (!hasHistory(dir, filename)) undoBtn.classList.remove('has-history');
+}
+
+// Check connection on load
+setTimeout(checkComfyConnection, 1000);
 
 // ---- Helpers ----
 function toast(msg) {
@@ -501,6 +899,8 @@ async function selectMonster(dir) {
       card.innerHTML = `
         <div class="card-actions">
           <button class="flip-btn" title="좌우 반전 (원본 저장)">&#8646;</button>
+          <button class="rmbg-btn" title="배경제거 (클릭으로 포인트 지정)">BG</button>
+          <button class="rmbg-undo-btn" title="배경제거 되돌리기">↩</button>
         </div>
         <img src="${imgUrl(dir, 'all_images', v)}" loading="lazy" />
         <div class="label">${v.replace(/_(\d+)\.png$/, ' #$1')}</div>
@@ -508,9 +908,19 @@ async function selectMonster(dir) {
       `;
       const img = card.querySelector('img');
       const flipBtn = card.querySelector('.flip-btn');
+      const rmbgBtn = card.querySelector('.rmbg-btn');
+      const undoBtn = card.querySelector('.rmbg-undo-btn');
       flipBtn.onclick = (e) => {
         e.stopPropagation();
         flipAndSave(dir, v, img, flipBtn);
+      };
+      rmbgBtn.onclick = (e) => {
+        e.stopPropagation();
+        removeBg(dir, v, rmbgBtn, img, undoBtn);
+      };
+      undoBtn.onclick = (e) => {
+        e.stopPropagation();
+        undoRemoveBg(dir, v, img, undoBtn, rmbgBtn);
       };
       card.onclick = () => confirmOverride(dir, v, selectedFile);
       grid.appendChild(card);

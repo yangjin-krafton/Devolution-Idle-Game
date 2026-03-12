@@ -1,0 +1,161 @@
+{
+  "1": {
+    "inputs": {
+      "precision": "auto",
+      "attention": "auto",
+      "compile": false
+    },
+    "class_type": "LoadSAM3Model",
+    "_meta": {
+      "title": "(down)Load SAM3 Model"
+    }
+  },
+  "10": {
+    "inputs": {
+      "image": "z-image_12957_.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "이미지 로드"
+    }
+  },
+  "18": {
+    "inputs": {
+      "image": [
+        "10",
+        0
+      ],
+      "alpha": [
+        "19",
+        0
+      ]
+    },
+    "class_type": "JoinImageWithAlpha",
+    "_meta": {
+      "title": "알파와 함께 이미지 결합"
+    }
+  },
+  "19": {
+    "inputs": {
+      "mask": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "InvertMask",
+    "_meta": {
+      "title": "마스크 반전"
+    }
+  },
+  "21": {
+    "inputs": {
+      "refinement_iterations": 1,
+      "use_multimask": false,
+      "sam3_model": [
+        "1",
+        0
+      ],
+      "image": [
+        "10",
+        0
+      ],
+      "multi_prompts": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "SAM3MultipromptSegmentation",
+    "_meta": {
+      "title": "SAM3 Multiprompt Segmentation"
+    }
+  },
+  "22": {
+    "inputs": {
+      "multi_prompts_store": "[{\"positive_points\":[{\"x\":255.79794207898246,\"y\":246.09415203099616},{\"x\":254.06921258657962,\"y\":261.6527142563036}],\"negative_points\":[],\"positive_boxes\":[],\"negative_boxes\":[]}]",
+      "canvas": "",
+      "image": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "SAM3MultiRegionCollector",
+    "_meta": {
+      "title": "SAM3 Multi-Region Collector"
+    }
+  },
+  "30": {
+    "inputs": {
+      "width": 256,
+      "height": 256,
+      "upscale_method": "nearest-exact",
+      "keep_proportion": "pad_edge",
+      "pad_color": "0, 0, 0",
+      "crop_position": "center",
+      "divisible_by": 2,
+      "device": "cpu",
+      "per_batch": 0,
+      "image": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "ImageResizeKJv2",
+    "_meta": {
+      "title": "Resize Image v2"
+    }
+  },
+  "34": {
+    "inputs": {
+      "invert_mask": false,
+      "detect": "mask_area",
+      "top_reserve": 20,
+      "bottom_reserve": 20,
+      "left_reserve": 20,
+      "right_reserve": 20,
+      "round_to_multiple": "8",
+      "image": [
+        "18",
+        0
+      ],
+      "mask": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "LayerUtility: CropByMask V2",
+    "_meta": {
+      "title": "LayerUtility: CropByMask V2"
+    }
+  },
+  "39": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "41",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "이미지 저장"
+    }
+  },
+  "41": {
+    "inputs": {
+      "rem_mode": "RMBG-1.4",
+      "image_output": "Preview",
+      "save_prefix": "ComfyUI",
+      "torchscript_jit": false,
+      "add_background": "none",
+      "refine_foreground": false,
+      "images": [
+        "30",
+        0
+      ]
+    },
+    "class_type": "easy imageRemBg",
+    "_meta": {
+      "title": "Image Remove Bg"
+    }
+  }
+}
