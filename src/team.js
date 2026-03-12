@@ -68,18 +68,18 @@ export class TeamManager {
       const xpGain = 1;
       ally.xp += xpGain;
 
-      let leveledUp = false;
       let levelAfter = ally.level || 1;
-      const statChanges = {};
-      const newSkills = [];
+      const levelUps = []; // per-level: { from, to, statChanges, newSkills }
       let enteredEgg = false;
 
       // xpCurve-based level-up (may level multiple times)
       const curve = ally.xpCurve;
       if (curve) {
         while (levelAfter < (ally.maxLevel || curve.length) && ally.xp >= curve[levelAfter]) {
+          const lvFrom = levelAfter;
           levelAfter++;
-          leveledUp = true;
+          const sc = {};
+          const sk = [];
 
           // Stat growth
           if (ally.statGrowth) {
@@ -87,7 +87,7 @@ export class TeamManager {
               const gain = min + Math.floor(Math.random() * (max - min + 1));
               if (gain > 0) {
                 ally.stats[stat] = (ally.stats[stat] || 0) + gain;
-                statChanges[stat] = (statChanges[stat] || 0) + gain;
+                sc[stat] = gain;
               }
             }
           }
@@ -96,7 +96,7 @@ export class TeamManager {
           const hpGain = Math.ceil(ally.maxHp * 0.1);
           ally.maxHp += hpGain;
           ally.hp = Math.min(ally.hp + hpGain, ally.maxHp);
-          statChanges.hp = (statChanges.hp || 0) + hpGain;
+          sc.hp = hpGain;
 
           // Skill unlocks
           if (ally.skillUnlocks && ally.skillUnlocks[levelAfter]) {
@@ -106,17 +106,19 @@ export class TeamManager {
               const skill = getSkill(key);
               if (skill && !ally.skillPool.some(s => s.key === key || s === key)) {
                 ally.skillPool.push(skill);
-                newSkills.push(skill);
+                sk.push(skill);
               }
             }
           }
+
+          levelUps.push({ from: lvFrom, to: levelAfter, statChanges: sc, newSkills: sk });
         }
       } else {
         // Fallback: old threshold system
         const threshold = ally.xpThreshold || 5;
         if (ally.xp >= threshold) {
           levelAfter = levelBefore + 1;
-          leveledUp = true;
+          levelUps.push({ from: levelBefore, to: levelAfter, statChanges: {}, newSkills: [] });
         }
       }
 
@@ -144,10 +146,9 @@ export class TeamManager {
         img: ally.img,
         xpBefore, xpAfter: ally.xp, xpGain,
         xpBase, xpNeeded,
-        leveledUp,
+        leveledUp: levelUps.length > 0,
         levelBefore, levelAfter,
-        statChanges,
-        newSkills,
+        levelUps,
         enteredEgg,
       });
     }

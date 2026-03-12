@@ -240,9 +240,12 @@ function endBattle() {
   }
 
   // Compute structured rewards (XP, level-up, stat growth, skill unlocks, devolution)
+  console.log('[endBattle] state:', result.state, '| actedAllies:', result.actedAllies,
+    '| team:', teamManager.allies.map(a => a.name + (a.inEgg ? '(egg)' : '') + (a.devolved ? '(devo)' : '')).join(', '));
   const allyRewards = result.state !== 'defeat'
     ? teamManager.computeBattleRewards(result.actedAllies)
     : [];
+  console.log('[endBattle] allyRewards:', allyRewards.length, allyRewards.map(a => a.name + ' xp:' + a.xpBefore + '→' + a.xpAfter).join(', '));
 
   const rewards = {
     state: result.state,
@@ -408,6 +411,14 @@ initDebug(() => ({
   currentScreen: _currentScreen,
   refreshCombatUI,
   endBattle,
+  showResult: (rewards, onDone) => {
+    _showScreenTracked('result');
+    renderResult(rewards, onDone || (() => {
+      _showScreenTracked('title');
+      console.log('[DEBUG] 결과창 닫힘 → 타이틀로 복귀');
+    }));
+  },
+  teamManager,
 }));
 
 // ============================================================

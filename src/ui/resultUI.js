@@ -42,16 +42,25 @@ export function initResult() {
   ct.eventMode = 'static';
   ct.hitArea = new PIXI.Rectangle(0, 0, W, H);
 
-  // Background
+  // Background with subtle grid dots
   const bg = new PIXI.Graphics();
   bg.rect(0, 0, W, H).fill({ color: D.bg });
-  bg.roundRect(0, 0, W, 4, 0).fill({ color: D.neon, alpha: 0.25 });
   ct.addChild(bg);
+  const dots = new PIXI.Graphics();
+  for (let dx = 30; dx < W; dx += 50) {
+    for (let dy = FEED_TOP + 20; dy < FEED_BOTTOM; dy += 50) {
+      dots.circle(dx, dy, 1).fill({ color: D.dim, alpha: 0.06 });
+    }
+  }
+  ct.addChild(dots);
 
   // Header
   const hdr = new PIXI.Graphics();
   hdr.rect(0, 0, W, HEADER_H).fill({ color: D.panel });
-  hdr.moveTo(0, HEADER_H).lineTo(W, HEADER_H).stroke({ color: D.sep, width: 1, alpha: 0.4 });
+  // Neon accent line top
+  hdr.roundRect(0, 0, W, 3, 0).fill({ color: D.neon, alpha: 0.3 });
+  // Bottom border
+  hdr.moveTo(0, HEADER_H).lineTo(W, HEADER_H).stroke({ color: D.neon, width: 1, alpha: 0.2 });
   ct.addChild(hdr);
   const title = lbl('전투 결과', 10, D.neon, true);
   title.anchor = { x: 0.5, y: 0.5 }; title.x = W / 2; title.y = HEADER_H / 2;
@@ -68,10 +77,15 @@ export function initResult() {
   // Footer
   const ftr = new PIXI.Graphics();
   ftr.rect(0, FEED_BOTTOM, W, FOOTER_H).fill({ color: D.panel });
-  ftr.moveTo(0, FEED_BOTTOM).lineTo(W, FEED_BOTTOM).stroke({ color: D.sep, width: 1, alpha: 0.4 });
+  ftr.moveTo(0, FEED_BOTTOM).lineTo(W, FEED_BOTTOM).stroke({ color: D.neon, width: 1, alpha: 0.15 });
   ct.addChild(ftr);
 
-  footerBtn = cuteBtn(W / 2 - 180, FEED_BOTTOM + 10, 180, 44, '▶ 계속', D.neon, D.bg);
+  // "탭하여 계속" hint centered above button
+  const tapHint = lbl('화면을 탭하세요', 6, D.dimmer);
+  tapHint.anchor = { x: 0.5, y: 0 }; tapHint.x = W / 2; tapHint.y = FEED_BOTTOM + 4;
+  ct.addChild(tapHint);
+
+  footerBtn = cuteBtn(W / 2 - 180, FEED_BOTTOM + 16, 180, 40, '\u25B6 계속', D.neon, D.bg);
   footerBtn.alpha = 0.3;
   ct.addChild(footerBtn);
 
@@ -104,25 +118,38 @@ export function renderResult(rewards, onNext) {
   footerBtn.removeAllListeners();
   applyScroll();
 
-  // Build card queue
+  // Build card queue with error protection per card
   cardQueue.push(buildBannerCard(rewards.state, rewards.enemy));
 
   if (rewards.state !== 'defeat') {
     for (const ally of rewards.allies) {
-      cardQueue.push(buildXPCard(ally));
-      if (ally.leveledUp) {
-        cardQueue.push(buildLevelUpCard(ally));
-        if (ally.newSkills && ally.newSkills.length > 0) {
-          for (const skill of ally.newSkills) {
-            cardQueue.push(buildSkillAcquireCard(ally, skill));
+      try {
+        cardQueue.push(buildXPCard(ally));
+        const lvUps = ally.levelUps || [];
+        for (const lv of lvUps) {
+          cardQueue.push(buildLevelUpCard(ally, lv));
+          if (lv.newSkills && lv.newSkills.length > 0) {
+            for (const skill of lv.newSkills) {
+              cardQueue.push(buildSkillAcquireCard(ally, skill));
+            }
           }
         }
-      }
-      if (ally.enteredEgg) {
-        cardQueue.push(buildEggCard(ally));
+        // Backwards compat: old format
+        if (lvUps.length === 0 && ally.leveledUp) {
+          cardQueue.push(buildLevelUpCard(ally, { from: ally.levelBefore, to: ally.levelAfter, statChanges: ally.statChanges || {}, newSkills: ally.newSkills || [] }));
+          for (const skill of (ally.newSkills || [])) { cardQueue.push(buildSkillAcquireCard(ally, skill)); }
+        }
+        if (ally.enteredEgg) {
+          cardQueue.push(buildEggCard(ally));
+        }
+      } catch (e) {
+        console.error('[resultUI] card build error for', ally.name, e);
       }
     }
   }
+
+  console.log('[resultUI] cardQueue:', cardQueue.length, 'cards | allies:', rewards.allies.length,
+    '|', rewards.allies.map(a => a.name + ' Lv' + a.levelBefore + '→' + a.levelAfter + ' lvUps:' + (a.levelUps||[]).length).join(', '));
 
   // Show first card (banner) automatically
   showNextCard();
@@ -132,116 +159,177 @@ export function renderResult(rewards, onNext) {
 // Card Builders
 // ============================================================
 
+// ---- Shared decorative helpers ----
+
+function glowCircle(x, y, r, color, alpha) {
+  const g = new PIXI.Graphics();
+  g.circle(x, y, r).fill({ color, alpha: alpha || 0.08 });
+  g.circle(x, y, r * 0.6).fill({ color, alpha: (alpha || 0.08) * 0.7 });
+  return g;
+}
+
+function sep(x1, x2, y, color) {
+  return new PIXI.Graphics()
+    .moveTo(x1, y).lineTo(x2, y)
+    .stroke({ color: color || D.sep, width: 0.5, alpha: 0.35 });
+}
+
+// ---- Banner Card ----
+
 function buildBannerCard(state, enemy) {
-  const h = 140;
+  const h = state === 'defeat' ? 120 : 170;
   const card = new PIXI.Container();
-  const accentColor = state === 'victory' ? D.neon : state === 'escaped' ? D.orange : D.red;
-  card.addChild(feedCard(CARD_W, h, accentColor));
+  const accent = state === 'victory' ? D.neon : state === 'escaped' ? D.orange : D.red;
+  card.addChild(feedCard(CARD_W, h, accent));
 
   if (state === 'victory') {
-    const spr = monster(70, enemy.img || null);
-    spr.x = CARD_W / 2; spr.y = 45;
+    // Layered glow behind sprite
+    card.addChild(glowCircle(CARD_W / 2, 52, 48, D.neon, 0.07));
+    card.addChild(glowCircle(CARD_W / 2, 52, 28, D.neon, 0.05));
+    // Decorative ring
+    card.addChild(new PIXI.Graphics()
+      .circle(CARD_W / 2, 52, 44).stroke({ color: D.neon, width: 1, alpha: 0.08 }));
+
+    const spr = monster(80, enemy.img || null);
+    spr.x = CARD_W / 2; spr.y = 52;
     card.addChild(spr);
 
-    // Hearts
-    for (let i = 0; i < 3; i++) {
-      const heart = lbl('\u2665', 10, D.neon);
+    // Orbiting hearts (varied sizes & colors)
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * Math.PI * 2) / 5 - Math.PI / 2;
+      const heart = lbl('\u2665', 7 + (i % 3) * 2, i % 2 === 0 ? D.neon : D.blue);
       heart.anchor = { x: 0.5, y: 0.5 };
-      heart.alpha = 0.5;
-      heart.x = CARD_W / 2 + Math.cos(i * Math.PI * 2 / 3) * 50;
-      heart.y = 45 + Math.sin(i * Math.PI * 2 / 3) * 28;
+      heart.alpha = 0.3 + (i % 3) * 0.12;
+      heart.x = CARD_W / 2 + Math.cos(angle) * (50 + i * 4);
+      heart.y = 52 + Math.sin(angle) * (30 + i * 3);
       card.addChild(heart);
     }
 
+    // Corner sparkle dots
+    [[24, 16], [CARD_W - 24, 20], [40, 98], [CARD_W - 36, 94]].forEach(([sx, sy]) => {
+      card.addChild(new PIXI.Graphics().circle(sx, sy, 1.5).fill({ color: D.neon, alpha: 0.2 }));
+    });
+
+    card.addChild(sep(24, CARD_W - 24, 102, accent));
+
     const t = lbl('순화 성공!', 14, D.neon, true);
-    t.anchor = { x: 0.5, y: 0 }; t.x = CARD_W / 2; t.y = 88;
+    t.anchor = { x: 0.5, y: 0 }; t.x = CARD_W / 2; t.y = 110;
     card.addChild(t);
     const sub = lbl((enemy.name || '???') + '을(를) 길들였다!', 8, D.dim);
-    sub.anchor = { x: 0.5, y: 0 }; sub.x = CARD_W / 2; sub.y = 116;
+    sub.anchor = { x: 0.5, y: 0 }; sub.x = CARD_W / 2; sub.y = 140;
     card.addChild(sub);
 
   } else if (state === 'escaped') {
-    const spr = monster(60, enemy.img || null);
-    spr.x = CARD_W / 2; spr.y = 40; spr.alpha = 0.4;
+    card.addChild(glowCircle(CARD_W / 2, 48, 38, D.orange, 0.06));
+
+    const spr = monster(65, enemy.img || null);
+    spr.x = CARD_W / 2; spr.y = 48; spr.alpha = 0.35;
     card.addChild(spr);
+
+    // Speed streaks
+    for (let i = 0; i < 3; i++) {
+      const sy = 34 + i * 14;
+      card.addChild(new PIXI.Graphics()
+        .moveTo(CARD_W / 2 + 38 + i * 8, sy)
+        .lineTo(CARD_W / 2 + 68 + i * 14, sy)
+        .stroke({ color: D.orange, width: 1.5, alpha: 0.2 - i * 0.05 }));
+    }
+
+    card.addChild(sep(24, CARD_W - 24, 98, D.orange));
     const t = lbl('도주...', 14, D.orange, true);
-    t.anchor = { x: 0.5, y: 0 }; t.x = CARD_W / 2; t.y = 88;
+    t.anchor = { x: 0.5, y: 0 }; t.x = CARD_W / 2; t.y = 106;
     card.addChild(t);
     const sub = lbl((enemy.name || '???') + '이(가) 도망쳤습니다.', 8, D.dim);
-    sub.anchor = { x: 0.5, y: 0 }; sub.x = CARD_W / 2; sub.y = 116;
+    sub.anchor = { x: 0.5, y: 0 }; sub.x = CARD_W / 2; sub.y = 136;
     card.addChild(sub);
 
   } else {
+    // Defeat — somber
+    card.addChild(glowCircle(CARD_W / 2, 38, 28, D.red, 0.06));
+    const cross = new PIXI.Graphics();
+    cross.moveTo(CARD_W / 2 - 12, 26).lineTo(CARD_W / 2 + 12, 50).stroke({ color: D.red, width: 2, alpha: 0.15 });
+    cross.moveTo(CARD_W / 2 + 12, 26).lineTo(CARD_W / 2 - 12, 50).stroke({ color: D.red, width: 2, alpha: 0.15 });
+    card.addChild(cross);
+
+    card.addChild(sep(24, CARD_W - 24, 62, D.red));
     const t = lbl('전멸', 14, D.red, true);
-    t.anchor = { x: 0.5, y: 0.5 }; t.x = CARD_W / 2; t.y = 50;
+    t.anchor = { x: 0.5, y: 0 }; t.x = CARD_W / 2; t.y = 70;
     card.addChild(t);
     const sub = lbl('모든 아군이 쓰러졌습니다.', 8, D.dim);
-    sub.anchor = { x: 0.5, y: 0 }; sub.x = CARD_W / 2; sub.y = 80;
+    sub.anchor = { x: 0.5, y: 0 }; sub.x = CARD_W / 2; sub.y = 94;
     card.addChild(sub);
   }
 
   return { container: card, height: h };
 }
 
+// ---- XP Card ----
+
 function buildXPCard(ally) {
-  const h = 80;
+  const h = 90;
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.blue));
 
-  // Sprite
-  const spr = monster(40, ally.img);
-  spr.x = 36; spr.y = 28;
+  // Sprite backdrop circle
+  card.addChild(new PIXI.Graphics().circle(40, 36, 24).fill({ color: D.blue, alpha: 0.06 }));
+  card.addChild(new PIXI.Graphics().circle(40, 36, 24).stroke({ color: D.blue, width: 0.5, alpha: 0.1 }));
+  const spr = monster(46, ally.img);
+  spr.x = 40; spr.y = 36;
   card.addChild(spr);
 
-  // Name + Level
+  // Name
   const name = lbl(ally.name, 9, D.text, true);
-  name.x = 66; name.y = 8;
+  name.x = 74; name.y = 10;
   card.addChild(name);
 
-  const lvl = lbl('Lv.' + ally.levelAfter, 7, D.dim);
-  lvl.x = 66; lvl.y = 30;
-  card.addChild(lvl);
+  // Level badge
+  const lvlBadge = neonBadge('Lv.' + ally.levelAfter, D.dim);
+  lvlBadge.x = 74 + (ally.name.length * 9 * S) + 6; lvlBadge.y = 13;
+  card.addChild(lvlBadge);
 
-  // XP badge
-  const badge = neonBadge('+' + ally.xpGain + ' XP', D.blue);
-  badge.x = CARD_W - 70; badge.y = 10;
-  card.addChild(badge);
+  // XP gain badge (top-right)
+  const xpBadge = neonBadge('+' + ally.xpGain + ' XP', D.blue);
+  xpBadge.x = CARD_W - 72; xpBadge.y = 13;
+  card.addChild(xpBadge);
 
-  // XP bar
-  const barW = CARD_W - 80;
-  const barX = 66;
-  const barY = 52;
-  const barH = 10;
+  // Separator
+  card.addChild(sep(74, CARD_W - 14, 34));
 
-  // Calculate ratio within current level
+  // XP bar — fits within card with 16px right margin
+  const barX = 74;
+  const barY = 42;
+  const barH = 12;
+  const barW = CARD_W - barX - 16;
   const range = ally.xpNeeded - ally.xpBase;
   const ratioBefore = range > 0 ? Math.min(1, (ally.xpBefore - ally.xpBase) / range) : 0;
   const ratioAfter = range > 0 ? Math.min(1, (ally.xpAfter - ally.xpBase) / range) : 1;
 
-  // Background bar
-  const barBg = new PIXI.Graphics()
-    .roundRect(barX, barY, barW, barH, barH / 2)
-    .fill({ color: D.sep, alpha: 0.6 });
-  card.addChild(barBg);
+  // Bar track
+  card.addChild(new PIXI.Graphics()
+    .roundRect(barX, barY, barW, barH, barH / 2).fill({ color: D.sep, alpha: 0.5 }));
+  // Inner track shine
+  card.addChild(new PIXI.Graphics()
+    .roundRect(barX + 0.5, barY + 0.5, barW - 1, barH * 0.35, barH / 2).fill({ color: D.white, alpha: 0.03 }));
 
-  // Fill bar (will animate)
+  // Fill bar (animated)
   const barFill = new PIXI.Graphics();
   card.addChild(barFill);
   card._barFill = barFill;
-  card._barX = barX;
-  card._barY = barY;
-  card._barW = barW;
-  card._barH = barH;
+  card._barX = barX; card._barY = barY; card._barW = barW; card._barH = barH;
   card._ratioBefore = ratioBefore;
   card._ratioAfter = ally.leveledUp ? 1 : ratioAfter;
+  drawBarFill(barFill, barX, barY, barW, barH, ratioBefore);
 
-  // XP text
-  const xpText = lbl(ally.xpAfter + '/' + ally.xpNeeded, 6, D.dim);
-  xpText.x = barX + barW + 4; xpText.y = barY - 1;
+  // XP text (right-aligned under bar)
+  const xpText = lbl(ally.xpAfter + ' / ' + ally.xpNeeded, 6, D.dim);
+  xpText.anchor = { x: 1, y: 0 };
+  xpText.x = barX + barW; xpText.y = barY + barH + 4;
   card.addChild(xpText);
 
-  // Draw initial state
-  drawBarFill(barFill, barX, barY, barW, barH, ratioBefore);
+  // TAP hint (bottom right)
+  const hint = lbl('TAP \u25B6', 5, D.dimmer);
+  hint.anchor = { x: 1, y: 0 }; hint.x = CARD_W - 14; hint.y = h - 20;
+  card.addChild(hint);
 
   return { container: card, height: h, animate: 'xp', ratioBefore, ratioAfter: card._ratioAfter, barRef: card };
 }
@@ -249,96 +337,179 @@ function buildXPCard(ally) {
 function drawBarFill(gfx, x, y, w, h, ratio) {
   gfx.clear();
   if (ratio > 0) {
-    gfx.roundRect(x + 0.5, y + 0.5, Math.max(h, (w - 1) * Math.min(1, ratio)), h - 1, (h - 1) / 2)
-      .fill({ color: D.blue });
+    const fw = Math.max(h, (w - 1) * Math.min(1, ratio));
+    const r = (h - 1) / 2;
+    gfx.roundRect(x + 0.5, y + 0.5, fw, h - 1, r).fill({ color: D.blue });
+    // Shine highlight
+    gfx.roundRect(x + 1, y + 1, fw - 1, (h - 2) * 0.4, r).fill({ color: D.white, alpha: 0.15 });
   }
 }
 
-function buildLevelUpCard(ally) {
-  const stats = Object.keys(ally.statChanges).filter(k => k !== 'hp');
-  const rowCount = stats.length + 1; // +1 for HP
-  const h = 60 + rowCount * 22;
+// ---- Level Up Card ----
+
+function buildLevelUpCard(ally, lv) {
+  const sc = lv.statChanges || {};
+  const stats = Object.keys(sc).filter(k => k !== 'hp');
+  const hasHp = !!sc.hp;
+  const rowCount = stats.length + (hasHp ? 1 : 0);
+  const STAT_Y = 62;
+  const h = STAT_Y + 10 + Math.max(rowCount * 28, 70);
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.neon));
 
-  const title = lbl('\u2605 LEVEL UP!', 11, D.neon, true);
-  title.x = 16; title.y = 10;
+  // Right side: Monster sprite + name
+  const SPR_CX = CARD_W - 60;
+  const SPR_CY = 32;
+  card.addChild(glowCircle(SPR_CX, SPR_CY, 28, D.neon, 0.06));
+  card.addChild(new PIXI.Graphics()
+    .circle(SPR_CX, SPR_CY, 26).stroke({ color: D.neon, width: 0.5, alpha: 0.1 }));
+  const spr = monster(50, ally.img);
+  spr.x = SPR_CX; spr.y = SPR_CY;
+  card.addChild(spr);
+  const nameT = lbl(ally.name, 6, D.dim, true);
+  nameT.anchor = { x: 0.5, y: 0 }; nameT.x = SPR_CX; nameT.y = SPR_CY + 28;
+  card.addChild(nameT);
+
+  // Left side: Star + title
+  const starIcon = lbl('★', 14, D.neon);
+  starIcon.x = 14; starIcon.y = 6;
+  card.addChild(starIcon);
+  const title = lbl('LEVEL UP!', 12, D.neon, true);
+  title.x = 40; title.y = 8;
   card.addChild(title);
 
-  const lvlText = lbl('Lv.' + ally.levelBefore + '  \u2192  Lv.' + ally.levelAfter, 8, D.text);
-  lvlText.x = 16; lvlText.y = 34;
-  card.addChild(lvlText);
+  // Level badges
+  const lvlFrom = neonBadge('Lv.' + lv.from, D.dimmer);
+  lvlFrom.x = 16; lvlFrom.y = 38;
+  card.addChild(lvlFrom);
+  const arrow = lbl('→', 9, D.neon, true);
+  arrow.x = 74; arrow.y = 36;
+  card.addChild(arrow);
+  const lvlTo = neonBadge('Lv.' + lv.to, D.neon);
+  lvlTo.x = 96; lvlTo.y = 38;
+  card.addChild(lvlTo);
 
-  // Stat changes
-  let y = 58;
-  // HP
-  if (ally.statChanges.hp) {
-    addStatRow(card, 'HP', ally.statChanges.hp, D.red, y);
-    y += 22;
-  }
-  for (const stat of stats) {
-    const gain = ally.statChanges[stat];
-    const label = STAT_LABEL[stat] || stat;
-    const color = STAT_COLOR[stat] || D.dim;
-    addStatRow(card, label, gain, color, y);
-    y += 22;
-  }
+  // Stat section (full width bars)
+  card.addChild(sep(14, CARD_W - 14, STAT_Y, D.neon));
+
+  let y = STAT_Y + 10;
+  const allStats = [];
+  if (hasHp) allStats.push({ label: 'HP', gain: sc.hp, color: D.red });
+  stats.forEach(s => allStats.push({
+    label: STAT_LABEL[s] || s,
+    gain: sc[s],
+    color: STAT_COLOR[s] || D.dim,
+  }));
+
+  const LABEL_X = 20;
+  const BAR_X = 76;
+  const BAR_W = CARD_W - BAR_X - 56;
+
+  allStats.forEach(({ label, gain, color }) => {
+    const n = lbl(label, 7, D.dim, true);
+    n.x = LABEL_X; n.y = y;
+    card.addChild(n);
+
+    const maxG = 5;
+    const ratio = Math.min(1, gain / maxG);
+    card.addChild(new PIXI.Graphics()
+      .roundRect(BAR_X, y + 4, BAR_W, 8, 4).fill({ color: D.sep, alpha: 0.3 }));
+    if (ratio > 0) {
+      const bw = Math.max(8, BAR_W * ratio);
+      card.addChild(new PIXI.Graphics()
+        .roundRect(BAR_X, y + 4, bw, 8, 4).fill({ color, alpha: 0.55 }));
+      card.addChild(new PIXI.Graphics()
+        .roundRect(BAR_X + 0.5, y + 4.5, bw - 1, 3.5, 2).fill({ color: D.white, alpha: 0.1 }));
+    }
+
+    if (gain > 0) {
+      const v = lbl('+' + gain, 8, D.neon, true);
+      v.anchor = { x: 1, y: 0 }; v.x = CARD_W - 16; v.y = y;
+      card.addChild(v);
+    } else {
+      const v = lbl('─', 7, D.dimmer);
+      v.anchor = { x: 1, y: 0 }; v.x = CARD_W - 16; v.y = y + 1;
+      card.addChild(v);
+    }
+    y += 28;
+  });
 
   return { container: card, height: h };
 }
 
-function addStatRow(card, label, gain, color, y) {
-  const name = lbl(label, 7, D.dim, true);
-  name.x = 24; name.y = y;
-  card.addChild(name);
-
-  if (gain > 0) {
-    const val = lbl('+' + gain, 8, D.neon, true);
-    val.x = 120; val.y = y;
-    card.addChild(val);
-  } else {
-    const val = lbl('\u2500\u2500', 7, D.dimmer);
-    val.x = 120; val.y = y;
-    card.addChild(val);
-  }
-}
+// ---- Skill Acquire Card ----
 
 function buildSkillAcquireCard(ally, skill) {
-  const h = 100;
+  const h = 115;
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.blue));
 
-  const title = lbl('\u2726 새로운 스킬!', 10, D.blue, true);
-  title.x = 16; title.y = 10;
+  // Decorative glow
+  card.addChild(glowCircle(30, 22, 16, D.blue, 0.08));
+
+  // Icon + title
+  const icon = lbl('\u2726', 12, D.blue);
+  icon.x = 14; icon.y = 6;
+  card.addChild(icon);
+  const title = lbl('새로운 스킬!', 10, D.blue, true);
+  title.x = 38; title.y = 8;
   card.addChild(title);
 
-  // Use buildSkillCard for the preview
-  const skillPreview = buildSkillCard(skill, CARD_W - 40, 52);
-  skillPreview.x = 20; skillPreview.y = 36;
+  // Subtitle
+  const sub = lbl('스킬 풀에 추가됨', 6, D.dimmer);
+  sub.anchor = { x: 1, y: 0 }; sub.x = CARD_W - 14; sub.y = 12;
+  card.addChild(sub);
+
+  card.addChild(sep(14, CARD_W - 14, 32, D.blue));
+
+  // Skill card preview (full width, inside card)
+  const previewW = CARD_W - 30;
+  const skillPreview = buildSkillCard(skill, previewW, 68);
+  skillPreview.x = 15; skillPreview.y = 40;
   card.addChild(skillPreview);
 
   return { container: card, height: h };
 }
 
+// ---- Egg / Devolution Card ----
+
 function buildEggCard(ally) {
-  const h = 90;
+  const h = 115;
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.orange));
 
-  const eggIcon = egg(30, allyColor(ally.id));
-  eggIcon.x = 36; eggIcon.y = 35;
+  // Warm layered glow behind egg
+  card.addChild(glowCircle(52, 52, 32, D.orange, 0.07));
+  card.addChild(glowCircle(52, 52, 18, D.orange, 0.05));
+  // Decorative ring
+  card.addChild(new PIXI.Graphics()
+    .circle(52, 52, 30).stroke({ color: D.orange, width: 0.5, alpha: 0.1 }));
+
+  // Egg sprite
+  const eggIcon = egg(38, allyColor(ally.id));
+  eggIcon.x = 52; eggIcon.y = 50;
   card.addChild(eggIcon);
 
-  const title = lbl('\ud83e\udd5a 퇴화 시작!', 10, D.orange, true);
-  title.x = 66; title.y = 12;
+  // Title
+  const title = lbl('퇴화 시작!', 10, D.orange, true);
+  title.x = 96; title.y = 14;
   card.addChild(title);
 
-  const desc = lbl(ally.name + '이(가) 알 상태에 진입합니다...', 8, D.dim);
-  desc.x = 66; desc.y = 40;
+  card.addChild(sep(96, CARD_W - 14, 36, D.orange));
+
+  // Monster name (bold)
+  const nameText = lbl(ally.name, 9, D.text, true);
+  nameText.x = 96; nameText.y = 44;
+  card.addChild(nameText);
+
+  // Description
+  const desc = lbl('알 상태에 진입합니다...', 7, D.dim);
+  desc.x = 96; desc.y = 68;
   card.addChild(desc);
 
-  const hint = lbl('알에서 새로운 형태로 돌아옵니다', 6, D.dimmer);
-  hint.x = 66; hint.y = 62;
+  // Hint with arrow
+  const hint = lbl('새로운 형태로 돌아옵니다  \u2192', 6, D.dimmer);
+  hint.x = 96; hint.y = 90;
   card.addChild(hint);
 
   return { container: card, height: h };
@@ -361,6 +532,7 @@ function showNextCard() {
   const gen = animGeneration;
   const entry = cardQueue[currentCardIdx];
   const card = entry.container;
+  entry._entryDone = false; // track if entry animation completed
   card.x = PAD;
   card.y = feedY;
 
@@ -386,6 +558,7 @@ function showNextCard() {
     } else {
       card.y = targetY;
       card.alpha = 1;
+      entry._entryDone = true;
       feedY += entry.height + CARD_GAP;
       updateMaxScroll();
       autoScrollToBottom();
@@ -456,9 +629,15 @@ function finishCurrentCard() {
 
   // Ensure card is in feed and fully visible
   if (!card.parent) feedContainer.addChild(card);
-  card.x = PAD;
-  card.y = feedY;
   card.alpha = 1;
+
+  // Only advance feedY if entry animation hadn't completed yet
+  if (!entry._entryDone) {
+    card.x = PAD;
+    card.y = feedY;
+    entry._entryDone = true;
+    feedY += entry.height + CARD_GAP;
+  }
 
   // Finish XP bar
   if (entry.animate === 'xp' && entry.barRef) {
@@ -466,7 +645,6 @@ function finishCurrentCard() {
       entry.barRef._barW, entry.barRef._barH, entry.ratioAfter);
   }
 
-  feedY += entry.height + CARD_GAP;
   currentCardIdx = idx + 1;
   animating = false;
 
@@ -547,7 +725,7 @@ function onPointerMove(e) {
 
 function onPointerUp(e) {
   if (scrollMode === 'pending') {
-    // Tap detected
+    // Tap detected — only advance cards, never call onNext from here
     if (waitingForTap) {
       // Show next card
       waitingForTap = false;
@@ -555,9 +733,8 @@ function onPointerUp(e) {
     } else if (animating) {
       // Finish current card animation instantly
       finishCurrentCard();
-    } else if (allCardsShown) {
-      if (onNextCallback) onNextCallback();
     }
+    // When allCardsShown: do nothing here — user must use footer "계속" button
   }
   scrollMode = 'idle';
 }
