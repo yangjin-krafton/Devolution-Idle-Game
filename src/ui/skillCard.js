@@ -3,15 +3,9 @@
 // ============================================================
 
 import { S, lbl } from './theme.js';
+import { D } from './theme-dark.js';
 import { SKILL_CATEGORY } from '../data/index.js';
 import { AXIS_LABEL } from '../monsterRegistry.js';
-
-// Dark palette (shared with actionPanelUI / titleUI)
-const D = {
-  card: 0x262640, cardHi: 0x2e2e48,
-  neon: 0x00d4aa, red: 0xff6b6b, blue: 0x4dabf7,
-  text: 0xddddf0, dim: 0x8888aa, dimmer: 0x555577, sep: 0x444466,
-};
 
 export const SKILL_CAT = {
   stimulate: { c: D.neon, bg: 0x1a3330, icon: '💫', dark: 0x009977 },

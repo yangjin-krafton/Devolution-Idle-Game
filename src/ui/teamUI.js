@@ -1,91 +1,11 @@
 // ============================================================
-// Result, Team, Devolution, GameOver Screens — Pixi
+// Team, Devolution, GameOver Screens — Pixi
+// (Result screen moved to resultUI.js)
 // ============================================================
 
 import { W, H, C, lbl, softPanel, cuteBar, cuteBtn, star, addSparkles } from './theme.js';
 import { monster, egg, allyImg, allyColor } from './sprites.js';
 import { playDevolutionEffect } from '../effects.js';
-
-// ============================================================
-// RESULT SCREEN
-// ============================================================
-
-let resultContainer;
-let resultRefs = {};
-
-export function initResult() {
-  resultContainer = new PIXI.Container();
-  resultContainer.addChild(new PIXI.Graphics().rect(0, 0, W, H).fill({ color: C.bgAlt }));
-  addSparkles(resultContainer, 8, W, H);
-
-  resultRefs.title = lbl('', 16, C.pink, true);
-  resultRefs.title.anchor = { x: 0.5, y: 0.5 }; resultRefs.title.x = W / 2; resultRefs.title.y = 80;
-  resultContainer.addChild(resultRefs.title);
-
-  resultRefs.desc = lbl('', 10, C.dim);
-  resultRefs.desc.anchor = { x: 0.5, y: 0.5 }; resultRefs.desc.x = W / 2; resultRefs.desc.y = 120;
-  resultContainer.addChild(resultRefs.desc);
-
-  resultRefs.body = new PIXI.Container();
-  resultRefs.body.y = 150;
-  resultContainer.addChild(resultRefs.body);
-
-  resultRefs.nextBtn = cuteBtn(W / 2 - 160, 700, 160, 42, '계속', C.taming, 0xffffff);
-  resultContainer.addChild(resultRefs.nextBtn);
-
-  return resultContainer;
-}
-
-export function renderResult(state, enemy, xpLogs, devoLogs, onNext) {
-  resultRefs.body.removeChildren();
-  const enemyName = enemy.name || enemy;
-  const enemyImg = enemy.img || null;
-
-  if (state === 'victory') {
-    resultRefs.title.text = '순화 성공!';
-    resultRefs.title.style.fill = '#ff88aa';
-    resultRefs.desc.text = enemyName + '을(를) 길들였다!';
-
-    const cm = monster(120, enemyImg);
-    cm.x = W / 2; cm.y = 60;
-    resultRefs.body.addChild(cm);
-
-    // Hearts
-    for (let i = 0; i < 3; i++) {
-      const h = lbl('♥', 14, C.pinkLight);
-      h.anchor = { x: 0.5, y: 0.5 };
-      h.x = W / 2 + Math.cos(i * Math.PI * 2 / 3) * 55;
-      h.y = 60 + Math.sin(i * Math.PI * 2 / 3) * 35;
-      h.alpha = 0.5;
-      resultRefs.body.addChild(h);
-    }
-  } else if (state === 'escaped') {
-    resultRefs.title.text = '도주...';
-    resultRefs.title.style.fill = '#ffaa60';
-    resultRefs.desc.text = enemyName + '이(가) 도망쳤습니다.';
-  } else if (state === 'defeat') {
-    resultRefs.title.text = '전멸';
-    resultRefs.title.style.fill = '#ff6070';
-    resultRefs.desc.text = '모든 아군이 쓰러졌습니다.';
-  }
-
-  // XP/Devo logs
-  const logPanel = new PIXI.Container(); logPanel.y = 140;
-  logPanel.addChild(softPanel(20, 0, W - 40, Math.max(80, (xpLogs.length + devoLogs.length) * 36 + 50), C.white, C.pinkLight));
-  logPanel.addChild(Object.assign(lbl('결과', 10, C.pink, true), { x: 36, y: 10 }));
-
-  [...xpLogs, ...devoLogs].forEach((log, i) => {
-    const isDevo = log.includes('알 상태');
-    const t = lbl(log, 9, isDevo ? C.orange : C.text);
-    t.x = 36; t.y = 40 + i * 36;
-    logPanel.addChild(t);
-  });
-  resultRefs.body.addChild(logPanel);
-
-  // Button
-  resultRefs.nextBtn.removeAllListeners();
-  if (onNext) resultRefs.nextBtn.on('pointerdown', onNext);
-}
 
 // ============================================================
 // TEAM SCREEN

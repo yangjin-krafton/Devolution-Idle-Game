@@ -17,11 +17,11 @@ import {
 import { randomEnvironment } from './backgrounds.js';
 import { initTitle, resetTitle } from './ui/titleUI.js';
 import {
-  initResult, renderResult,
   initTeam, renderTeamCards, updateEggProgress,
   initDevo, renderDevoReveal, tickDevo,
   initGameOver, renderGameOver,
 } from './ui/teamUI.js';
+import { initResult, renderResult } from './ui/resultUI.js';
 import { loadMonsterTextures } from './ui/sprites.js';
 import { initTeamEdit, renderTeamEdit } from './ui/teamEditUI.js';
 import { initDialog, showDialog, tickDialog } from './ui/dialogUI.js';
@@ -233,16 +233,25 @@ function handleConfirm() {
 // ============================================================
 function endBattle() {
   const result = combat.getResult();
-  const xpLogs = teamManager.awardXP(result.actedAllies);
-  const devoLogs = teamManager.checkDevolution();
 
   if (result.state === 'victory') {
     capturedCount++;
     teamManager.addCaptured(combat.enemy);
   }
 
+  // Compute structured rewards (XP, level-up, stat growth, skill unlocks, devolution)
+  const allyRewards = result.state !== 'defeat'
+    ? teamManager.computeBattleRewards(result.actedAllies)
+    : [];
+
+  const rewards = {
+    state: result.state,
+    enemy: combat.enemy,
+    allies: allyRewards,
+  };
+
   _showScreenTracked('result');
-  renderResult(result.state, combat.enemy, xpLogs, devoLogs, () => {
+  renderResult(rewards, () => {
     if (result.state === 'defeat') { showGameOverScreen(); return; }
 
     if (result.state === 'victory') {
@@ -378,8 +387,9 @@ window.__BRIDGE = {
   clickNext: () => {
     // 각 화면 내 버튼 참조를 사용해 콜백 트리거
     if (_currentScreen === 'result') {
-      // renderResult에서 nextBtn에 등록된 pointerdown 콜백 실행
-      resultScr.children.forEach(c => { if (c.cursor === 'pointer') c.emit('pointerdown'); });
+      // New feed-style result screen: emit tap to skip/continue
+      resultScr.emit('pointerdown', { getLocalPosition: () => ({ x: W / 2, y: H / 2 }) });
+      resultScr.emit('pointerup', { getLocalPosition: () => ({ x: W / 2, y: H / 2 }) });
     } else if (_currentScreen === 'team' || _currentScreen === 'teamEdit') {
       onNextBattle();
     } else if (_currentScreen === 'gameover') {

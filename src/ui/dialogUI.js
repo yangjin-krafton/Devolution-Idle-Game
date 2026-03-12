@@ -13,15 +13,9 @@
 //   ], () => { console.log('dialog done'); });
 
 import { W, H, S, lbl } from './theme.js';
+import { D } from './theme-dark.js';
 import { monster } from './sprites.js';
 import { initEffectsLayer, clearEffects, cleanupBubbles, playEffects, tickEffects } from './dialogEffects.js';
-
-// ---- Dark palette (matches title/combat) ----
-const D = {
-  bg:     0x1a1a2e, panel:  0x1e1e34, sep:    0x444466,
-  neon:   0x00d4aa, text:   0xddddf0, dim:    0x8888aa,
-  dimmer: 0x555577, white:  0xffffff, black:  0x000000,
-};
 
 // ---- Layout ----
 const BOX_H = 160;

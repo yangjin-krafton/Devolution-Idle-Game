@@ -3,7 +3,7 @@
 // ============================================================
 
 import { ALLY_MONSTERS, ENEMY_MONSTERS, ALL_MONSTERS, GENERIC_LOGS } from './data/index.js';
-import { normalizeSkillLoadout } from './data/skills.js';
+import { normalizeSkillLoadout, getSkill } from './data/skills.js';
 
 export class TeamManager {
   constructor(orderedIds) {
@@ -54,6 +54,104 @@ export class TeamManager {
       logs.push(GENERIC_LOGS.xpGain(ally.name, `${ally.xp}/${ally.xpThreshold}`));
     }
     return logs;
+  }
+
+  // Structured battle rewards — xpCurve-based level-up, statGrowth, skillUnlocks
+  computeBattleRewards(actedAllyIds) {
+    const allyResults = [];
+    for (const id of actedAllyIds) {
+      const ally = this.allies.find(a => a.id === id);
+      if (!ally || ally.inEgg || ally.devolved) continue;
+
+      const xpBefore = ally.xp;
+      const levelBefore = ally.level || 1;
+      const xpGain = 1;
+      ally.xp += xpGain;
+
+      let leveledUp = false;
+      let levelAfter = ally.level || 1;
+      const statChanges = {};
+      const newSkills = [];
+      let enteredEgg = false;
+
+      // xpCurve-based level-up (may level multiple times)
+      const curve = ally.xpCurve;
+      if (curve) {
+        while (levelAfter < (ally.maxLevel || curve.length) && ally.xp >= curve[levelAfter]) {
+          levelAfter++;
+          leveledUp = true;
+
+          // Stat growth
+          if (ally.statGrowth) {
+            for (const [stat, [min, max]] of Object.entries(ally.statGrowth)) {
+              const gain = min + Math.floor(Math.random() * (max - min + 1));
+              if (gain > 0) {
+                ally.stats[stat] = (ally.stats[stat] || 0) + gain;
+                statChanges[stat] = (statChanges[stat] || 0) + gain;
+              }
+            }
+          }
+
+          // HP growth (10% per level)
+          const hpGain = Math.ceil(ally.maxHp * 0.1);
+          ally.maxHp += hpGain;
+          ally.hp = Math.min(ally.hp + hpGain, ally.maxHp);
+          statChanges.hp = (statChanges.hp || 0) + hpGain;
+
+          // Skill unlocks
+          if (ally.skillUnlocks && ally.skillUnlocks[levelAfter]) {
+            const unlockKeys = ally.skillUnlocks[levelAfter];
+            const keys = Array.isArray(unlockKeys) ? unlockKeys : [unlockKeys];
+            for (const key of keys) {
+              const skill = getSkill(key);
+              if (skill && !ally.skillPool.some(s => s.key === key || s === key)) {
+                ally.skillPool.push(skill);
+                newSkills.push(skill);
+              }
+            }
+          }
+        }
+      } else {
+        // Fallback: old threshold system
+        const threshold = ally.xpThreshold || 5;
+        if (ally.xp >= threshold) {
+          levelAfter = levelBefore + 1;
+          leveledUp = true;
+        }
+      }
+
+      ally.level = levelAfter;
+
+      // Devolution check: maxLevel reached
+      const maxLvl = ally.maxLevel || (curve ? curve.length : 10);
+      if (levelAfter >= maxLvl && !ally.inEgg) {
+        ally.inEgg = true;
+        ally.hp = 0;
+        enteredEgg = true;
+        this.eggTimers.set(ally.id, {
+          startTime: Date.now(),
+          duration: 15000,
+        });
+      }
+
+      // xpNeeded for current level's bar display
+      const xpNeeded = curve ? (curve[levelAfter] || curve[curve.length - 1]) : (ally.xpThreshold || 5);
+      const xpBase = curve ? (curve[levelAfter - 1] || 0) : 0;
+
+      allyResults.push({
+        id: ally.id,
+        name: ally.name,
+        img: ally.img,
+        xpBefore, xpAfter: ally.xp, xpGain,
+        xpBase, xpNeeded,
+        leveledUp,
+        levelBefore, levelAfter,
+        statChanges,
+        newSkills,
+        enteredEgg,
+      });
+    }
+    return allyResults;
   }
 
   checkDevolution() {
