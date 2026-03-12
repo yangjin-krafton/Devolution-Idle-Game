@@ -155,6 +155,17 @@ export class TeamManager {
     return allyResults;
   }
 
+  // Swap equipped skill: replace equipped[slotIdx] with newSkillKey, rebuild actions
+  swapEquippedSkill(allyId, slotIdx, newSkillKey) {
+    const ally = this.allies.find(a => a.id === allyId);
+    if (!ally || slotIdx < 0 || slotIdx >= ally.equipped.length) return false;
+    const newSkill = ally.skillPool.find(s => (s.key || s.id) === newSkillKey);
+    if (!newSkill) return false;
+    ally.equipped[slotIdx] = newSkillKey;
+    ally.actions[slotIdx] = { ...newSkill, pp: newSkill.maxPp || newSkill.pp };
+    return true;
+  }
+
   checkDevolution() {
     const logs = [];
     for (const ally of this.allies) {

@@ -254,6 +254,9 @@ function endBattle() {
   };
 
   _showScreenTracked('result');
+  const onSkillSwap = (allyId, slotIdx, newKey) => {
+    teamManager.swapEquippedSkill(allyId, slotIdx, newKey);
+  };
   renderResult(rewards, () => {
     if (result.state === 'defeat') { showGameOverScreen(); return; }
 
@@ -273,8 +276,7 @@ function endBattle() {
       // Escaped — go to team edit without captured monster
       showTeamEditScreen(null);
     }
-  });
-}
+  }, onSkillSwap);
 
 function showTeamEditScreen(capturedEnemy) {
   teamManager.healTeam();
@@ -416,7 +418,10 @@ initDebug(() => ({
     renderResult(rewards, onDone || (() => {
       _showScreenTracked('title');
       console.log('[DEBUG] 결과창 닫힘 → 타이틀로 복귀');
-    }));
+    }), (allyId, slotIdx, newKey) => {
+      console.log('[DEBUG] swapSkill:', allyId, slotIdx, newKey);
+      if (teamManager) teamManager.swapEquippedSkill(allyId, slotIdx, newKey);
+    });
   },
   teamManager,
 }));

@@ -22,6 +22,12 @@ export function initDebug(getState) {
       xpBase: 3, xpNeeded: 8,
       leveledUp: false, levelBefore: 2, levelAfter: 2,
       statChanges: {}, newSkills: [], enteredEgg: false,
+      actions: a.actions || [
+        { name: '기본 자극', category: 'stimulate', axis: 'sound', power: 5, pp: 6, maxPp: 6, escapeRisk: 2, key: 'mock-stim' },
+        { name: '기본 포획', category: 'capture', axis: 'sound', power: 4, pp: 3, maxPp: 3, escapeRisk: 1, key: 'mock-cap' },
+        { name: '기본 수비', category: 'defend', axis: null, power: 0, pp: 5, maxPp: 5, escapeRisk: -1, key: 'mock-def' },
+      ],
+      equipped: a.equipped || ['mock-stim', 'mock-cap', 'mock-def'],
       ...overrides,
     };
   }

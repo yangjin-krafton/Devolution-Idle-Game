@@ -31,6 +31,7 @@ let animating = false;
 let waitingForTap = false; // true = card finished, waiting for user tap to show next
 let animGeneration = 0; // incremented to cancel stale rAF loops
 let onNextCallback = null;
+let onSkillSwapCallback = null;
 let allCardsShown = false;
 
 // ============================================================
@@ -102,7 +103,7 @@ export function initResult() {
 // Render — called each battle end
 // ============================================================
 
-export function renderResult(rewards, onNext) {
+export function renderResult(rewards, onNext, onSkillSwap) {
   // Reset
   feedContainer.removeChildren();
   cardQueue = [];
@@ -114,6 +115,7 @@ export function renderResult(rewards, onNext) {
   waitingForTap = false;
   allCardsShown = false;
   onNextCallback = onNext;
+  onSkillSwapCallback = onSkillSwap || null;
   footerBtn.alpha = 0.3;
   footerBtn.removeAllListeners();
   applyScroll();
@@ -440,35 +442,118 @@ function buildLevelUpCard(ally, lv) {
 // ---- Skill Acquire Card ----
 
 function buildSkillAcquireCard(ally, skill) {
-  const h = 115;
+  const actions = ally.actions || [];
+  const newCat = skill.category;
+  const SLOT_H = 48;
+  const h = 114 + actions.length * (SLOT_H + 6) + 44;
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.blue));
 
-  // Decorative glow
+  // Glow + Title
   card.addChild(glowCircle(30, 22, 16, D.blue, 0.08));
-
-  // Icon + title
   const icon = lbl('\u2726', 12, D.blue);
   icon.x = 14; icon.y = 6;
   card.addChild(icon);
-  const title = lbl('새로운 스킬!', 10, D.blue, true);
+  const title = lbl('\uc0c8\ub85c\uc6b4 \uc2a4\ud0ac!', 10, D.blue, true);
   title.x = 38; title.y = 8;
   card.addChild(title);
 
-  // Subtitle
-  const sub = lbl('스킬 풀에 추가됨', 6, D.dimmer);
-  sub.anchor = { x: 1, y: 0 }; sub.x = CARD_W - 14; sub.y = 12;
-  card.addChild(sub);
+  // Monster name badge (top-right)
+  const nameTag = neonBadge(ally.name, D.dim);
+  nameTag.x = CARD_W - (ally.name.length * 5 * S + 14) - 14; nameTag.y = 10;
+  card.addChild(nameTag);
 
-  card.addChild(sep(14, CARD_W - 14, 32, D.blue));
+  card.addChild(sep(14, CARD_W - 14, 30, D.blue));
 
-  // Skill card preview (full width, inside card)
-  const previewW = CARD_W - 30;
-  const skillPreview = buildSkillCard(skill, previewW, 68);
-  skillPreview.x = 15; skillPreview.y = 40;
-  card.addChild(skillPreview);
+  // NEW skill preview (highlighted)
+  const newBadge = neonBadge('NEW', D.neon);
+  newBadge.x = 16; newBadge.y = 36;
+  card.addChild(newBadge);
+  const newPreview = buildSkillCard(skill, CARD_W - 32, 56);
+  newPreview.x = 16; newPreview.y = 52;
+  card.addChild(newPreview);
 
-  return { container: card, height: h };
+  // Prompt
+  card.addChild(sep(14, CARD_W - 14, 114, D.sep));
+  const prompt = lbl('\uad50\uccb4\ud560 \uc2a4\ud0ac\uc744 \uc120\ud0dd\ud558\uc138\uc694', 7, D.dim);
+  prompt.anchor = { x: 0.5, y: 0 }; prompt.x = CARD_W / 2; prompt.y = 118;
+  card.addChild(prompt);
+
+  // Equipped skill slots
+  const slotStartY = 140;
+  actions.forEach((action, i) => {
+    const sy = slotStartY + i * (SLOT_H + 6);
+    const sameCat = action.category === newCat;
+
+    // Slot bg
+    const slotBg = new PIXI.Graphics();
+    slotBg.roundRect(16, sy, CARD_W - 32, SLOT_H, 8)
+      .fill({ color: D.card })
+      .stroke({ color: sameCat ? D.blue : D.sep, width: sameCat ? 1.5 : 0.5, alpha: sameCat ? 0.6 : 0.3 });
+    card.addChild(slotBg);
+
+    // Recommend badge
+    if (sameCat) {
+      const rec = neonBadge('\ucd94\ucc9c', D.blue);
+      rec.x = CARD_W - 62; rec.y = sy + 4;
+      card.addChild(rec);
+    }
+
+    // Slot number
+    const num = lbl(String(i + 1), 6, D.dimmer, true);
+    num.x = 24; num.y = sy + 4;
+    card.addChild(num);
+
+    // Skill info
+    const sName = lbl(action.name, 8, sameCat ? D.text : D.dim, true);
+    sName.x = 40; sName.y = sy + 6;
+    card.addChild(sName);
+
+    const sInfo = lbl('\uc704\ub825 ' + action.power + '  PP ' + (action.maxPp || '-'), 6, D.dimmer);
+    sInfo.x = 40; sInfo.y = sy + 26;
+    card.addChild(sInfo);
+
+    // Tap target
+    const hit = new PIXI.Graphics();
+    hit.roundRect(16, sy, CARD_W - 32, SLOT_H, 8).fill({ color: 0xffffff, alpha: 0.001 });
+    hit.eventMode = 'static'; hit.cursor = 'pointer';
+    hit.on('pointerdown', () => {
+      if (card._resolved) return;
+      if (onSkillSwapCallback) onSkillSwapCallback(ally.id, i, skill.key || skill.id);
+      slotBg.clear();
+      slotBg.roundRect(16, sy, CARD_W - 32, SLOT_H, 8)
+        .fill({ color: D.neon, alpha: 0.1 }).stroke({ color: D.neon, width: 2 });
+      prompt.text = action.name + ' \u2192 ' + skill.name + ' \uad50\uccb4!';
+      prompt.style.fill = '#00d4aa';
+      card._resolved = true;
+      resolveInteractiveCard();
+    });
+    card.addChild(hit);
+  });
+
+  // Skip button
+  const skipY = slotStartY + actions.length * (SLOT_H + 6) + 4;
+  const skipBg = new PIXI.Graphics();
+  skipBg.roundRect(CARD_W / 2 - 80, skipY, 160, 32, 16)
+    .fill({ color: D.bgAlt, alpha: 0.5 })
+    .stroke({ color: D.sep, width: 0.5, alpha: 0.3 });
+  card.addChild(skipBg);
+  const skipT = lbl('\uac74\ub108\ub6f0\uae30', 7, D.dim);
+  skipT.anchor = { x: 0.5, y: 0.5 }; skipT.x = CARD_W / 2; skipT.y = skipY + 16;
+  card.addChild(skipT);
+  const skipHit = new PIXI.Graphics();
+  skipHit.roundRect(CARD_W / 2 - 80, skipY, 160, 32, 16).fill({ color: 0xffffff, alpha: 0.001 });
+  skipHit.eventMode = 'static'; skipHit.cursor = 'pointer';
+  skipHit.on('pointerdown', () => {
+    if (card._resolved) return;
+    prompt.text = '\uc2a4\ud0ac \ud480\uc5d0 \ubcf4\uad00\ub428';
+    prompt.style.fill = '#8888aa';
+    card._resolved = true;
+    resolveInteractiveCard();
+  });
+  card.addChild(skipHit);
+
+  return { container: card, height: h, interactive: true };
 }
 
 // ---- Egg / Devolution Card ----
@@ -569,6 +654,9 @@ function showNextCard() {
           currentCardIdx++;
           onCardFinished();
         });
+      } else if (entry.interactive) {
+        // Interactive card: wait for user choice (not tap)
+        animating = false;
       } else {
         currentCardIdx++;
         onCardFinished();
@@ -604,6 +692,14 @@ function animateXPBar(entry, onDone) {
   }
 
   requestAnimationFrame(tick);
+}
+
+function resolveInteractiveCard() {
+  // Called when user makes a choice on an interactive card
+  currentCardIdx++;
+  animating = false;
+  waitingForTap = false;
+  onCardFinished();
 }
 
 function onCardFinished() {
