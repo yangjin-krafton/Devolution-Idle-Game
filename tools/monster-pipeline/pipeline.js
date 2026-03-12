@@ -140,25 +140,35 @@ async function saveCandidateBundle(rosterId, rosterData, conceptData, selectedIm
   for (const { form, winner } of selectedImages) {
     if (!winner) continue;
     const filename = `${form.type}_${form.name_en}.png`;
-    await copyFile(winner.path, resolve(candidateDir, 'selected', filename));
+    try {
+      await copyFile(winner.path, resolve(candidateDir, 'selected', filename));
+    } catch (err) {
+      console.warn(`  [WARN] selected 복사 실패 (${filename}): ${err.message}`);
+    }
   }
 
   for (const { form, result } of allImages) {
     for (const img of result.images) {
       const filename = `${form.type}_${form.name_en}_${img.index}.png`;
-      await copyFile(img.path, resolve(candidateDir, 'all_images', filename));
+      try {
+        await copyFile(img.path, resolve(candidateDir, 'all_images', filename));
+      } catch (err) {
+        console.warn(`  [WARN] all_images 복사 실패 (${filename}): ${err.message}`);
+      }
     }
   }
 
   const readme = generateReadme(rosterId, rosterData, conceptData, selectedImages);
   await writeFile(resolve(candidateDir, 'README.md'), readme, 'utf-8');
 
-  // temp 정리
-  try {
-    const tempDir = resolve(__dirname, CONFIG.TEMP_DIR);
-    await rm(tempDir, { recursive: true, force: true });
-    await mkdir(tempDir, { recursive: true });
-  } catch {}
+  // temp 정리 — 이 몬스터 전용 하위 폴더만 삭제 (다른 몬스터 temp 보호)
+  const monsterTempDirs = new Set();
+  for (const { form } of allImages) {
+    monsterTempDirs.add(resolve(__dirname, CONFIG.TEMP_DIR, form.name_en));
+  }
+  for (const d of monsterTempDirs) {
+    try { await rm(d, { recursive: true, force: true }); } catch {}
+  }
 
   log(`후보 저장: candidates/${dirName}/`);
   return dirName;
@@ -453,10 +463,9 @@ async function runWildOnly(roster) {
         await copyFile(img.path, resolve(candidateDir, 'all_images', filename));
       }
 
-      // temp 정리
+      // temp 정리 — 이 몬스터 전용 하위 폴더만 삭제
       try {
-        await rm(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true, force: true });
-        await mkdir(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true });
+        await rm(resolve(__dirname, CONFIG.TEMP_DIR, w.name_en), { recursive: true, force: true });
       } catch {}
 
       stopSilenceWatch();
@@ -466,8 +475,7 @@ async function runWildOnly(roster) {
       stopSilenceWatch();
       log(`✗ #${num} ${w.name_kr} 에러: ${err.message}`);
       try {
-        await rm(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true, force: true });
-        await mkdir(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true });
+        await rm(resolve(__dirname, CONFIG.TEMP_DIR, w.name_en), { recursive: true, force: true });
       } catch {}
     }
   }
@@ -618,9 +626,9 @@ async function runPipeline() {
         stopSilenceWatch();
         retryCount[id] = (retryCount[id] || 0) + 1;
         log(`✗ #${String(id).padStart(2, '0')} 에러: ${err.message}`);
+        // 에러 시 이 몬스터 temp만 정리 (다른 몬스터 temp 보호)
         try {
-          await rm(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true, force: true });
-          await mkdir(resolve(__dirname, CONFIG.TEMP_DIR), { recursive: true });
+          await rm(resolve(__dirname, CONFIG.TEMP_DIR, w.name_en), { recursive: true, force: true });
         } catch {}
       }
     }

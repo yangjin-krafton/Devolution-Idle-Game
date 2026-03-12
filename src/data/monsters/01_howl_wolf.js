@@ -1,17 +1,14 @@
 import { makeActions } from '../skills.js';
 import { REACTIONS } from '../reactions.js';
 
-const IMG = 'asset/monsters/'; // placeholder prefix
-
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+const IMG = 'asset/monsters/';
 
 export default {
   id: 'howl_wolf',
 
   wild: {
     id: 'howl_wolf', name: '울부짖는 늑대', desc: '달빛 아래 울부짖으며 음파로 사냥하는 어둠의 늑대',
-    img: IMG + 'enemy_abyss_wolf.png',
+    img: IMG + 'howl_wolf_wild.png',
     attackPower: 7, tamingThreshold: 75, escapeThreshold: 95,
     sensoryType: ['sound'], personality: 'aggressive',
     habitat: 'forest',
@@ -24,7 +21,7 @@ export default {
   devo1: [
     {
       id: 'howl_wolf_d1_0', name: '달울림', desc: '울음이 아군을 격려하는 전장의 노래꾼', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'howl_wolf_d1_0.png', devolvedImg: IMG + 'howl_wolf_d2_0.png',
       hp: 24, maxHp: 24, stats: { gentleness: 12, empathy: 3, resilience: 3, agility: 2 },
       devolvedName: '울림이', devolvedDesc: '작은 입으로 용감하게 울부짖는 꼬마 늑대',
       devolvedStats: { gentleness: 7, empathy: 2, resilience: 2, agility: 3 },
@@ -39,7 +36,7 @@ export default {
     },
     {
       id: 'howl_wolf_d1_1', name: '수호늑대', desc: '울음소리로 적의 접근을 막는 방어의 늑대', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'howl_wolf_d1_1.png', devolvedImg: IMG + 'howl_wolf_d2_2.png',
       hp: 32, maxHp: 32, stats: { gentleness: 4, empathy: 3, resilience: 11, agility: 2 },
       devolvedName: '방패냥', devolvedDesc: '작은 몸으로 버티며 아군을 지키는 꼬마 늑대',
       devolvedStats: { gentleness: 2, empathy: 2, resilience: 8, agility: 2 },
@@ -54,7 +51,7 @@ export default {
     },
     {
       id: 'howl_wolf_d1_2', name: '질풍늑대', desc: '바람처럼 빠르게 달려 적을 압박하는 늑대', role: 'speedster',
-      img: AIMG.speedster[0], devolvedImg: AIMG.speedster[1],
+      img: IMG + 'howl_wolf_d1_2.png', devolvedImg: IMG + 'howl_wolf_d2_4.png',
       hp: 20, maxHp: 20, stats: { gentleness: 5, empathy: 4, resilience: 2, agility: 9 },
       devolvedName: '쏜살이', devolvedDesc: '짧은 다리로 후다닥 내달리는 꼬마 늑대',
       devolvedStats: { gentleness: 3, empathy: 2, resilience: 2, agility: 7 },
