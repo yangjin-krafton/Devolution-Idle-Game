@@ -12,7 +12,7 @@
   },
   "10": {
     "inputs": {
-      "image": "z-image_12957_.png"
+      "image": "devo2_0_0_howl_pup_12.png"
     },
     "class_type": "LoadImage",
     "_meta": {
@@ -38,49 +38,13 @@
   "19": {
     "inputs": {
       "mask": [
-        "21",
+        "43",
         0
       ]
     },
     "class_type": "InvertMask",
     "_meta": {
       "title": "마스크 반전"
-    }
-  },
-  "21": {
-    "inputs": {
-      "refinement_iterations": 1,
-      "use_multimask": false,
-      "sam3_model": [
-        "1",
-        0
-      ],
-      "image": [
-        "10",
-        0
-      ],
-      "multi_prompts": [
-        "22",
-        0
-      ]
-    },
-    "class_type": "SAM3MultipromptSegmentation",
-    "_meta": {
-      "title": "SAM3 Multiprompt Segmentation"
-    }
-  },
-  "22": {
-    "inputs": {
-      "multi_prompts_store": "[{\"positive_points\":[{\"x\":255.79794207898246,\"y\":246.09415203099616},{\"x\":254.06921258657962,\"y\":261.6527142563036}],\"negative_points\":[],\"positive_boxes\":[],\"negative_boxes\":[]}]",
-      "canvas": "",
-      "image": [
-        "10",
-        0
-      ]
-    },
-    "class_type": "SAM3MultiRegionCollector",
-    "_meta": {
-      "title": "SAM3 Multi-Region Collector"
     }
   },
   "30": {
@@ -95,7 +59,7 @@
       "device": "cpu",
       "per_batch": 0,
       "image": [
-        "34",
+        "47",
         0
       ]
     },
@@ -118,7 +82,7 @@
         0
       ],
       "mask": [
-        "21",
+        "43",
         0
       ]
     },
@@ -131,7 +95,7 @@
     "inputs": {
       "filename_prefix": "ComfyUI",
       "images": [
-        "41",
+        "30",
         0
       ]
     },
@@ -140,22 +104,75 @@
       "title": "이미지 저장"
     }
   },
-  "41": {
+  "43": {
     "inputs": {
-      "rem_mode": "RMBG-1.4",
-      "image_output": "Preview",
-      "save_prefix": "ComfyUI",
-      "torchscript_jit": false,
-      "add_background": "none",
-      "refine_foreground": false,
-      "images": [
-        "30",
+      "refinement_iterations": 10,
+      "use_multimask": false,
+      "output_best_mask": true,
+      "sam3_model": [
+        "1",
+        0
+      ],
+      "image": [
+        "10",
+        0
+      ],
+      "positive_points": [
+        "44",
+        0
+      ],
+      "negative_points": [
+        "44",
+        1
+      ]
+    },
+    "class_type": "SAM3Segmentation",
+    "_meta": {
+      "title": "SAM3 Point Segmentation"
+    }
+  },
+  "44": {
+    "inputs": {
+      "points_store": "{\"positive\":[{\"x\":241.62779019188082,\"y\":191.52896552461488},{\"x\":291.645766836553,\"y\":351.93144235063255}],\"negative\":[{\"x\":120.89474311853417,\"y\":300.18870789062686},{\"x\":415.8283295405667,\"y\":110.46534820393927},{\"x\":65.70249302786141,\"y\":69.0711606359347},{\"x\":31.20733672119094,\"y\":408.84845025663884},{\"x\":396.85599357189795,\"y\":488.18730976198094},{\"x\":55.35394613586027,\"y\":231.19839527728593},{\"x\":112.64940470673486,\"y\":345.61212192705017}]}",
+      "coordinates": "[{\"x\":241.62779019188082,\"y\":191.52896552461488},{\"x\":291.645766836553,\"y\":351.93144235063255}]",
+      "neg_coordinates": "[{\"x\":120.89474311853417,\"y\":300.18870789062686},{\"x\":415.8283295405667,\"y\":110.46534820393927},{\"x\":65.70249302786141,\"y\":69.0711606359347},{\"x\":31.20733672119094,\"y\":408.84845025663884},{\"x\":396.85599357189795,\"y\":488.18730976198094},{\"x\":55.35394613586027,\"y\":231.19839527728593},{\"x\":112.64940470673486,\"y\":345.61212192705017}]",
+      "canvas": "",
+      "image": [
+        "10",
         0
       ]
     },
-    "class_type": "easy imageRemBg",
+    "class_type": "SAM3PointCollector",
     "_meta": {
-      "title": "Image Remove Bg"
+      "title": "SAM3 Point Collector"
+    }
+  },
+  "47": {
+    "inputs": {
+      "image": [
+        "34",
+        0
+      ],
+      "alpha": [
+        "48",
+        0
+      ]
+    },
+    "class_type": "JoinImageWithAlpha",
+    "_meta": {
+      "title": "알파와 함께 이미지 결합"
+    }
+  },
+  "48": {
+    "inputs": {
+      "mask": [
+        "34",
+        1
+      ]
+    },
+    "class_type": "InvertMask",
+    "_meta": {
+      "title": "마스크 반전"
     }
   }
 }

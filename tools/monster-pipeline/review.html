@@ -132,24 +132,49 @@
   .rmbg-btn.done { background: #4caf50; color: #fff; opacity: 1; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-  /* Point picker overlay */
-  .point-picker-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150;
+  /* Unified BG removal popup */
+  .bg-popup {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 150;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
-  .point-picker-header {
-    color: #e0e0e0; font-size: 14px; margin-bottom: 12px; text-align: center;
+  .bg-popup-header {
+    color: #e0e0e0; font-size: 14px; margin-bottom: 10px; text-align: center;
   }
-  .point-picker-header small { color: #888; font-size: 12px; }
-  .point-picker-canvas-wrap {
+  .bg-popup-header small { color: #888; font-size: 12px; }
+  .bg-popup-body {
+    display: flex; gap: 20px; align-items: flex-start; margin-bottom: 12px;
+  }
+  .bg-popup-canvas-wrap {
     position: relative; cursor: crosshair; border: 2px solid #e94560; border-radius: 8px;
     overflow: hidden; background: repeating-conic-gradient(#333 0% 25%, #222 0% 50%) 50%/16px 16px;
+    flex-shrink: 0;
   }
-  .point-picker-canvas-wrap canvas { display: block; }
-  .point-picker-actions {
-    margin-top: 12px; display: flex; gap: 10px;
+  .bg-popup-canvas-wrap canvas { display: block; }
+  .bg-popup-canvas-wrap.disabled { cursor: default; pointer-events: none; opacity: 0.6; }
+  .bg-popup-result {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;
   }
-  .point-picker-actions .btn { font-size: 13px; padding: 6px 16px; }
+  .bg-popup-result img {
+    border-radius: 8px; border: 2px solid #333; object-fit: contain;
+    background: repeating-conic-gradient(#333 0% 25%, #222 0% 50%) 50%/16px 16px;
+  }
+  .bg-popup-result .label { font-size: 11px; color: #888; }
+  .bg-popup-result .placeholder {
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; border: 2px dashed #444; color: #555; font-size: 13px;
+    background: #1a1a2e;
+  }
+  .bg-popup-status {
+    color: #ff9800; font-size: 13px; margin-bottom: 8px; min-height: 20px; text-align: center;
+  }
+  .bg-popup-actions {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  }
+  .bg-popup-actions .btn { font-size: 13px; padding: 7px 16px; }
+  .btn-success { background: #4caf50; color: #fff; }
+  .btn-success:hover { background: #43a047; }
+  .btn-retry { background: #2196f3; color: #fff; }
+  .btn-retry:hover { background: #1e88e5; }
   .point-dot {
     position: absolute; width: 12px; height: 12px; border-radius: 50%;
     border: 2px solid #fff; transform: translate(-50%, -50%); pointer-events: none;
@@ -157,6 +182,8 @@
   }
   .point-dot.positive { background: #4caf50; }
   .point-dot.negative { background: #f44336; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .bg-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ff9800; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
 
   /* ComfyUI settings bar */
   .comfy-bar {
@@ -400,8 +427,8 @@ let candidates = [];
 let currentDir = null;
 let pendingOverride = null;
 
-// ---- ComfyUI Background Removal ----
-const SAM3_WORKFLOW = {"1":{"inputs":{"precision":"auto","attention":"auto","compile":false},"class_type":"LoadSAM3Model","_meta":{"title":"(down)Load SAM3 Model"}},"10":{"inputs":{"image":"PLACEHOLDER.png"},"class_type":"LoadImage","_meta":{"title":"이미지 로드"}},"18":{"inputs":{"image":["10",0],"alpha":["19",0]},"class_type":"JoinImageWithAlpha","_meta":{"title":"알파와 함께 이미지 결합"}},"19":{"inputs":{"mask":["21",0]},"class_type":"InvertMask","_meta":{"title":"마스크 반전"}},"20":{"inputs":{"filename_prefix":"ComfyUI","images":["18",0]},"class_type":"SaveImage","_meta":{"title":"이미지 저장"}},"21":{"inputs":{"refinement_iterations":1,"use_multimask":false,"sam3_model":["1",0],"image":["10",0],"multi_prompts":["22",0]},"class_type":"SAM3MultipromptSegmentation","_meta":{"title":"SAM3 Multiprompt Segmentation"}},"22":{"inputs":{"multi_prompts_store":"[{\"positive_points\":[{\"x\":255,\"y\":246},{\"x\":254,\"y\":261}],\"negative_points\":[],\"positive_boxes\":[],\"negative_boxes\":[]}]","canvas":"","image":["10",0]},"class_type":"SAM3MultiRegionCollector","_meta":{"title":"SAM3 Multi-Region Collector"}}};
+// ---- ComfyUI Background Removal (SAM3 + CropByMask + Resize) ----
+const SAM3_WORKFLOW = {"1":{"inputs":{"precision":"auto","attention":"auto","compile":false},"class_type":"LoadSAM3Model","_meta":{"title":"(down)Load SAM3 Model"}},"10":{"inputs":{"image":"PLACEHOLDER.png"},"class_type":"LoadImage","_meta":{"title":"이미지 로드"}},"18":{"inputs":{"image":["10",0],"alpha":["19",0]},"class_type":"JoinImageWithAlpha","_meta":{"title":"알파와 함께 이미지 결합"}},"19":{"inputs":{"mask":["43",0]},"class_type":"InvertMask","_meta":{"title":"마스크 반전"}},"30":{"inputs":{"width":256,"height":256,"upscale_method":"nearest-exact","keep_proportion":"pad_edge","pad_color":"0, 0, 0","crop_position":"center","divisible_by":2,"device":"cpu","per_batch":0,"image":["47",0]},"class_type":"ImageResizeKJv2","_meta":{"title":"Resize Image v2"}},"34":{"inputs":{"invert_mask":false,"detect":"mask_area","top_reserve":20,"bottom_reserve":20,"left_reserve":20,"right_reserve":20,"round_to_multiple":"8","image":["18",0],"mask":["43",0]},"class_type":"LayerUtility: CropByMask V2","_meta":{"title":"LayerUtility: CropByMask V2"}},"39":{"inputs":{"filename_prefix":"ComfyUI","images":["30",0]},"class_type":"SaveImage","_meta":{"title":"이미지 저장"}},"43":{"inputs":{"refinement_iterations":10,"use_multimask":false,"output_best_mask":true,"sam3_model":["1",0],"image":["10",0],"positive_points":["44",0],"negative_points":["44",1]},"class_type":"SAM3Segmentation","_meta":{"title":"SAM3 Point Segmentation"}},"44":{"inputs":{"points_store":"{}","coordinates":"[]","neg_coordinates":"[]","canvas":"","image":["10",0]},"class_type":"SAM3PointCollector","_meta":{"title":"SAM3 Point Collector"}},"47":{"inputs":{"image":["34",0],"alpha":["48",0]},"class_type":"JoinImageWithAlpha","_meta":{"title":"알파와 함께 이미지 결합"}},"48":{"inputs":{"mask":["34",1]},"class_type":"InvertMask","_meta":{"title":"마스크 반전"}}};
 
 function getComfyUrl() {
   // Use local proxy to avoid CORS — all /comfy/* requests are forwarded by review-server
@@ -450,13 +477,13 @@ async function uploadToComfy(dir, filename) {
 function buildSam3Prompt(uploadedFilename, positivePoints, negativePoints) {
   const workflow = JSON.parse(JSON.stringify(SAM3_WORKFLOW));
   workflow['10'].inputs.image = uploadedFilename;
-  workflow['22'].inputs.multi_prompts_store = JSON.stringify([{
-    positive_points: positivePoints,
-    negative_points: negativePoints || [],
-    positive_boxes: [],
-    negative_boxes: [],
-  }]);
-  workflow['20'].inputs.filename_prefix = 'rmbg_' + uploadedFilename.replace(/\.png$/i, '');
+  // Node 44: SAM3PointCollector — separate coordinates & neg_coordinates
+  const posArr = positivePoints || [];
+  const negArr = negativePoints || [];
+  workflow['44'].inputs.coordinates = JSON.stringify(posArr);
+  workflow['44'].inputs.neg_coordinates = JSON.stringify(negArr);
+  workflow['44'].inputs.points_store = JSON.stringify({ positive: posArr, negative: negArr });
+  workflow['39'].inputs.filename_prefix = 'rmbg_' + uploadedFilename.replace(/\.png$/i, '');
   return workflow;
 }
 
@@ -478,7 +505,7 @@ async function waitForComfyResult(promptId) {
     const data = await res.json();
     if (data[promptId]) {
       const outputs = data[promptId].outputs;
-      const saveNode = outputs['20'];
+      const saveNode = outputs['39'];
       if (saveNode && saveNode.images && saveNode.images.length > 0) {
         const img = saveNode.images[0];
         return `${comfyUrl}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder || '')}&type=${img.type || 'output'}`;
@@ -526,205 +553,255 @@ async function imgToDataUrl(src) {
   return canvas.toDataURL('image/png');
 }
 
-// ---- Point Picker UI ----
-function openPointPicker(imageSrc) {
+// ---- Save image data URL to file via server ----
+async function saveImageData(dir, filename, dataUrl) {
+  const res = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/flip`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename, imageData: dataUrl }),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || '저장 실패');
+}
+
+// ---- Unified BG Removal Popup ----
+// Single popup: pick points → run → see result → apply/retry/cancel
+function openBgPopup(dir, filename, originalDataUrl) {
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
-    overlay.className = 'point-picker-overlay';
+    overlay.className = 'bg-popup';
 
+    // Header
     const header = document.createElement('div');
-    header.className = 'point-picker-header';
-    header.innerHTML = '좌클릭: <b style="color:#4caf50">유지할 영역</b> (초록) &nbsp;|&nbsp; 우클릭: <b style="color:#f44336">제거할 영역</b> (빨강)<br><small>포인트를 찍은 뒤 "실행"을 누르세요. 포인트 없이 실행하면 중앙 자동.</small>';
+    header.className = 'bg-popup-header';
+    header.innerHTML = `<b>배경제거</b> — ${filename}<br><small>좌클릭: <span style="color:#4caf50">유지</span> (초록) &nbsp;|&nbsp; 우클릭: <span style="color:#f44336">제거</span> (빨강) &nbsp;|&nbsp; 포인트 없이 실행 = 중앙 자동</small>`;
     overlay.appendChild(header);
 
-    const wrap = document.createElement('div');
-    wrap.className = 'point-picker-canvas-wrap';
-    overlay.appendChild(wrap);
+    // Body: canvas (left) + result (right)
+    const body = document.createElement('div');
+    body.className = 'bg-popup-body';
+    overlay.appendChild(body);
 
+    // Canvas wrap for point picking
+    const wrap = document.createElement('div');
+    wrap.className = 'bg-popup-canvas-wrap';
+    body.appendChild(wrap);
+
+    // Result panel
+    const resultPanel = document.createElement('div');
+    resultPanel.className = 'bg-popup-result';
+    body.appendChild(resultPanel);
+
+    // Status line
+    const statusEl = document.createElement('div');
+    statusEl.className = 'bg-popup-status';
+    overlay.appendChild(statusEl);
+
+    // Actions
+    const actions = document.createElement('div');
+    actions.className = 'bg-popup-actions';
+    overlay.appendChild(actions);
+
+    let positivePoints = [];
+    let negativePoints = [];
+    let scale = 1;
+    let natW = 512, natH = 512;
+    let lastResultDataUrl = null;
+
+    function setStatus(msg) { statusEl.innerHTML = msg; }
+    function clearStatus() { statusEl.innerHTML = ''; }
+
+    function setActionsEnabled(enabled) {
+      actions.querySelectorAll('.btn').forEach(b => b.disabled = !enabled);
+    }
+
+    // Draw source image on canvas
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = imageSrc;
+    img.src = originalDataUrl;
     img.onload = () => {
-      // Scale to fit viewport (max 700px)
-      const maxSize = 700;
-      const scale = Math.min(1, maxSize / img.naturalWidth, maxSize / img.naturalHeight);
-      const cw = Math.round(img.naturalWidth * scale);
-      const ch = Math.round(img.naturalHeight * scale);
+      natW = img.naturalWidth;
+      natH = img.naturalHeight;
+      const maxSize = Math.min(550, window.innerHeight - 200);
+      scale = Math.min(1, maxSize / natW, maxSize / natH);
+      const cw = Math.round(natW * scale);
+      const ch = Math.round(natH * scale);
 
       const canvas = document.createElement('canvas');
       canvas.width = cw;
       canvas.height = ch;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, cw, ch);
+      canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
       wrap.appendChild(canvas);
 
-      const positivePoints = [];
-      const negativePoints = [];
+      // Result placeholder — same size
+      const resultSize = Math.max(cw, ch);
+      resultPanel.innerHTML = `<div class="placeholder" style="width:${cw}px;height:${ch}px;">결과가 여기에 표시됩니다</div><div class="label">결과</div>`;
 
-      function addDot(x, y, type) {
-        const dot = document.createElement('div');
-        dot.className = 'point-dot ' + type;
-        dot.style.left = x + 'px';
-        dot.style.top = y + 'px';
-        wrap.appendChild(dot);
-        return dot;
-      }
-
-      // Left click = positive (keep)
+      // Click handlers
       canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        // Convert to original image coords
-        const ox = Math.round(x / scale);
-        const oy = Math.round(y / scale);
-        positivePoints.push({ x: ox, y: oy });
+        positivePoints.push({ x: Math.round(x / scale), y: Math.round(y / scale) });
         addDot(x, y, 'positive');
       });
 
-      // Right click = negative (remove)
       canvas.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        const ox = Math.round(x / scale);
-        const oy = Math.round(y / scale);
-        negativePoints.push({ x: ox, y: oy });
+        negativePoints.push({ x: Math.round(x / scale), y: Math.round(y / scale) });
         addDot(x, y, 'negative');
       });
 
-      // Actions
-      const actions = document.createElement('div');
-      actions.className = 'point-picker-actions';
+      // Build action buttons
+      buildActions(cw, ch);
+    };
+
+    function addDot(x, y, type) {
+      const dot = document.createElement('div');
+      dot.className = 'point-dot ' + type;
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      wrap.appendChild(dot);
+    }
+
+    function clearDots() {
+      positivePoints = [];
+      negativePoints = [];
+      wrap.querySelectorAll('.point-dot').forEach(d => d.remove());
+    }
+
+    function showResult(dataUrl, cw, ch) {
+      lastResultDataUrl = dataUrl;
+      resultPanel.innerHTML = `<img src="${dataUrl}" style="width:${cw}px;height:${ch}px;" /><div class="label">결과</div>`;
+    }
+
+    function buildActions(cw, ch) {
+      actions.innerHTML = '';
 
       const runBtn = document.createElement('button');
       runBtn.className = 'btn btn-primary';
       runBtn.textContent = '실행';
-      runBtn.onclick = () => {
-        overlay.remove();
-        // If no points, use center
-        if (positivePoints.length === 0) {
-          positivePoints.push({
-            x: Math.round(img.naturalWidth / 2),
-            y: Math.round(img.naturalHeight / 2),
+      runBtn.onclick = async () => {
+        // Get points (default center if none)
+        const pos = positivePoints.length > 0 ? [...positivePoints] : [{ x: Math.round(natW / 2), y: Math.round(natH / 2) }];
+        const neg = [...negativePoints];
+
+        setActionsEnabled(false);
+        wrap.classList.add('disabled');
+
+        try {
+          setStatus('<span class="bg-spinner"></span>ComfyUI에 업로드 중...');
+          const uploadedName = await uploadToComfy(dir, filename);
+
+          setStatus('<span class="bg-spinner"></span>SAM3 워크플로우 실행 중...');
+          const workflow = buildSam3Prompt(uploadedName, pos, neg);
+          const promptId = await queueComfyPrompt(workflow);
+
+          setStatus('<span class="bg-spinner"></span>결과 대기 중...');
+          const resultUrl = await waitForComfyResult(promptId);
+
+          setStatus('<span class="bg-spinner"></span>결과 수신 중...');
+          const resultRes = await fetch(resultUrl);
+          const resultBlob = await resultRes.blob();
+          const dataUrl = await new Promise(r => {
+            const reader = new FileReader();
+            reader.onload = () => r(reader.result);
+            reader.readAsDataURL(resultBlob);
           });
+
+          showResult(dataUrl, cw, ch);
+          clearStatus();
+        } catch (err) {
+          setStatus(`<span style="color:#f44336">오류: ${err.message}</span>`);
         }
-        resolve({ positive: positivePoints, negative: negativePoints });
+
+        wrap.classList.remove('disabled');
+        setActionsEnabled(true);
       };
 
       const clearBtn = document.createElement('button');
       clearBtn.className = 'btn btn-cancel';
-      clearBtn.textContent = '초기화';
-      clearBtn.onclick = () => {
-        positivePoints.length = 0;
-        negativePoints.length = 0;
-        wrap.querySelectorAll('.point-dot').forEach(d => d.remove());
+      clearBtn.textContent = '포인트 초기화';
+      clearBtn.onclick = clearDots;
+
+      const applyBtn = document.createElement('button');
+      applyBtn.className = 'btn btn-success';
+      applyBtn.textContent = '적용';
+      applyBtn.onclick = () => {
+        if (!lastResultDataUrl) { setStatus('<span style="color:#f44336">먼저 실행하세요</span>'); return; }
+        overlay.remove();
+        resolve({ action: 'apply', dataUrl: lastResultDataUrl });
+      };
+
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn btn-retry';
+      retryBtn.textContent = '다시 찍기';
+      retryBtn.onclick = () => {
+        clearDots();
+        lastResultDataUrl = null;
+        resultPanel.innerHTML = `<div class="placeholder" style="width:${cw}px;height:${ch}px;">포인트를 다시 찍고 실행하세요</div><div class="label">결과</div>`;
+        clearStatus();
       };
 
       const cancelBtn = document.createElement('button');
       cancelBtn.className = 'btn btn-cancel';
-      cancelBtn.textContent = '취소';
+      cancelBtn.textContent = '닫기';
       cancelBtn.onclick = () => {
         overlay.remove();
-        resolve(null);
+        resolve({ action: 'cancel' });
       };
 
       actions.appendChild(runBtn);
       actions.appendChild(clearBtn);
+      actions.appendChild(applyBtn);
+      actions.appendChild(retryBtn);
       actions.appendChild(cancelBtn);
-      overlay.appendChild(actions);
-    };
+    }
 
     document.body.appendChild(overlay);
   });
 }
 
-// ---- Remove BG with point picker ----
+// ---- Remove BG entry point ----
 async function removeBg(dir, filename, btn, cardImg, undoBtn) {
   if (btn.classList.contains('processing')) return;
 
-  // Open point picker
-  const imgSrc = cardImg.src.startsWith('data:') ? cardImg.src : imgUrl(dir, 'all_images', filename) + '?t=' + Date.now();
-  const points = await openPointPicker(imgSrc);
-  if (!points) return; // cancelled
+  const originalSrc = cardImg.src.startsWith('data:') ? cardImg.src : imgUrl(dir, 'all_images', filename) + '?t=' + Date.now();
+  const originalDataUrl = await imgToDataUrl(originalSrc);
 
-  btn.classList.remove('done');
-  btn.classList.add('processing');
-  btn.textContent = '⏳';
+  const result = await openBgPopup(dir, filename, originalDataUrl);
 
-  try {
-    // Save current image to history for undo
-    const currentDataUrl = await imgToDataUrl(imgSrc);
-    pushHistory(dir, filename, currentDataUrl);
+  if (result.action === 'apply' && result.dataUrl) {
+    // Save original to history
+    pushHistory(dir, filename, originalDataUrl);
     undoBtn.classList.add('has-history');
 
-    // 1. Upload image to ComfyUI
-    toast(`배경제거 시작: ${filename}`);
-    const uploadedName = await uploadToComfy(dir, filename);
-
-    // 2. Build workflow with user-picked points
-    const workflow = buildSam3Prompt(uploadedName, points.positive, points.negative);
-    const promptId = await queueComfyPrompt(workflow);
-
-    // 3. Wait for result
-    const resultUrl = await waitForComfyResult(promptId);
-
-    // 4. Fetch result
-    const resultRes = await fetch(resultUrl);
-    const resultBlob = await resultRes.blob();
-    const dataUrl = await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(resultBlob);
-    });
-
-    // 5. Save back
-    const saveRes = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/flip`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename, imageData: dataUrl }),
-    });
-    const saveData = await saveRes.json();
-    if (saveData.ok) {
-      cardImg.src = dataUrl;
-      btn.classList.remove('processing');
+    try {
+      await saveImageData(dir, filename, result.dataUrl);
+      cardImg.src = result.dataUrl;
       btn.classList.add('done');
       btn.textContent = '✓';
-      toast(`배경제거 완료: ${filename}`);
-    } else {
-      throw new Error(saveData.error || '저장 실패');
+      toast(`배경제거 적용: ${filename}`);
+    } catch (err) {
+      toast(`저장 실패: ${err.message}`);
     }
-  } catch (err) {
-    btn.classList.remove('processing');
-    btn.textContent = 'BG';
-    toast(`배경제거 실패: ${err.message}`);
   }
 }
 
-// ---- Undo BG removal ----
+// ---- Undo BG removal (from card button) ----
 async function undoRemoveBg(dir, filename, cardImg, undoBtn, bgBtn) {
   const prevDataUrl = popHistory(dir, filename);
   if (!prevDataUrl) { toast('되돌릴 이미지가 없습니다'); return; }
 
   try {
-    // Save previous data back to file
-    const saveRes = await fetch(`${API}/api/candidates/${encodeURIComponent(dir)}/flip`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename, imageData: prevDataUrl }),
-    });
-    const saveData = await saveRes.json();
-    if (saveData.ok) {
-      cardImg.src = prevDataUrl;
-      bgBtn.classList.remove('done');
-      bgBtn.textContent = 'BG';
-      toast(`되돌리기 완료: ${filename}`);
-    } else {
-      // Push back if save failed
-      pushHistory(dir, filename, prevDataUrl);
-      toast(`되돌리기 실패: ${saveData.error}`);
-    }
+    await saveImageData(dir, filename, prevDataUrl);
+    cardImg.src = prevDataUrl;
+    bgBtn.classList.remove('done');
+    bgBtn.textContent = 'BG';
+    toast(`되돌리기 완료: ${filename}`);
   } catch (err) {
     pushHistory(dir, filename, prevDataUrl);
     toast(`되돌리기 실패: ${err.message}`);
