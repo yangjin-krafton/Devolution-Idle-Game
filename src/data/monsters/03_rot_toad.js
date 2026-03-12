@@ -3,15 +3,15 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'rot_toad',
 
   wild: {
     id: 'rot_toad', name: '썩은향 두꺼비', desc: '독한 냄새를 뿜어 접근하는 모든 것을 내쫓는 거대 두꺼비',
-    img: IMG + 'enemy_fog_jellyfish.png',
+    img: IMG + 'rot_toad_wild.png',
     attackPower: 7, tamingThreshold: 78, escapeThreshold: 110,
     sensoryType: ['smell'], personality: 'aggressive',
     habitat: 'swamp',
@@ -24,7 +24,7 @@ export default {
   devo1: [
     {
       id: 'rot_toad_d1_0', name: '향기두꺼비', desc: '독기가 약초 향으로 변한 치유의 두꺼비', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'rot_toad_d1_0.png', devolvedImg: IMG + 'rot_toad_d2_0.png',
       hp: 36, maxHp: 36, stats: { gentleness: 3, empathy: 3, resilience: 12, agility: 2 },
       devolvedName: '약초올챙이', devolvedDesc: '몸에서 약초 향이 솔솔 나는 꼬마 올챙이',
       devolvedStats: { gentleness: 2, empathy: 2, resilience: 8, agility: 2 },
@@ -39,7 +39,7 @@ export default {
     },
     {
       id: 'rot_toad_d1_1', name: '독안개', desc: '독을 역이용해 적의 도주를 막는 전략가', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'rot_toad_d1_1.png', devolvedImg: IMG + 'rot_toad_d2_2.png',
       hp: 30, maxHp: 30, stats: { gentleness: 4, empathy: 9, resilience: 5, agility: 2 },
       devolvedName: '안개올챙이', devolvedDesc: '작은 안개를 피워 숨바꼭질하는 올챙이',
       devolvedStats: { gentleness: 2, empathy: 7, resilience: 3, agility: 2 },
@@ -54,7 +54,7 @@ export default {
     },
     {
       id: 'rot_toad_d1_2', name: '맹독두꺼비', desc: '강렬한 냄새로 순화도를 급격히 올리는 공격형', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'rot_toad_d1_2.png', devolvedImg: IMG + 'rot_toad_d2_4.png',
       hp: 28, maxHp: 28, stats: { gentleness: 10, empathy: 3, resilience: 5, agility: 2 },
       devolvedName: '독침올챙이', devolvedDesc: '작은 독침으로 용감하게 싸우는 올챙이',
       devolvedStats: { gentleness: 7, empathy: 2, resilience: 2, agility: 3 },
