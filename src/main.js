@@ -277,6 +277,7 @@ function endBattle() {
       showTeamEditScreen(null);
     }
   }, onSkillSwap);
+}
 
 function showTeamEditScreen(capturedEnemy) {
   teamManager.healTeam();

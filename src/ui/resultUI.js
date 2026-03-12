@@ -444,8 +444,11 @@ function buildLevelUpCard(ally, lv) {
 function buildSkillAcquireCard(ally, skill) {
   const actions = ally.actions || [];
   const newCat = skill.category;
-  const SLOT_H = 48;
-  const h = 114 + actions.length * (SLOT_H + 6) + 44;
+  const SLOT_H = 78; // taller slots for full skill card preview
+  const NEW_H = 80;  // new skill preview height (with desc)
+  const PROMPT_Y = 36 + NEW_H + 8;
+  const slotStartY = PROMPT_Y + 26;
+  const h = slotStartY + actions.length * (SLOT_H + 6) + 44;
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.blue));
 
@@ -465,32 +468,85 @@ function buildSkillAcquireCard(ally, skill) {
 
   card.addChild(sep(14, CARD_W - 14, 30, D.blue));
 
-  // NEW skill preview (highlighted)
+  // NEW skill preview (with description)
   const newBadge = neonBadge('NEW', D.neon);
   newBadge.x = 16; newBadge.y = 36;
   card.addChild(newBadge);
-  const newPreview = buildSkillCard(skill, CARD_W - 32, 56);
+  const newPreview = buildSkillCard(skill, CARD_W - 32, NEW_H, { showDesc: true });
   newPreview.x = 16; newPreview.y = 52;
   card.addChild(newPreview);
 
   // Prompt
-  card.addChild(sep(14, CARD_W - 14, 114, D.sep));
+  card.addChild(sep(14, CARD_W - 14, PROMPT_Y, D.sep));
   const prompt = lbl('\uad50\uccb4\ud560 \uc2a4\ud0ac\uc744 \uc120\ud0dd\ud558\uc138\uc694', 7, D.dim);
-  prompt.anchor = { x: 0.5, y: 0 }; prompt.x = CARD_W / 2; prompt.y = 118;
+  prompt.anchor = { x: 0.5, y: 0 }; prompt.x = CARD_W / 2; prompt.y = PROMPT_Y + 4;
   card.addChild(prompt);
 
-  // Equipped skill slots
-  const slotStartY = 140;
+  // --- Slot state management ---
+  card._selectedSlot = -1;
+  const slotBgs = [];
+
+  function resetAllSlots() {
+    actions.forEach((action, idx) => {
+      const sy = slotStartY + idx * (SLOT_H + 6);
+      const sameCat = action.category === newCat;
+      const bg = slotBgs[idx];
+      bg.clear();
+      bg.roundRect(16, sy, CARD_W - 32, SLOT_H, 10)
+        .fill({ color: D.card })
+        .stroke({ color: sameCat ? D.blue : D.sep, width: sameCat ? 1.5 : 0.5, alpha: sameCat ? 0.6 : 0.3 });
+    });
+    skipBg.clear();
+    skipBg.roundRect(CARD_W / 2 - 80, skipY, 160, 32, 16)
+      .fill({ color: D.bgAlt, alpha: 0.5 })
+      .stroke({ color: D.sep, width: 0.5, alpha: 0.3 });
+  }
+
+  function selectSlot(idx) {
+    resetAllSlots();
+    card._selectedSlot = idx;
+    if (idx >= 0) {
+      const sy = slotStartY + idx * (SLOT_H + 6);
+      slotBgs[idx].clear();
+      slotBgs[idx].roundRect(16, sy, CARD_W - 32, SLOT_H, 10)
+        .fill({ color: D.neon, alpha: 0.1 }).stroke({ color: D.neon, width: 2 });
+      if (onSkillSwapCallback) onSkillSwapCallback(ally.id, idx, skill.key || skill.id);
+      prompt.text = actions[idx].name + ' \u2192 ' + skill.name + ' \uad50\uccb4!';
+      prompt.style.fill = '#00d4aa';
+    } else {
+      skipBg.clear();
+      skipBg.roundRect(CARD_W / 2 - 80, skipY, 160, 32, 16)
+        .fill({ color: D.neon, alpha: 0.08 })
+        .stroke({ color: D.neon, width: 1, alpha: 0.3 });
+      prompt.text = '\uc2a4\ud0ac \ud480\uc5d0 \ubcf4\uad00\ub428';
+      prompt.style.fill = '#8888aa';
+    }
+    if (!card._resolved) {
+      card._resolved = true;
+      resolveInteractiveCard();
+    }
+  }
+
+  // Equipped skill slots — each uses buildSkillCard for full detail
   actions.forEach((action, i) => {
     const sy = slotStartY + i * (SLOT_H + 6);
     const sameCat = action.category === newCat;
 
-    // Slot bg
     const slotBg = new PIXI.Graphics();
-    slotBg.roundRect(16, sy, CARD_W - 32, SLOT_H, 8)
+    slotBg.roundRect(16, sy, CARD_W - 32, SLOT_H, 10)
       .fill({ color: D.card })
       .stroke({ color: sameCat ? D.blue : D.sep, width: sameCat ? 1.5 : 0.5, alpha: sameCat ? 0.6 : 0.3 });
     card.addChild(slotBg);
+    slotBgs.push(slotBg);
+
+    // Slot number badge
+    const numBg = new PIXI.Graphics();
+    numBg.roundRect(20, sy + 4, 18, 18, 4)
+      .fill({ color: sameCat ? D.blue : D.sep, alpha: 0.2 });
+    card.addChild(numBg);
+    const num = lbl(String(i + 1), 7, sameCat ? D.blue : D.dimmer, true);
+    num.anchor = { x: 0.5, y: 0.5 }; num.x = 29; num.y = sy + 13;
+    card.addChild(num);
 
     // Recommend badge
     if (sameCat) {
@@ -499,35 +555,17 @@ function buildSkillAcquireCard(ally, skill) {
       card.addChild(rec);
     }
 
-    // Slot number
-    const num = lbl(String(i + 1), 6, D.dimmer, true);
-    num.x = 24; num.y = sy + 4;
-    card.addChild(num);
-
-    // Skill info
-    const sName = lbl(action.name, 8, sameCat ? D.text : D.dim, true);
-    sName.x = 40; sName.y = sy + 6;
-    card.addChild(sName);
-
-    const sInfo = lbl('\uc704\ub825 ' + action.power + '  PP ' + (action.maxPp || '-'), 6, D.dimmer);
-    sInfo.x = 40; sInfo.y = sy + 26;
-    card.addChild(sInfo);
+    // Embedded skill card (compact with desc)
+    const slotCard = buildSkillCard(action, CARD_W - 72, SLOT_H - 8, { showDesc: true });
+    slotCard.x = 42; slotCard.y = sy + 4;
+    if (!sameCat) slotCard.alpha = 0.6;
+    card.addChild(slotCard);
 
     // Tap target
     const hit = new PIXI.Graphics();
-    hit.roundRect(16, sy, CARD_W - 32, SLOT_H, 8).fill({ color: 0xffffff, alpha: 0.001 });
+    hit.roundRect(16, sy, CARD_W - 32, SLOT_H, 10).fill({ color: 0xffffff, alpha: 0.001 });
     hit.eventMode = 'static'; hit.cursor = 'pointer';
-    hit.on('pointerdown', () => {
-      if (card._resolved) return;
-      if (onSkillSwapCallback) onSkillSwapCallback(ally.id, i, skill.key || skill.id);
-      slotBg.clear();
-      slotBg.roundRect(16, sy, CARD_W - 32, SLOT_H, 8)
-        .fill({ color: D.neon, alpha: 0.1 }).stroke({ color: D.neon, width: 2 });
-      prompt.text = action.name + ' \u2192 ' + skill.name + ' \uad50\uccb4!';
-      prompt.style.fill = '#00d4aa';
-      card._resolved = true;
-      resolveInteractiveCard();
-    });
+    hit.on('pointerdown', () => selectSlot(i));
     card.addChild(hit);
   });
 
@@ -544,17 +582,13 @@ function buildSkillAcquireCard(ally, skill) {
   const skipHit = new PIXI.Graphics();
   skipHit.roundRect(CARD_W / 2 - 80, skipY, 160, 32, 16).fill({ color: 0xffffff, alpha: 0.001 });
   skipHit.eventMode = 'static'; skipHit.cursor = 'pointer';
-  skipHit.on('pointerdown', () => {
-    if (card._resolved) return;
-    prompt.text = '\uc2a4\ud0ac \ud480\uc5d0 \ubcf4\uad00\ub428';
-    prompt.style.fill = '#8888aa';
-    card._resolved = true;
-    resolveInteractiveCard();
-  });
+  skipHit.on('pointerdown', () => selectSlot(-1));
   card.addChild(skipHit);
 
   return { container: card, height: h, interactive: true };
 }
+
+
 
 // ---- Egg / Devolution Card ----
 
@@ -655,7 +689,8 @@ function showNextCard() {
           onCardFinished();
         });
       } else if (entry.interactive) {
-        // Interactive card: wait for user choice (not tap)
+        // Interactive card: scroll so card top is visible, wait for user choice
+        autoScrollToCardTop(targetY);
         animating = false;
       } else {
         currentCardIdx++;
@@ -770,8 +805,16 @@ function applyScroll() {
   feedContainer.y = FEED_TOP - scrollOffset;
 }
 
-function autoScrollToBottom() {
-  const target = maxScroll;
+function autoScrollToBottom() { animateScrollTo(maxScroll); }
+
+function autoScrollToCardTop(cardY) {
+  // Scroll so that cardY sits at the top of the feed viewport (with small padding)
+  const target = Math.max(0, Math.min(maxScroll, cardY - 8));
+  animateScrollTo(target);
+}
+
+function animateScrollTo(target) {
+  target = Math.max(0, Math.min(maxScroll, target));
   if (Math.abs(scrollOffset - target) < 2) {
     scrollOffset = target;
     applyScroll();
