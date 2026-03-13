@@ -4,7 +4,7 @@
 
 import { W, H, S, lbl } from './theme.js';
 import { monster } from './sprites.js';
-import { buildSkillCard, SKILL_CAT } from './skillCard.js';
+import { buildSkillCard } from './skillCard.js';
 
 let container, refs = {}, onAction = null, onConfirm = null;
 
@@ -116,42 +116,13 @@ export function renderActions(team, cr) {
         return;
       }
 
-      // Build preview header for combat
-      const cat = SKILL_CAT[action.category] || SKILL_CAT.stimulate;
-      const preview = cr?._previews?.[c]?.[row];
-      let previewOpt = null;
-      if (preview) {
-        let pwText = `${cat.icon}`;
-        let effMarker = '';
-        const catLabel = { stimulate: '자극', capture: '포획', defend: '수비' }[action.category] || action.category;
-        if (preview.type === 'stimulate') {
-          const escSign = preview.escape > 0 ? `+${preview.escape}` : String(preview.escape);
-          pwText = `${cat.icon} +${preview.taming} 💨${escSign}`;
-          if (preview.effective === 'good') effMarker = ' ▲';
-          else if (preview.effective === 'bad') effMarker = ' ▼';
-          if (preview.saturated) effMarker += ' 둔감';
-          if (preview.repeated) effMarker += ' 반복↓';
-        }
-        else if (preview.type === 'capture') {
-          pwText = `${cat.icon} ${catLabel} ${preview.chance}% 💨+${preview.escape}`;
-        }
-        else if (preview.type === 'defend') {
-          const parts = [];
-          if (preview.defense) parts.push(`🛡${preview.defense}`);
-          if (preview.heal) parts.push(`+${preview.heal}HP`);
-          pwText = `${cat.icon} ${parts.join(' ')}`;
-        }
-        const effColor = effMarker.includes('▲') ? 0x00ff88 : effMarker.includes('▼') ? 0xff4444 : cat.c;
-        previewOpt = { text: (pwText + effMarker), effColor };
-      }
-
+      const preview = cr?._previews?.[c]?.[row] || null;
       const ppEmpty = action.pp != null && action.pp <= 0;
       const ct = buildSkillCard(action, cW, cardH, {
         selected: isChosen,
         locked: isLocked,
         ppEmpty,
-        showDesc: true,
-        preview: previewOpt,
+        preview,
         orderNum: (isChosen && order[c] != null) ? order[c] : null,
       });
       ct.x = x; ct.y = y;
