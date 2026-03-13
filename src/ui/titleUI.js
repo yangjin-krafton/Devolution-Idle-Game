@@ -525,7 +525,7 @@ function buildCodexPanel() {
 function buildFilterBar() {
   filterBarContainer.removeChildren();
 
-  // Row 1: type filters + sort
+  // ── Row 1: [필터] type pills ─── [정렬] sort pills ──
   const typeFilters = [
     { key: 'all',   label: '전체' },
     { key: 'wild',  label: '야생' },
@@ -539,6 +539,13 @@ function buildFilterBar() {
   ];
 
   let x = PAD;
+
+  // "필터" section label
+  const filterLabel = lbl('필터', 4.5, D.dimmer, true);
+  filterLabel.x = x; filterLabel.y = 5;
+  filterBarContainer.addChild(filterLabel);
+  x += 28;
+
   typeFilters.forEach(f => {
     const pill = filterPill(f.label, codexFilter === f.key, D.neon);
     pill.x = x; pill.y = 2;
@@ -554,16 +561,21 @@ function buildFilterBar() {
     x += (pill._pillWidth || 40) + 3;
   });
 
-  // Separator dot
-  x += 3;
+  // Vertical separator line
+  x += 4;
   filterBarContainer.addChild(new PIXI.Graphics()
-    .circle(x, 11, 1.5).fill({ color: D.sep }));
-  x += 6;
+    .moveTo(x, 3).lineTo(x, 17).stroke({ color: D.sep, width: 1, alpha: 0.4 }));
+  x += 8;
 
-  // Sort pills
+  // "정렬" section label
+  const sortLabel = lbl('정렬', 4.5, D.dimmer, true);
+  sortLabel.x = x; sortLabel.y = 5;
+  filterBarContainer.addChild(sortLabel);
+  x += 28;
+
   sorts.forEach(s => {
     const isActive = codexSort === s.key;
-    const pill = filterPill(s.label + (isActive ? ' ▼' : ''), isActive, D.blue);
+    const pill = filterPill(s.label + (isActive ? ' ▼' : ''), isActive, 0x7799ff);
     pill.x = x; pill.y = 2;
     pill.eventMode = 'static'; pill.cursor = 'pointer';
     pill.on('pointerdown', (e) => {
@@ -577,10 +589,15 @@ function buildFilterBar() {
     x += (pill._pillWidth || 40) + 3;
   });
 
-  // Row 2: 24 family pills
+  // ── Row 2: 24 family pills with "종족" label ──
   const famRow = new PIXI.Container();
-  famRow.y = 20;
-  let fx = PAD;
+  famRow.y = 22;
+
+  const famLabel = lbl('종족', 4.5, D.dimmer, true);
+  famLabel.x = PAD; famLabel.y = 3;
+  famRow.addChild(famLabel);
+
+  let fx = PAD + 28;
   ALL_MONSTERS.forEach(m => {
     const isActive = codexFilter === 'fam:' + m.id;
     const shortName = m.wild.name.slice(0, 3);
