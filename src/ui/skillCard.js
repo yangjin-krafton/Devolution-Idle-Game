@@ -177,30 +177,32 @@ export function buildSkillCard(action, w, h, opts = {}) {
 // ---- 실시간 프리뷰 렌더 (전투 중) ----
 function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
   if (preview.type === 'stimulate') {
-    // 순화량 (초록)
+    // 순화량 + 총 배율 %
+    const pctColor = preview.totalPct >= 120 ? 0x00ff88 : preview.totalPct <= 80 ? 0xff6666 : D.dim;
     const tamLbl = lbl(`순화 +${preview.taming}`, 7, D.neon, true);
     tamLbl.x = 10; tamLbl.y = y; tamLbl.alpha = alpha;
     ct.addChild(tamLbl);
-
-    // 상성 마커
-    if (preview.effective === 'good') {
-      const eff = lbl('▲ 유리', 5, 0x00ff88, true);
-      eff.x = 80; eff.y = y + 2; eff.alpha = alpha;
-      ct.addChild(eff);
-    } else if (preview.effective === 'bad') {
-      const eff = lbl('▼ 불리', 5, 0xff4444, true);
-      eff.x = 80; eff.y = y + 2; eff.alpha = alpha;
-      ct.addChild(eff);
-    }
+    const pctLbl = lbl(`(${preview.totalPct}%)`, 5.5, pctColor, true);
+    pctLbl.x = 10 + tamLbl.width / S + 4; pctLbl.y = y + 2; pctLbl.alpha = alpha;
+    ct.addChild(pctLbl);
     y += 15;
 
-    // 도주 위험 (빨강)
+    // 상성 배율
+    if (preview.sensoryPct !== 100) {
+      const sColor = preview.sensoryPct > 100 ? 0x00ff88 : 0xff6666;
+      const sLbl = lbl(`상성 ${preview.sensoryPct}%`, 5, sColor);
+      sLbl.x = 10; sLbl.y = y; sLbl.alpha = alpha;
+      ct.addChild(sLbl);
+      y += 11;
+    }
+
+    // 도주 위험
     const escSign = preview.escape >= 0 ? `+${preview.escape}` : String(preview.escape);
     const escColor = preview.escape > 0 ? D.red : D.neon;
-    const escLbl = lbl(`도주 ${escSign}`, 6, escColor);
+    const escLbl = lbl(`도주 ${escSign}`, 5.5, escColor);
     escLbl.x = 10; escLbl.y = y; escLbl.alpha = alpha;
     ct.addChild(escLbl);
-    y += 13;
+    y += 12;
 
     // 경고 태그
     if (preview.saturated || preview.repeated) {
@@ -210,7 +212,7 @@ function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
       const warnPill = new PIXI.Graphics();
       warnPill.roundRect(8, y, w - 16, 12, 4).fill({ color: D.orange, alpha: 0.15 });
       ct.addChild(warnPill);
-      const warnLbl = lbl(`⚠ ${warns.join(' · ')}`, 5, D.orange, true);
+      const warnLbl = lbl(`⚠ ${warns.join(' · ')}`, 4.5, D.orange, true);
       warnLbl.x = 12; warnLbl.y = y + 1; warnLbl.alpha = alpha;
       ct.addChild(warnLbl);
       y += 14;
@@ -218,29 +220,27 @@ function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
   }
 
   else if (preview.type === 'capture') {
-    // 성공률
+    // 성공률 (색상 구간)
     const chanceColor = preview.chance >= 60 ? D.neon : preview.chance >= 30 ? D.yellow : D.red;
-    const chanceLbl = lbl(`교감 성공률 ${preview.chance}%`, 7, chanceColor, true);
+    const chanceLbl = lbl(`교감 ${preview.chance}%`, 8, chanceColor, true);
     chanceLbl.x = 10; chanceLbl.y = y; chanceLbl.alpha = alpha;
     ct.addChild(chanceLbl);
-    y += 15;
+    y += 16;
 
-    // 도주 위험
-    const escLbl = lbl(`도주 +${preview.escape}`, 6, D.red);
+    // 실패 시 도주 위험
+    const escLbl = lbl(`실패 시 도주 +${preview.escape}`, 5, D.red);
     escLbl.x = 10; escLbl.y = y; escLbl.alpha = alpha;
     ct.addChild(escLbl);
-    y += 13;
+    y += 12;
   }
 
   else if (preview.type === 'defend') {
-    // 방어력
     if (preview.defense) {
       const defLbl = lbl(`방어 +${preview.defense}`, 7, D.blue, true);
       defLbl.x = 10; defLbl.y = y; defLbl.alpha = alpha;
       ct.addChild(defLbl);
       y += 15;
     }
-    // 회복량
     if (preview.heal) {
       const healLbl = lbl(`회복 +${preview.heal} HP`, 6, D.neon);
       healLbl.x = 10; healLbl.y = y; healLbl.alpha = alpha;

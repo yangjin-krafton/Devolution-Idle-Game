@@ -72,9 +72,14 @@ export function previewAction(ally, action, enemy, tamingGauge, emotionState, op
     const esc = Math.round(
       (action.escapeRisk + (stateBonus.escapeRiskDelta || 0)) * (isGood ? 0.7 : 1.5) * emotionMods.escapeMod
     );
-    const effective = mod >= 1.2 ? 'good' : mod <= 0.8 ? 'bad' : 'neutral';
+    // 총 배율 계산 (base power 대비)
+    const baseTaming = action.power;
+    const totalMod = baseTaming > 0 ? gain / baseTaming : 1;
+
     return {
-      type: 'stimulate', taming: gain, escape: esc, pp: action.pp, effective,
+      type: 'stimulate', taming: gain, escape: esc, pp: action.pp,
+      sensoryPct: Math.round(mod * 100),       // 상성 배율 %
+      totalPct: Math.round(totalMod * 100),     // 총 배율 %
       saturated: satMod < 1.0,
       repeated: repeatMod < 1.0,
     };
