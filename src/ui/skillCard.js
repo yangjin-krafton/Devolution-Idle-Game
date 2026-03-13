@@ -177,31 +177,26 @@ export function buildSkillCard(action, w, h, opts = {}) {
 // ---- 실시간 프리뷰 렌더 (전투 중) ----
 function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
   if (preview.type === 'stimulate') {
-    // 순화량 + 총 배율 %
-    const pctColor = preview.totalPct >= 120 ? 0x00ff88 : preview.totalPct <= 80 ? 0xff6666 : D.dim;
-    const tamLbl = lbl(`순화 +${preview.taming}`, 7, D.neon, true);
+    // 1행: 순화 +N (총배율%)
+    const pctColor = preview.totalPct >= 120 ? 0x00ff88 : preview.totalPct <= 80 ? 0xff6666 : D.neon;
+    const tamLbl = lbl(`순화 +${preview.taming} (${preview.totalPct}%)`, 7, pctColor, true);
     tamLbl.x = 10; tamLbl.y = y; tamLbl.alpha = alpha;
     ct.addChild(tamLbl);
-    const pctLbl = lbl(`(${preview.totalPct}%)`, 5.5, pctColor, true);
-    pctLbl.x = 10 + tamLbl.width / S + 4; pctLbl.y = y + 2; pctLbl.alpha = alpha;
-    ct.addChild(pctLbl);
     y += 15;
 
-    // 상성 배율
-    if (preview.sensoryPct !== 100) {
-      const sColor = preview.sensoryPct > 100 ? 0x00ff88 : 0xff6666;
-      const sLbl = lbl(`상성 ${preview.sensoryPct}%`, 5, sColor);
-      sLbl.x = 10; sLbl.y = y; sLbl.alpha = alpha;
-      ct.addChild(sLbl);
-      y += 11;
-    }
-
-    // 도주 위험
+    // 2행: 상성 + 도주 (한 줄에)
+    const parts = [];
+    if (preview.sensoryPct !== 100) parts.push({ t: `상성${preview.sensoryPct}%`, c: preview.sensoryPct > 100 ? 0x00ff88 : 0xff6666 });
     const escSign = preview.escape >= 0 ? `+${preview.escape}` : String(preview.escape);
-    const escColor = preview.escape > 0 ? D.red : D.neon;
-    const escLbl = lbl(`도주 ${escSign}`, 5.5, escColor);
-    escLbl.x = 10; escLbl.y = y; escLbl.alpha = alpha;
-    ct.addChild(escLbl);
+    parts.push({ t: `도주${escSign}`, c: preview.escape > 0 ? D.red : D.neon });
+
+    let px = 10;
+    for (const p of parts) {
+      const l = lbl(p.t, 5.5, p.c);
+      l.x = px; l.y = y; l.alpha = alpha;
+      ct.addChild(l);
+      px += p.t.length * 5.5 * S + 8;
+    }
     y += 12;
 
     // 경고 태그
