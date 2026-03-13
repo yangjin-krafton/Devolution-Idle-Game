@@ -1,77 +1,87 @@
 // ============================================================
-// Skill Card — 하스스톤 스타일 카드 컴포넌트
-// 헤더: 아이콘 + 이름 + PP
-// 설명: 실시간 수치 → 부가효과 → 경고 → 플레이버
-// 설명 영역은 카드 높이에 맞게 자동 스케일
+// Skill Card — 보드게임 토큰 카드 스타일
+//
+// 구조:
+//   헤더: 카테고리 아이콘 + 이름 + PP 도트
+//   중앙: 핵심 효과 (큰 이모지 + 큰 수치)
+//   힌트: 방향 힌트 or 상태
+//   하단: 플레이버 텍스트 (1줄, 흐리게)
 // ============================================================
 
 import { S, lbl } from './theme.js';
-import { SKILL_CATEGORY } from '../data/index.js';
+import { ENV_AXIS_ICON, ENV_AXIS_LABEL } from '../data/index.js';
 import { AXIS_LABEL } from '../monsterRegistry.js';
 
 const D = {
   card: 0x262640, cardHi: 0x2e2e48,
   neon: 0x00d4aa, red: 0xff6b6b, blue: 0x4dabf7,
   text: 0xddddf0, dim: 0x8888aa, dimmer: 0x555577, sep: 0x444466,
-  yellow: 0xeebb55, orange: 0xffaa60,
+  yellow: 0xeebb55, orange: 0xffaa60, purple: 0xccaaee,
 };
 
 export const SKILL_CAT = {
-  stimulate: { c: D.neon, bg: 0x1a3330, icon: '💫', dark: 0x009977 },
-  capture:   { c: D.red,  bg: 0x33222a, icon: '🤝', dark: 0xcc4444 },
-  defend:    { c: D.blue,  bg: 0x1a2a3a, icon: '🛡️', dark: 0x2b7fc4 },
-  survey:    { c: 0xccaaee, bg: 0x2a2040, icon: '🔍', dark: 0x8866bb },
+  stimulate: { c: D.neon,   bg: 0x1a3330, icon: '💫', dark: 0x009977 },
+  capture:   { c: D.red,    bg: 0x33222a, icon: '🤝', dark: 0xcc4444 },
+  defend:    { c: D.blue,   bg: 0x1a2a3a, icon: '🛡️', dark: 0x2b7fc4 },
+  survey:    { c: D.purple, bg: 0x2a2040, icon: '🔍', dark: 0x8866bb },
 };
 
-const AXIS_ICON = { sound: '🔊', temperature: '🌡️', smell: '🌿', behavior: '👁️' };
-
-const EMOTION_LABEL = {
-  calm: '진정', curious: '호기심', fear: '공포',
-  charmed: '매혹', rage: '분노', trust: '신뢰',
-};
-
-// 기본 폰트 크기 (자동 스케일 전)
-const F = { hero: 10, main: 8, sub: 7, tiny: 6 };
-// 줄 높이 배율
-const LH = 1.8;
+// 스킬 axis → 환경 축 매핑 (combat.js와 동일)
+const AXIS_TO_ENV = { sound: 'sound', temperature: 'temperature', smell: 'smell', behavior: 'humidity' };
 
 export function buildSkillCard(action, w, h, opts = {}) {
   const ct = new PIXI.Container();
   const cat = SKILL_CAT[action.category] || SKILL_CAT.stimulate;
-  const rd = 8;
+  const rd = 10;
   const a = opts.locked ? 0.2 : 1;
   const cardAlpha = opts.ppEmpty ? 0.25 : a;
+  const preview = opts.preview;
 
-  // ---- Card background ----
+  // ======== 배경 ========
   const bg = new PIXI.Graphics();
-  bg.roundRect(0, 0, w, h, rd).fill({ color: opts.selected ? D.cardHi : D.card, alpha: a });
-  bg.roundRect(0, 4, 3, h - 8, 1.5).fill({ color: cat.c, alpha: 0.7 * a });
+
+  // 선택 시: 살짝 위로 올라간 느낌 (그림자 + 밝은 배경)
   if (opts.selected) {
-    bg.roundRect(0, 0, w, h, rd).stroke({ color: cat.c, width: 2 });
+    bg.roundRect(1, 3, w - 2, h - 2, rd).fill({ color: 0x000000, alpha: 0.3 });
+    bg.roundRect(0, 0, w, h, rd).fill({ color: D.cardHi });
+    bg.roundRect(0, 0, w, h, rd).stroke({ color: cat.c, width: 2.5 });
+    // 상단 glow
+    bg.roundRect(2, 1, w - 4, 4, 2).fill({ color: cat.c, alpha: 0.3 });
   } else {
-    bg.roundRect(0, 0, w, h, rd).stroke({ color: cat.c, width: 1, alpha: 0.3 });
+    bg.roundRect(0, 0, w, h, rd).fill({ color: D.card, alpha: a });
+    bg.roundRect(0, 0, w, h, rd).stroke({ color: cat.c, width: 1, alpha: 0.3 * a });
   }
+  // 좌측 카테고리 바
+  bg.roundRect(0, 6, 3, h - 12, 1.5).fill({ color: cat.c, alpha: 0.7 * a });
   ct.addChild(bg);
 
-  // ---- 헤더: 아이콘 + 이름 + PP ----
-  const nameText = `${cat.icon} ${action.name}`;
-  const nameLbl = lbl(nameText, 7, opts.ppEmpty ? D.dimmer : D.text, true);
-  nameLbl.x = 8; nameLbl.y = 4; nameLbl.alpha = cardAlpha;
-  ct.addChild(nameLbl);
+  // ======== 헤더: 아이콘 + 이름 ========
+  const nameL = lbl(`${cat.icon} ${action.name}`, 7, opts.ppEmpty ? D.dimmer : D.text, true);
+  nameL.x = 8; nameL.y = 4; nameL.alpha = cardAlpha;
+  ct.addChild(nameL);
 
-  if (action.pp != null) {
-    const ppColor = opts.ppEmpty ? D.red : D.dim;
-    const ppLbl = lbl(`${action.pp}/${action.maxPp}`, 5, ppColor, true);
-    ppLbl.anchor = { x: 1, y: 0 }; ppLbl.x = w - 6; ppLbl.y = 6; ppLbl.alpha = cardAlpha;
-    ct.addChild(ppLbl);
+  // ======== PP 도트 (우상단) ========
+  if (action.pp != null && action.maxPp != null) {
+    const dotSize = 3, dotGap = 2;
+    const maxDots = Math.min(action.maxPp, 8); // 최대 8개까지 표시
+    const dotsW = maxDots * (dotSize * 2 + dotGap);
+    const dotStartX = w - 6 - dotsW;
+    const dotY = 8;
+    const dotG = new PIXI.Graphics();
+    for (let i = 0; i < maxDots; i++) {
+      const dx = dotStartX + i * (dotSize * 2 + dotGap) + dotSize;
+      const filled = i < action.pp;
+      if (filled) {
+        dotG.circle(dx, dotY, dotSize).fill({ color: cat.c, alpha: cardAlpha });
+      } else {
+        dotG.circle(dx, dotY, dotSize).fill({ color: 0x1a1a2e, alpha: cardAlpha });
+        dotG.circle(dx, dotY, dotSize).stroke({ color: cat.c, width: 0.8, alpha: 0.3 * cardAlpha });
+      }
+    }
+    ct.addChild(dotG);
   }
 
-  if (action.axis) {
-    const axisTag = lbl(`${AXIS_ICON[action.axis] || ''}${AXIS_LABEL[action.axis] || ''}`, 4.5, D.dim);
-    axisTag.anchor = { x: 1, y: 0 }; axisTag.x = w - 6; axisTag.y = 16; axisTag.alpha = cardAlpha;
-    ct.addChild(axisTag);
-  }
-
+  // ======== 턴 순서 배지 ========
   if (opts.orderNum != null) {
     const oB = new PIXI.Graphics();
     oB.roundRect(w - 20, 0, 18, 16, 4).fill({ color: cat.c });
@@ -81,184 +91,219 @@ export function buildSkillCard(action, w, h, opts = {}) {
     ct.addChild(oL);
   }
 
-  // ---- 구분선 ----
-  const sepY = 24;
+  // ======== 구분선 ========
+  const sepY = 20;
   ct.addChild(new PIXI.Graphics()
-    .moveTo(8, sepY).lineTo(w - 8, sepY)
+    .moveTo(6, sepY).lineTo(w - 6, sepY)
     .stroke({ color: D.sep, width: 0.5, alpha: 0.3 * a }));
 
-  // ---- 설명 영역 → 서브 컨테이너에 렌더 후 자동 스케일 ----
-  const descContainer = new PIXI.Container();
-  const preview = opts.preview;
-  let curY = 0;
+  // ======== 중앙: 핵심 효과 ========
+  const centerY = sepY + 4;
+  const centerH = h - sepY - 28; // 하단 플레이버 공간 확보
 
   if (preview && !preview.blocked) {
-    curY = _renderLivePreview(descContainer, preview, action, cat, w, curY, cardAlpha);
+    _renderPreview(ct, preview, action, cat, w, centerY, centerH, cardAlpha);
   } else if (preview?.blocked) {
-    descContainer.addChild(Object.assign(lbl('⚠ 조건 미충족', F.hero, D.orange, true), { x: 0, y: curY, alpha: cardAlpha }));
-    curY += F.hero * S * LH;
+    const bl = lbl('⚠ 조건 미충족', 8, D.orange, true);
+    bl.anchor = { x: 0.5, y: 0.5 };
+    bl.x = w / 2; bl.y = centerY + centerH / 2; bl.alpha = cardAlpha;
+    ct.addChild(bl);
   } else {
-    curY = _renderStaticDesc(descContainer, action, cat, w, curY, cardAlpha);
+    _renderStatic(ct, action, cat, w, centerY, centerH, cardAlpha);
   }
 
-  // 부가효과
-  if (action.effects?.length > 0) {
-    for (const eff of action.effects) {
-      const emotionName = EMOTION_LABEL[eff.type] || eff.type;
-      const pct = Math.round(eff.chance * 100);
-      descContainer.addChild(Object.assign(lbl(`${emotionName} ${pct}%`, F.sub, D.yellow), { x: 0, y: curY, alpha: cardAlpha }));
-      curY += F.sub * S * LH;
-    }
-  }
-
-  // 조건부 보너스
-  if (action.stateBonus) {
-    const sb = action.stateBonus;
-    let bonusText = '';
-    if (sb.ifEnemyEmotion) bonusText = `${EMOTION_LABEL[sb.ifEnemyEmotion] || sb.ifEnemyEmotion} 시`;
-    if (sb.ifEnemyEmotionIn) bonusText = `${sb.ifEnemyEmotionIn.map(e => EMOTION_LABEL[e] || e).join('/')} 시`;
-    if (sb.tamingPowerBonus) bonusText += ` 순화 +${sb.tamingPowerBonus}`;
-    if (sb.captureChanceBonus) bonusText += ` 교감 +${Math.round(sb.captureChanceBonus * 100)}%`;
-    if (bonusText) {
-      descContainer.addChild(Object.assign(lbl(`▸ ${bonusText}`, F.tiny, D.blue), { x: 0, y: curY, alpha: cardAlpha * 0.8 }));
-      curY += F.tiny * S * LH;
-    }
-  }
-
-  // 조건
-  if (action.condition) {
-    const cond = action.condition;
-    const parts = [];
-    if (cond.minTamingPercent) parts.push(`순화 ${cond.minTamingPercent}%+`);
-    if (cond.maxEscapePercent) parts.push(`도주 ${cond.maxEscapePercent}%↓`);
-    if (cond.requireEnemyEmotion) {
-      const emotions = Array.isArray(cond.requireEnemyEmotion) ? cond.requireEnemyEmotion : [cond.requireEnemyEmotion];
-      parts.push(emotions.map(e => EMOTION_LABEL[e] || e).join('/') + ' 필요');
-    }
-    if (parts.length > 0) {
-      descContainer.addChild(Object.assign(lbl(`조건: ${parts.join(', ')}`, F.tiny, D.orange), { x: 0, y: curY, alpha: cardAlpha * 0.7 }));
-      curY += F.tiny * S * LH;
-    }
-  }
-
-  // 플레이버
+  // ======== 하단: 플레이버 (1줄) ========
   const flavor = action.log || action.desc || '';
   if (flavor) {
-    const flavorText = new PIXI.Text({ text: flavor, style: {
+    const flavorL = new PIXI.Text({ text: flavor, style: {
       fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-      fontSize: F.tiny * S, fill: '#666688', fontWeight: '400',
-      wordWrap: true, wordWrapWidth: w - 18,
-      lineHeight: F.tiny * S * 1.4,
+      fontSize: 5 * S, fill: '#555577', fontWeight: '400',
+      wordWrap: true, wordWrapWidth: w - 14,
+      lineHeight: 5 * S * 1.3,
     }});
-    flavorText.y = curY + 2; flavorText.alpha = cardAlpha * 0.5;
-    descContainer.addChild(flavorText);
-    curY += F.tiny * S * 2.5;
+    flavorL.x = 7; flavorL.y = h - 24;
+    flavorL.alpha = cardAlpha * 0.45;
+    ct.addChild(flavorL);
   }
-
-  // ---- 자동 스케일: 설명 영역이 카드에 맞도록 ----
-  const availH = h - sepY - 8; // 사용 가능한 높이
-  const contentH = curY;
-  const scale = contentH > availH ? availH / contentH : 1;
-
-  descContainer.x = 10;
-  descContainer.y = sepY + 4;
-  descContainer.scale.set(scale);
-  ct.addChild(descContainer);
 
   return ct;
 }
 
-// ---- 실시간 프리뷰 (전투 중) ----
-function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
-  const line = (size) => size * S * LH;
+// ======== 전투 중 프리뷰 ========
+function _renderPreview(ct, preview, action, cat, w, cy, ch, alpha) {
+  const midX = w / 2;
+  const midY = cy + ch * 0.4;
 
   if (preview.type === 'stimulate') {
-    // 환경 조율 프리뷰 — 변화 방향 + 힌트
-    const axisLabel = preview.envAxisLabel || preview.envAxis || '???';
+    // 환경 축 아이콘 (크게)
+    const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
+    const envIcon = ENV_AXIS_ICON[envAxis] || '💫';
+    const envName = ENV_AXIS_LABEL[envAxis] || '';
+
+    const iconL = lbl(envIcon, 14, cat.c, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX - 20; iconL.y = midY; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    // 변화량 (크게)
     const delta = preview.delta || 0;
-    const deltaSign = delta > 0 ? `+${delta}` : String(delta);
-    const newSign = preview.newVal > 0 ? '+' : '';
+    const deltaText = delta > 0 ? `+${delta}` : String(delta);
+    const deltaL = lbl(deltaText, 14, D.text, true);
+    deltaL.anchor = { x: 0.5, y: 0.5 };
+    deltaL.x = midX + 20; deltaL.y = midY; deltaL.alpha = alpha;
+    ct.addChild(deltaL);
 
-    ct.addChild(Object.assign(lbl(`${axisLabel} ${deltaSign} → ${newSign}${preview.newVal}`, F.hero, D.text, true), { x: 0, y, alpha }));
-    y += line(F.hero);
-
-    // 힌트 표시: 방향이 맞는지
+    // 힌트 (아래)
+    const hintY = midY + 22;
     const hintMap = { low: '▲ 올려야', high: '▼ 내려야', ok: '● 적절' };
     const hintColor = preview.hint === 'ok' ? D.neon : preview.hint === 'low' ? 0xff8866 : 0x66aaff;
-    const hintText = hintMap[preview.hint] || '?';
-    ct.addChild(Object.assign(lbl(`현재: ${hintText}`, F.main, hintColor), { x: 0, y, alpha }));
-    y += line(F.main);
+    const hintText = hintMap[preview.hint] || envName;
+    const hintL = lbl(hintText, 6, hintColor, true);
+    hintL.anchor = { x: 0.5, y: 0 };
+    hintL.x = midX; hintL.y = hintY; hintL.alpha = alpha;
+    ct.addChild(hintL);
 
-    // 공개된 축이면 목표값 표시
+    // 공개된 축이면 목표값
     if (preview.revealed && preview.idealVal != null) {
       const iSign = preview.idealVal > 0 ? '+' : '';
-      const tolText = preview.tolerance > 0 ? ` ±${preview.tolerance}` : '';
-      ct.addChild(Object.assign(lbl(`목표: ${iSign}${preview.idealVal}${tolText}`, F.sub, 0xccaaee), { x: 0, y, alpha }));
-      y += line(F.sub);
+      const tolText = preview.tolerance > 0 ? `±${preview.tolerance}` : '';
+      const goalL = lbl(`목표 ${iSign}${preview.idealVal}${tolText}`, 5, D.purple);
+      goalL.anchor = { x: 0.5, y: 0 };
+      goalL.x = midX; goalL.y = hintY + 14; goalL.alpha = alpha * 0.7;
+      ct.addChild(goalL);
+    }
+  }
+
+  else if (preview.type === 'defend') {
+    const iconL = lbl('🛡️', 14, D.blue, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX; iconL.y = midY - 5; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    const infoY = midY + 18;
+    if (preview.escapeReduce > 0) {
+      const escL = lbl(`⏳-${preview.escapeReduce}`, 7, D.neon, true);
+      escL.anchor = { x: 0.5, y: 0 };
+      escL.x = midX - (preview.heal ? 25 : 0); escL.y = infoY; escL.alpha = alpha;
+      ct.addChild(escL);
+    }
+    if (preview.heal) {
+      const healL = lbl(`💚+${preview.heal}`, 7, D.neon, true);
+      healL.anchor = { x: 0.5, y: 0 };
+      healL.x = midX + (preview.escapeReduce > 0 ? 25 : 0); healL.y = infoY; healL.alpha = alpha;
+      ct.addChild(healL);
+    }
+    if (!preview.escapeReduce && !preview.heal) {
+      const defL = lbl('수비', 8, D.blue, true);
+      defL.anchor = { x: 0.5, y: 0 };
+      defL.x = midX; defL.y = infoY; defL.alpha = alpha;
+      ct.addChild(defL);
     }
   }
 
   else if (preview.type === 'capture') {
-    ct.addChild(Object.assign(lbl('교감 시도', F.hero + 2, D.yellow, true), { x: 0, y, alpha }));
-    y += line(F.hero + 2);
-    ct.addChild(Object.assign(lbl(`도주 -${preview.escapeReduce}`, F.main, D.neon), { x: 0, y, alpha }));
-    y += line(F.main);
-  }
+    const iconL = lbl('🤝', 14, D.yellow, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX; iconL.y = midY - 5; iconL.alpha = alpha;
+    ct.addChild(iconL);
 
-  else if (preview.type === 'defend') {
-    ct.addChild(Object.assign(lbl('수비', F.hero, D.blue, true), { x: 0, y, alpha }));
-    y += line(F.hero);
-    ct.addChild(Object.assign(lbl(`도주 -${preview.escapeReduce || 1}`, F.main, D.neon), { x: 0, y, alpha }));
-    y += line(F.main);
-    if (preview.heal) {
-      ct.addChild(Object.assign(lbl(`회복 +${preview.heal} HP`, F.main + 1, D.neon), { x: 0, y, alpha }));
-      y += line(F.main + 1);
+    const infoY = midY + 18;
+    if (preview.escapeReduce > 0) {
+      const escL = lbl(`⏳-${preview.escapeReduce}`, 8, D.neon, true);
+      escL.anchor = { x: 0.5, y: 0 };
+      escL.x = midX; escL.y = infoY; escL.alpha = alpha;
+      ct.addChild(escL);
+    } else {
+      const waitL = lbl('연장전에 효과', 6, D.dim);
+      waitL.anchor = { x: 0.5, y: 0 };
+      waitL.x = midX; waitL.y = infoY; waitL.alpha = alpha;
+      ct.addChild(waitL);
     }
   }
 
   else if (preview.type === 'survey') {
-    ct.addChild(Object.assign(lbl('🔍 환경 조사', F.hero, 0xccaaee, true), { x: 0, y, alpha }));
-    y += line(F.hero);
+    const iconL = lbl('🔍', 14, D.purple, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX; iconL.y = midY - 5; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    const infoY = midY + 18;
     const countText = preview.unrevealedCount > 0
-      ? `미공개 ${preview.unrevealedCount}축 중 1개 공개`
+      ? `? → ! (${preview.unrevealedCount}축)`
       : '모두 공개됨';
     const countColor = preview.unrevealedCount > 0 ? D.text : D.dim;
-    ct.addChild(Object.assign(lbl(countText, F.main, countColor), { x: 0, y, alpha }));
-    y += line(F.main);
+    const infoL = lbl(countText, 7, countColor, true);
+    infoL.anchor = { x: 0.5, y: 0 };
+    infoL.x = midX; infoL.y = infoY; infoL.alpha = alpha;
+    ct.addChild(infoL);
   }
-
-  return y;
 }
 
-// ---- 정적 스탯 (팀 화면용) ----
-function _renderStaticDesc(ct, action, cat, w, y, alpha) {
-  const line = (size) => size * S * LH;
+// ======== 정적 (팀 화면) ========
+function _renderStatic(ct, action, cat, w, cy, ch, alpha) {
+  const midX = w / 2;
+  const midY = cy + ch * 0.4;
 
   if (action.category === 'stimulate') {
-    ct.addChild(Object.assign(lbl(`위력 ${action.power}`, F.main + 1, D.text), { x: 0, y, alpha }));
-    y += line(F.main + 1);
-    if (action.escapeRisk) {
-      const risk = action.escapeRisk > 0 ? `+${action.escapeRisk}` : String(action.escapeRisk);
-      ct.addChild(Object.assign(lbl(`도주 ${risk}`, F.main, action.escapeRisk > 0 ? D.red : D.neon), { x: 0, y, alpha }));
-      y += line(F.main);
-    }
-  } else if (action.category === 'capture') {
-    ct.addChild(Object.assign(lbl(`교감 위력 ${action.power}`, F.main + 1, D.text), { x: 0, y, alpha }));
-    y += line(F.main + 1);
-  } else if (action.category === 'defend') {
-    if (action.defenseBoost) {
-      ct.addChild(Object.assign(lbl(`방어 ${action.defenseBoost}`, F.main + 1, D.text), { x: 0, y, alpha }));
-      y += line(F.main + 1);
-    }
-    if (action.healAmount) {
-      ct.addChild(Object.assign(lbl(`회복 ${action.healAmount}`, F.main + 1, D.neon), { x: 0, y, alpha }));
-      y += line(F.main + 1);
-    }
-  } else if (action.category === 'survey') {
-    ct.addChild(Object.assign(lbl('환경 조사', F.main + 1, 0xccaaee), { x: 0, y, alpha }));
-    y += line(F.main + 1);
-    ct.addChild(Object.assign(lbl(`PP ${action.pp}/${action.maxPp}`, F.main, D.dim), { x: 0, y, alpha }));
-    y += line(F.main);
+    const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
+    const envIcon = ENV_AXIS_ICON[envAxis] || '💫';
+
+    const iconL = lbl(envIcon, 12, cat.c, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX - 15; iconL.y = midY; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    const mag = action.power > 5 ? '±2' : '±1';
+    const magL = lbl(mag, 10, D.text, true);
+    magL.anchor = { x: 0.5, y: 0.5 };
+    magL.x = midX + 18; magL.y = midY; magL.alpha = alpha;
+    ct.addChild(magL);
+
+    // axis 이름
+    const nameL = lbl(ENV_AXIS_LABEL[envAxis] || '', 6, D.dim);
+    nameL.anchor = { x: 0.5, y: 0 };
+    nameL.x = midX; nameL.y = midY + 18; nameL.alpha = alpha;
+    ct.addChild(nameL);
   }
-  return y;
+
+  else if (action.category === 'defend') {
+    const iconL = lbl('🛡️', 12, D.blue, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX; iconL.y = midY; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    const parts = [];
+    if (action.defenseBoost) parts.push(`방어 ${action.defenseBoost}`);
+    if (action.healAmount) parts.push(`회복 ${action.healAmount}`);
+    if (parts.length > 0) {
+      const infoL = lbl(parts.join(' · '), 6, D.dim);
+      infoL.anchor = { x: 0.5, y: 0 };
+      infoL.x = midX; infoL.y = midY + 18; infoL.alpha = alpha;
+      ct.addChild(infoL);
+    }
+  }
+
+  else if (action.category === 'capture') {
+    const iconL = lbl('🤝', 12, D.yellow, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX; iconL.y = midY; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    const infoL = lbl('연장전 도주 감소', 6, D.dim);
+    infoL.anchor = { x: 0.5, y: 0 };
+    infoL.x = midX; infoL.y = midY + 18; infoL.alpha = alpha;
+    ct.addChild(infoL);
+  }
+
+  else if (action.category === 'survey') {
+    const iconL = lbl('🔍', 12, D.purple, true);
+    iconL.anchor = { x: 0.5, y: 0.5 };
+    iconL.x = midX; iconL.y = midY; iconL.alpha = alpha;
+    ct.addChild(iconL);
+
+    const infoL = lbl('환경 조사', 6, D.dim);
+    infoL.anchor = { x: 0.5, y: 0 };
+    infoL.x = midX; infoL.y = midY + 18; infoL.alpha = alpha;
+    ct.addChild(infoL);
+  }
 }
