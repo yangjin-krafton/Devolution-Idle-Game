@@ -135,6 +135,8 @@ const SENSORY_ICONS = {
 
 export function renderEnemy(enemy) {
   refs.enemySprite.removeChildren();
+  refs.enemySprite.alpha = 1;
+  refs.enemySprite.y = refs.enemyBaseY;
   refs.enemySprite.addChild(monster(140, enemy.img));
 
   refs.enemyLevel = Math.max(1, Math.round(enemy.tamingThreshold / 10));
