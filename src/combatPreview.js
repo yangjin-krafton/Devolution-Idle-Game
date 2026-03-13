@@ -1,6 +1,5 @@
 import { calcSensoryMod } from './data/index.js';
 import { getEmotionMods } from './emotion.js';
-import { statScale, getStat } from './statSystem.js';
 import {
   getStimulateAbilityMods,
   getCaptureAbilityBonus,
@@ -20,21 +19,8 @@ function resolveStateBonus(action, emotionState) {
 
 /**
  * 스킬 프리뷰 계산 — combat.js 실제 실행과 동일한 보정 적용
- *
- * @param {object} ally       — 아군 몬스터
- * @param {object} action     — 스킬 데이터
- * @param {object} enemy      — 적 몬스터
- * @param {number} tamingGauge — 현재 순화 게이지
- * @param {object} emotionState — 적 감정 상태
- * @param {object} options
- *   .conditionMet   — 조건 충족 여부
- *   .team           — 팀 배열 (어빌리티 계산용)
- *   .axisUsage      — { sound: N, ... } 축별 사용 횟수
- *   .lastActionIdx  — 이전 턴에 사용한 스킬 인덱스 (반복 감쇠용)
- *   .currentActionIdx — 현재 스킬의 인덱스
  */
 export function previewAction(ally, action, enemy, tamingGauge, emotionState, options = {}) {
-  const stats = ally.stats;
   const emotionMods = getEmotionMods(emotionState);
   const stateBonus = resolveStateBonus(action, emotionState);
   const conditionMet = options.conditionMet ?? true;
@@ -65,7 +51,7 @@ export function previewAction(ally, action, enemy, tamingGauge, emotionState, op
 
     const gain = Math.round(
       (action.power + (stateBonus.tamingPowerBonus || 0))
-      * mod * statScale(getStat(stats, 'affinity'))
+      * mod
       * emotionMods.tamingMod * abilityMods.tamingMod
       * satMod * repeatMod
     );
@@ -87,7 +73,7 @@ export function previewAction(ally, action, enemy, tamingGauge, emotionState, op
 
   if (action.category === 'capture') {
     const ratio = tamingGauge / enemy.tamingThreshold;
-    let chance = Math.min(0.9, (ratio - 0.2) * 1.0 * statScale(getStat(stats, 'empathy')));
+    let chance = Math.min(0.9, (ratio - 0.2) * 1.0);
     chance += emotionMods.captureMod;
     chance += stateBonus.captureChanceBonus || 0;
     chance += getCaptureAbilityBonus(team);
@@ -95,10 +81,9 @@ export function previewAction(ally, action, enemy, tamingGauge, emotionState, op
     return { type: 'capture', chance: Math.round(chance * 100), escape: action.escapeRisk, pp: action.pp };
   }
 
-  const endurance = getStat(stats, 'endurance');
   const abilityDefBonus = getDefendAbilityBonus(team, ally);
   const totalHealBase = (action.healAmount || 0) + (stateBonus.healBonus || 0) + abilityDefBonus.healBonus;
-  const heal = totalHealBase > 0 ? Math.round(totalHealBase * statScale(endurance)) : 0;
-  const defense = Math.round(((action.defenseBoost || 2) + (stateBonus.defenseBonus || 0)) * statScale(endurance));
+  const heal = totalHealBase > 0 ? totalHealBase : 0;
+  const defense = (action.defenseBoost || 2) + (stateBonus.defenseBonus || 0);
   return { type: 'defend', heal, defense, pp: action.pp };
 }

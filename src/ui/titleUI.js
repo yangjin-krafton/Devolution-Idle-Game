@@ -82,8 +82,6 @@ function getFilteredMonsters() {
   // Sort
   if (codexSort === 'name') {
     all.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-  } else if (codexSort === 'hp') {
-    all.sort((a, b) => (b.maxHp || b.attackPower || 0) - (a.maxHp || a.attackPower || 0));
   }
   // 'default' = original data order (no sort)
 
@@ -185,9 +183,6 @@ function refreshDetail() {
 }
 
 // ---- Detail: 3-section layout (Stats / Skills / Lineage) ----
-
-const ROLE_LABEL = { attacker: '공격', tank: '방어', support: '지원', speedster: '속도' };
-const ROLE_COLOR = { attacker: D.red, tank: D.blue, support: D.neon, speedster: 0x88ddbb };
 
 function drawTable(x, y, w, h, headers, dataRows, colColors) {
   const cols = headers.length;
@@ -355,53 +350,28 @@ function drawLineage(x, y, pw, h, mon) {
 function renderPageInfo(pw, mon) {
   const contentH = DETAIL_H;
   const gap = 4;
-  const LINEAGE_H = 68;
+  const LINEAGE_H = 90;
 
   // ══ ALLY MONSTER ══
-  if (mon.actions && mon.stats) {
+  if (mon.actions) {
     // --- 1) Name bar ---
-    const nameT = lbl(mon.name, 10, D.text, true); nameT.x = 2; nameT.y = 2;
+    const nameT = lbl(mon.name, 11, D.text, true); nameT.x = 2; nameT.y = 2;
     detailBody.addChild(nameT);
 
-    if (mon.role) {
-      const badge = neonBadge(ROLE_LABEL[mon.role] || mon.role, ROLE_COLOR[mon.role] || D.dim);
-      badge.x = pw - badge.width - 4; badge.y = 4;
-      // approximate badge width
-      const bw = (ROLE_LABEL[mon.role] || mon.role).length * 5 * S + 14;
-      badge.x = pw - bw - 4;
-      detailBody.addChild(badge);
-    }
-
-    const descT = lbl(mon.desc || '', 5, D.dimmer);
-    descT.x = 2; descT.y = 22;
+    const descT = lbl(mon.desc || '', 7, D.dim);
+    descT.x = 2; descT.y = 28;
     detailBody.addChild(descT);
 
-    // --- 2) Stats table (HP included) ---
-    const STAT = { affinity: '친화', empathy: '공감', endurance: '인내', agility: '민첩', bond: '유대', instinct: '직감' };
-    const SCOL = { affinity: D.neon, empathy: D.blue, endurance: 0xffaa60, agility: 0x88ddbb, bond: 0xeebb55, instinct: 0xcc88dd };
-    const statKeys = Object.keys(mon.stats);
-
-    const sHeaders = ['HP', ...statKeys.map(k => STAT[k])];
-    const sColors = [D.red, ...statKeys.map(k => SCOL[k])];
-    const sRow = [
-      [{ text: String(mon.hp ?? mon.maxHp), size: 8, color: D.text, bold: true },
-       ...statKeys.map(k => ({ text: String(mon.stats[k]), size: 8, color: D.text, bold: true }))]
-    ];
-
-    const statY = 38;
-    const statH = 42;
-    drawTable(0, statY, pw, statH, sHeaders, sRow, sColors);
-
-    // --- 3) Lineage ---
-    const lineY = statY + statH + gap;
+    // --- 2) Lineage ---
+    const lineY = 46 + gap;
     drawLineage(0, lineY, pw, LINEAGE_H, mon);
 
-    // --- 4) Skill cards ---
+    // --- 3) Skill cards ---
     const skillY = lineY + LINEAGE_H + gap;
     const skillH = contentH - skillY;
     drawSkillCards(0, skillY, pw, skillH, mon.actions);
 
-  } else if (mon.actions) {
+  } else if (!mon.actions) {
     drawLineage(0, 0, pw, LINEAGE_H, mon);
     drawSkillCards(0, LINEAGE_H + gap, pw, contentH - LINEAGE_H - gap, mon.actions);
   }
@@ -409,11 +379,11 @@ function renderPageInfo(pw, mon) {
   // ══ Enemy: no skills → show enemy info + lineage ══
   if (!mon.actions) {
     // Name + desc
-    const nameT = lbl(mon.name, 10, D.text, true); nameT.x = 2; nameT.y = 2;
+    const nameT = lbl(mon.name, 11, D.text, true); nameT.x = 2; nameT.y = 2;
     detailBody.addChild(nameT);
 
-    const descT = lbl(mon.desc || '', 5, D.dimmer);
-    descT.x = 2; descT.y = 22;
+    const descT = lbl(mon.desc || '', 7, D.dim);
+    descT.x = 2; descT.y = 28;
     detailBody.addChild(descT);
 
     // Enemy info table
@@ -429,7 +399,7 @@ function renderPageInfo(pw, mon) {
       { text: String(mon.escapeThreshold || '-'), size: 9, color: D.red, bold: true },
     ]];
 
-    const tableY = 38;
+    const tableY = 46;
     const tableH = 42;
     drawTable(0, tableY, pw, tableH, headers, row, colors);
 
@@ -496,8 +466,8 @@ function refreshSlots() {
     }
 
     // Sprite backdrop
-    c.addChild(new PIXI.Graphics().circle(SLOT_W / 2, 47, 22).fill({ color: D.neon, alpha: 0.06 }));
-    const spr = monster(48, mon.img); spr.x = SLOT_W / 2; spr.y = 47; c.addChild(spr);
+    c.addChild(new PIXI.Graphics().circle(SLOT_W / 2, 42, 32).fill({ color: D.neon, alpha: 0.06 }));
+    const spr = monster(72, mon.img); spr.x = SLOT_W / 2; spr.y = 42; c.addChild(spr);
 
     // Name
     const nm = lbl(mon.name, 6.5, D.text, true);
@@ -635,14 +605,14 @@ function refreshCodex() {
         .roundRect(0, 0, CODEX_CARD_W, CODEX_CARD_H, 12)
         .fill({ color: 0x1a1a28 }).stroke({ color: D.sep, width: 1, alpha: 0.3 }));
       card.addChild(new PIXI.Graphics()
-        .circle(CODEX_CARD_W / 2, 40, 18).fill({ color: D.dimmer, alpha: 0.3 })
+        .circle(CODEX_CARD_W / 2, 44, 26).fill({ color: D.dimmer, alpha: 0.3 })
         .stroke({ color: D.dimmer, width: 1, alpha: 0.3 }));
       const q = lbl('???', 7, D.dimmer); q.anchor = { x: 0.5, y: 0 };
       q.x = CODEX_CARD_W / 2; q.y = CODEX_CARD_H - 22; card.addChild(q);
 
     } else if (state === 'seen') {
       card.addChild(darkCard(CODEX_CARD_W, CODEX_CARD_H, 12, D.bgAlt, D.sep, false));
-      const s = monster(36, mon.img); s.x = CODEX_CARD_W / 2; s.y = 40; s.alpha = 0.25;
+      const s = monster(56, mon.img); s.x = CODEX_CARD_W / 2; s.y = 44; s.alpha = 0.25;
       if (s.children[0]) s.children[0].tint = 0x555577;
       card.addChild(s);
       const n = lbl(mon.name, 6, D.dimmer); n.anchor = { x: 0.5, y: 0 };
@@ -662,8 +632,8 @@ function refreshCodex() {
 
       // Sprite
       card.addChild(new PIXI.Graphics()
-        .circle(CODEX_CARD_W / 2, 40, 17).fill({ color: D.neon, alpha: inTeam ? 0.04 : 0.07 }));
-      const s = monster(36, mon.img); s.x = CODEX_CARD_W / 2; s.y = 40;
+        .circle(CODEX_CARD_W / 2, 44, 26).fill({ color: D.neon, alpha: inTeam ? 0.04 : 0.07 }));
+      const s = monster(56, mon.img); s.x = CODEX_CARD_W / 2; s.y = 44;
       if (inTeam) s.alpha = 0.35;
       card.addChild(s);
 
@@ -829,7 +799,7 @@ function onCodexClick(mon) {
   }
   const empty = teamSlots.findIndex(s => s === null);
   if (empty >= 0) {
-    teamSlots[empty] = { ...mon, actions: mon.actions.map(a => ({ ...a })), stats: { ...mon.stats } };
+    teamSlots[empty] = { ...mon, actions: mon.actions.map(a => ({ ...a })) };
     refreshSlots(); refreshCodex();
     // Pulse bounce on newly placed slot
     pulseSlot(empty);

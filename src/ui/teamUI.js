@@ -69,10 +69,7 @@ export function renderTeamCards(allies, collection, getEggProgress, onNextBattle
       card.addChild(Object.assign(lbl('알', 9, C.orange, true), { x: 112, y: 72 }));
       card.addChild(Object.assign(lbl('퇴화 중...', 8, C.orange), { x: 100, y: 104 }));
     } else {
-      card.addChild(Object.assign(lbl('체력', 8, C.hp), { x: 100, y: 72 }));
-      card.addChild(cuteBar(140, 76, 180, 14, ally.hp / ally.maxHp, C.hp));
-      card.addChild(Object.assign(lbl(ally.hp + '/' + ally.maxHp, 8, C.dim), { x: 330, y: 72 }));
-      card.addChild(Object.assign(lbl(ally.hp > 0 ? '준비' : '기절', 8, ally.hp > 0 ? C.mint : C.hpLow, true), { x: 100, y: 100 }));
+      card.addChild(Object.assign(lbl('준비', 8, C.mint, true), { x: 100, y: 72 }));
     }
 
     // XP bar

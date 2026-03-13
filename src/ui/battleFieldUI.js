@@ -77,8 +77,9 @@ export function setSwitchAllyCallback() { /* 3v1 구조에서는 미사용 */ }
 function buildEnemyArea() {
   const ePlatX = W * 0.5, ePlatY = 130;
 
-  refs.enemyShadow = new PIXI.Graphics();
-  refs.enemyShadow.ellipse(ePlatX, ePlatY + 50, 40, 12).fill({ color: 0x000000, alpha: 0.15 });
+  refs.enemyShadow = new PIXI.Container();
+  refs.enemyShadow.x = ePlatX; refs.enemyShadow.y = ePlatY + 50;
+  refs.enemyShadowBaseY = ePlatY + 50;
   container.addChild(refs.enemyShadow);
 
   refs.enemySprite = new PIXI.Container();
@@ -96,17 +97,18 @@ function buildEnemyArea() {
 function buildAllyArea() {
   refs.allySlots = [];
   const positions = [
-    { x: W * 0.18, y: 215, size: 88 },    // 좌 (적 옆 포위)
-    { x: W * 0.50, y: 290, size: 105 },   // 중앙 (약간 뒤)
-    { x: W * 0.82, y: 215, size: 88 },    // 우 (적 옆 포위)
+    { x: W * 0.18, y: 235, size: 88 },    // 좌 (적 옆 포위, 살짝 아래)
+    { x: W * 0.50, y: 268, size: 105 },   // 중앙 (살짝 위로)
+    { x: W * 0.82, y: 235, size: 88 },    // 우 (적 옆 포위, 살짝 아래)
   ];
 
   for (let i = 0; i < 3; i++) {
     const pos = positions[i];
     const slot = { baseX: pos.x, baseY: pos.y, size: pos.size };
 
-    slot.shadow = new PIXI.Graphics();
-    slot.shadow.ellipse(pos.x, pos.y + pos.size * 0.32, pos.size * 0.22, 7).fill({ color: 0x000000, alpha: 0.12 });
+    slot.shadow = new PIXI.Container();
+    slot.shadow.x = pos.x; slot.shadow.y = pos.y + pos.size * 0.32;
+    slot.shadowBaseY = pos.y + pos.size * 0.32;
     container.addChild(slot.shadow);
 
     slot.container = new PIXI.Container();
@@ -138,6 +140,14 @@ export function renderEnemy(enemy) {
   refs.enemySprite.alpha = 1;
   refs.enemySprite.y = refs.enemyBaseY;
   refs.enemySprite.addChild(monster(140, enemy.img));
+
+  // Planar shadow — flattened copy of the sprite
+  refs.enemyShadow.removeChildren();
+  const sh = monster(140, enemy.img);
+  sh.scale.y = 0.25;
+  sh.alpha = 0.18;
+  if (sh.children[0]) sh.children[0].tint = 0x000000;
+  refs.enemyShadow.addChild(sh);
 
   refs._enemyName = enemy.name;
   _renderEnvironmentHud({});
@@ -313,11 +323,12 @@ export function renderAlly() {
 
 export function renderAllyTabs(team, aggroTargetIndex, combatState, enemyPower) {
   if (!refs.allySlots) return;
-  const sizes = [88, 105, 88];
+  const sizes = [106, 126, 106];
 
   for (let i = 0; i < refs.allySlots.length; i++) {
     const slot = refs.allySlots[i];
     slot.container.removeChildren();
+    slot.shadow.removeChildren();
     slot._arrow = null;
 
     const ally = team[i];
@@ -326,37 +337,16 @@ export function renderAllyTabs(team, aggroTargetIndex, combatState, enemyPower) 
     const size = sizes[i];
     const m = monster(size, ally.img);
     m.scale.x = -1;
-    if (ally.hp <= 0) m.alpha = 0.3;
     if (ally.inEgg) m.alpha = 0.4;
     slot.container.addChild(m);
 
-    // HP bar — 스위치 스타일 다크 바
-    const barW = size * 0.55;
-    const barY = -size * 0.42;
-    const hpRatio = ally.hp / ally.maxHp;
-    const hpBg = new PIXI.Graphics();
-    hpBg.roundRect(-barW / 2 - 1, barY - 1, barW + 2, 10, 5)
-      .fill({ color: 0x1a1a2e, alpha: 0.8 });
-    hpBg.roundRect(-barW / 2, barY, barW, 8, 4)
-      .fill({ color: 0x333355 });
-    if (hpRatio > 0) {
-      const hpCol = hpRatio > 0.3 ? 0x00d4aa : 0xff6b6b;
-      hpBg.roundRect(-barW / 2, barY, Math.max(8, barW * hpRatio), 8, 4)
-        .fill({ color: hpCol });
-    }
-    slot.container.addChild(hpBg);
-
-    // 어그로 타겟 — HP바 위에 ⚔️ 표시
-    if (i === aggroTargetIndex && combatState === 'active' && ally.hp > 0) {
-      const dmg = enemyPower || 0;
-      const tag = lbl(`⚔️ ${dmg}`, 8, 0xff6b6b, true);
-      tag.anchor.set(0.5, 1);
-      tag.x = 0;
-      tag.y = barY - 4;
-      tag._baseY = barY - 4;
-      slot.container.addChild(tag);
-      slot._arrow = tag;
-    }
+    // Planar shadow — flattened copy of the sprite
+    const sh = monster(size, ally.img);
+    sh.scale.x = -1;
+    sh.scale.y = 0.25;
+    sh.alpha = ally.inEgg ? 0.08 : 0.15;
+    if (sh.children[0]) sh.children[0].tint = 0x000000;
+    slot.shadow.addChild(sh);
   }
 
   refs.allySprite = refs.allySlots[1].container;
@@ -637,12 +627,22 @@ export function tickBattleField(tick) {
   if (refs.enemySprite && refs.enemyBaseY != null) {
     refs.enemySprite.y = refs.enemyBaseY + bounce * 4;
     refs.enemySprite.scale.set(1 + Math.sin(tick * 3) * 0.02, 1 - Math.sin(tick * 3) * 0.02);
+    // Shadow follows sprite X-scale breathing + slight Y shift
+    if (refs.enemyShadow) {
+      const breathScale = 1 + Math.sin(tick * 3) * 0.02;
+      refs.enemyShadow.scale.x = breathScale;
+      refs.enemyShadow.y = refs.enemyShadowBaseY + bounce * 1.5;
+    }
   }
   if (refs.allySlots) {
     refs.allySlots.forEach((slot, i) => {
       const phase = tick * 3 + i * 0.7;
       slot.container.y = slot.baseY - Math.sin(phase) * 3;
       slot.container.scale.set(1 - Math.sin(phase) * 0.015, 1 + Math.sin(phase) * 0.015);
+      // Shadow follows ally idle motion
+      const sBreath = 1 - Math.sin(phase) * 0.015;
+      slot.shadow.scale.x = sBreath;
+      slot.shadow.y = slot.shadowBaseY - Math.sin(phase) * 1.2;
       // Bounce the aggro arrow (offset from base position)
       if (slot._arrow && slot._arrow._baseY != null) {
         slot._arrow.y = slot._arrow._baseY + Math.sin(tick * 5) * 3;

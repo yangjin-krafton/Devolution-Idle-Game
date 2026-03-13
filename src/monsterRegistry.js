@@ -30,8 +30,6 @@ function normalizeAlly(a) {
     type: 'ally',
 
     // Combat
-    hp: a.hp, maxHp: a.maxHp,
-    stats: { ...a.stats },
     actions: a.actions,
     skillPool,
     equipped,
@@ -41,7 +39,6 @@ function normalizeAlly(a) {
     devolvedName: a.devolvedName,
     devolvedDesc: a.devolvedDesc,
     devolvedImg: a.devolvedImg,
-    devolvedStats: a.devolvedStats ? { ...a.devolvedStats } : null,
     xp: a.xp, xpThreshold: a.xpThreshold,
     inEgg: a.inEgg,
 
@@ -77,15 +74,12 @@ function normalizeEnemy(e) {
     img: e.img,
     type: 'enemy',
 
-    hp: e.hp ?? null, maxHp: e.maxHp ?? e.hp ?? null,
-    stats: e.stats ? { ...e.stats } : null,
     actions: null,
 
     devolved: false,
     devolvedName: null,
     devolvedDesc: null,
     devolvedImg: null,
-    devolvedStats: null,
     xp: null, xpThreshold: null,
     inEgg: false,
 
@@ -128,12 +122,6 @@ export function getMonsterById(id) {
   return buildRegistry().all.find(m => m.id === id) || null;
 }
 
-// Stat total for sorting
-export function getStatTotal(mon) {
-  if (!mon.stats) return 0;
-  return Object.values(mon.stats).reduce((s, v) => s + v, 0);
-}
-
 // Labels
 export { AXIS_LABEL, PERSONALITY_LABEL, ROLE_LABEL };
 
@@ -154,21 +142,19 @@ export function loadRoster(rosterEntries) {
       desc: w.desc_kr,
       img: null, // filled by image pipeline
       type: 'enemy',
-      hp: w.hp, maxHp: w.hp,
-      stats: w.stats ? { ...w.stats } : null,
       actions: null,
       devolved: false, devolvedName: null, devolvedDesc: null,
-      devolvedImg: null, devolvedStats: null,
+      devolvedImg: null,
       xp: null, xpThreshold: null, inEgg: false,
       devoTree: {
         devo1: (entry.devo1 || []).map(d1 => ({
           name: d1.name_kr, nameEn: d1.name_en, desc: d1.desc_kr,
-          role: d1.role, hp: d1.hp, stats: d1.stats ? { ...d1.stats } : null,
+          role: d1.role,
           skillFocus: d1.skillFocus,
           visual: d1.visual,
           devo2: (d1.devo2 || []).map(d2 => ({
             name: d2.name_kr, nameEn: d2.name_en, desc: d2.desc_kr,
-            role: d2.role, hp: d2.hp, stats: d2.stats ? { ...d2.stats } : null,
+            role: d2.role,
             skillFocus: d2.skillFocus,
             visual: d2.visual,
           })),
@@ -194,11 +180,9 @@ export function loadRoster(rosterEntries) {
         id: `roster_${entry.id}_d1_${di}`,
         name: d1.name_kr, nameEn: d1.name_en, desc: d1.desc_kr,
         img: null, type: 'ally',
-        hp: d1.hp, maxHp: d1.hp,
-        stats: d1.stats ? { ...d1.stats } : null,
         actions: null, // generated from skillFocus later
         devolved: false, devolvedName: null, devolvedDesc: null,
-        devolvedImg: null, devolvedStats: null,
+        devolvedImg: null,
         xp: 0, xpThreshold: 5, inEgg: false,
         devoTree: null,
         attackPower: null, tamingThreshold: null, escapeThreshold: null,

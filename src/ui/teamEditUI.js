@@ -12,7 +12,6 @@ import { D, darkCard, neonBadge, statBar } from './theme-dark.js';
 import { monster } from './sprites.js';
 import { buildSkillCard } from './skillCard.js';
 import { getAbility } from '../ability.js';
-import { getStat } from '../statSystem.js';
 import { ALL_MONSTERS, AXIS_LABEL } from '../data/index.js';
 
 const PAD = 14;
@@ -390,25 +389,6 @@ function refreshCapture() {
     captureArea.addChild(pBadge);
   }
 
-  if (capturedEnemy.stats) {
-    const PREVIEW_STATS = [
-      { key: 'affinity', name: '친화', color: D.neon },
-      { key: 'empathy', name: '공감', color: D.blue },
-      { key: 'endurance', name: '인내', color: 0xffaa60 },
-    ];
-    PREVIEW_STATS.forEach((s, i) => {
-      const val = capturedEnemy.stats[s.key] || 0;
-      const sx = infoX + i * 100;
-      captureArea.addChild(Object.assign(lbl(s.name, 5, s.color, true), { x: sx, y: 80 }));
-      captureArea.addChild(Object.assign(lbl(String(val), 6, D.text), { x: sx + 28, y: 80 }));
-      captureArea.addChild(statBar(sx + 42, 83, 40, 4, val / 15, s.color));
-    });
-  }
-
-  if (capturedEnemy.maxHp) {
-    captureArea.addChild(Object.assign(lbl(`HP ${capturedEnemy.maxHp}`, 6, D.neon), { x: infoX, y: 102 }));
-    captureArea.addChild(statBar(infoX + 50, 105, 80, 5, 1, D.neon));
-  }
 }
 
 // ============================================================
@@ -475,18 +455,6 @@ function refreshSlots() {
         .stroke({ color: D.neon, width: 2, alpha: 0.3 }));
     }
 
-    // Faint overlay
-    if (!ally.inEgg && ally.hp <= 0) {
-      c.addChild(new PIXI.Graphics()
-        .roundRect(0, 0, SLOT_W, SLOT_H, 14).fill({ color: D.red, alpha: 0.12 }));
-    }
-
-    // HP bar
-    if (!ally.inEgg) {
-      const hpR = (ally.hp ?? ally.maxHp) / ally.maxHp;
-      c.addChild(statBar(SLOT_W / 2 - 30, 6, 60, 5, hpR, hpR > 0.3 ? D.neon : D.red));
-    }
-
     // Sprite area
     c.addChild(new PIXI.Graphics().circle(SLOT_W / 2, 47, 22).fill({ color: D.neon, alpha: 0.06 }));
 
@@ -513,13 +481,7 @@ function refreshSlots() {
       c.addChild(eggBadge);
     } else {
       const spr = monster(48, ally.img); spr.x = SLOT_W / 2; spr.y = 47;
-      if (ally.hp <= 0) spr.alpha = 0.3;
       c.addChild(spr);
-      if (ally.hp <= 0) {
-        const faintBadge = neonBadge('탈진', D.red);
-        faintBadge.x = SLOT_W / 2 - 16; faintBadge.y = 28;
-        c.addChild(faintBadge);
-      }
     }
 
     // Name
@@ -622,22 +584,15 @@ function refreshDetail() {
 
   // ══ Normal ally — titleUI renderPageInfo 포맷 ══
   const gap = 4;
-  const LINEAGE_H = 68;
+  const LINEAGE_H = 90;
 
   // --- 1) Name bar ---
   const levelText = ally.level ? ` Lv.${ally.level}` : '';
   detailBody.addChild(Object.assign(lbl(ally.name + levelText, 10, D.text, true), { x: 2, y: 2 }));
 
-  if (ally.role) {
-    const badge = neonBadge(ROLE_LABEL[ally.role] || ally.role, ROLE_COLOR[ally.role] || D.dim);
-    const bw = (ROLE_LABEL[ally.role] || ally.role).length * 5 * S + 14;
-    badge.x = pw - bw - 4; badge.y = 4;
-    detailBody.addChild(badge);
-  }
-
   const descText = ally.desc || '';
   if (descText) {
-    detailBody.addChild(Object.assign(lbl(descText, 5, D.dimmer), { x: 2, y: 22 }));
+    detailBody.addChild(Object.assign(lbl(descText, 5.5, D.dim), { x: 2, y: 22 }));
   }
 
   // 어빌리티 표시
@@ -654,26 +609,8 @@ function refreshDetail() {
     }
   }
 
-  // --- 2) Stats table (HP + 6stats — titleUI drawTable format) ---
-  const STAT = { affinity: '친화', empathy: '공감', endurance: '인내', agility: '민첩', bond: '유대', instinct: '직감' };
-  const SCOL = { affinity: D.neon, empathy: D.blue, endurance: 0xffaa60, agility: 0x88ddbb, bond: 0xeebb55, instinct: 0xcc88dd };
-  const statKeys = ally.stats ? Object.keys(ally.stats) : [];
-
-  const sHeaders = ['HP', ...statKeys.map(k => STAT[k] || k)];
-  const sColors = [D.red, ...statKeys.map(k => SCOL[k] || D.dim)];
-  const hpR = (ally.hp ?? ally.maxHp) / ally.maxHp;
-  const hpColor = hpR > 0.3 ? D.text : D.red;
-  const sRow = [[
-    { text: `${ally.hp ?? ally.maxHp}/${ally.maxHp}`, size: 7, color: hpColor, bold: true },
-    ...statKeys.map(k => ({ text: String(getStat(ally.stats, k)), size: 8, color: D.text, bold: true })),
-  ]];
-
-  const statY = 50;
-  const statH = 42;
-  drawTable(0, statY, pw, statH, sHeaders, sRow, sColors);
-
-  // XP bar below stats
-  const xpY = statY + statH + 4;
+  // --- 2) XP bar ---
+  const xpY = 50;
   const xpR = (ally.xp || 0) / (ally.xpThreshold || 5);
   detailBody.addChild(Object.assign(lbl('XP', 5, 0xeebb55, true), { x: 2, y: xpY }));
   detailBody.addChild(statBar(26, xpY + 2, 100, 4, xpR, 0xeebb55));

@@ -1,0 +1,232 @@
+species_order,tier,species_id,form_id,stage,stage_depth,route_order,name,parent_form_id,dominant_axes,temperature_target,temperature_tolerance,temperature_min,temperature_max,brightness_target,brightness_tolerance,brightness_min,brightness_max,smell_target,smell_tolerance,smell_min,smell_max,humidity_target,humidity_tolerance,humidity_min,humidity_max,sound_target,sound_tolerance,sound_min,sound_max,provide_temperature,provide_brightness,provide_smell,provide_humidity,provide_sound,extreme_axis_count,difficulty_score,difficulty_rank
+1,1,howl_wolf,howl_wolf,wild,0,0,울부짖는 늑대,,sound|brightness,0,4,-4,4,-3,2,-5,-1,3,4,-1,7,0,4,-4,4,-6,2,-8,-4,-4,-2,-2,1,1,0,2.02,easy
+1,1,howl_wolf,howl_wolf_d1_0,devo1,1,1,달울림,howl_wolf,sound|brightness,0,3,-3,3,-6,1,-7,-5,5,3,2,8,0,3,-3,3,-9,1,-9,-8,-6,-3,-4,1,2,1,5.47,normal
+1,1,howl_wolf,howl_wolf_d1_1,devo1,1,2,수호늑대,howl_wolf,sound|brightness,0,3,-3,3,-6,1,-7,-5,5,3,2,8,0,3,-3,3,-9,1,-9,-8,-6,-3,-4,1,2,1,5.47,normal
+1,1,howl_wolf,howl_wolf_d1_2,devo1,1,3,질풍늑대,howl_wolf,sound|brightness,0,3,-3,3,-6,1,-7,-5,5,3,2,8,0,3,-3,3,-9,1,-9,-8,-6,-3,-4,1,2,1,5.47,normal
+1,1,howl_wolf,howl_wolf_d2_0,devo2,2,1,울림이,howl_wolf_d1_0,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,2,5,9,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,2,2,3,11.73,brutal
+1,1,howl_wolf,howl_wolf_d2_1,devo2,2,2,자장이,howl_wolf_d1_0,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,2,5,9,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,2,2,3,11.73,brutal
+1,1,howl_wolf,howl_wolf_d2_2,devo2,2,3,방패냥,howl_wolf_d1_1,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,2,5,9,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,2,2,3,11.73,brutal
+1,1,howl_wolf,howl_wolf_d2_3,devo2,2,4,메아리,howl_wolf_d1_1,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,2,5,9,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,2,2,3,11.73,brutal
+1,1,howl_wolf,howl_wolf_d2_4,devo2,2,5,쏜살이,howl_wolf_d1_2,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,2,5,9,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,2,2,3,11.73,brutal
+1,1,howl_wolf,howl_wolf_d2_5,devo2,2,6,솔솔이,howl_wolf_d1_2,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,2,5,9,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,2,2,3,11.73,brutal
+2,1,ember_salamander,ember_salamander,wild,0,0,용암 도롱뇽,,temperature|humidity,6,2,4,8,3,4,-1,7,-3,2,-5,-1,-6,2,-8,-4,0,4,-4,4,-2,4,4,-1,-5,0,2.58,easy
+2,1,ember_salamander,ember_salamander_d1_0,devo1,1,1,불씨도롱,ember_salamander,temperature|humidity,9,1,8,9,5,3,2,8,-5,1,-6,-4,-9,1,-9,-8,0,3,-3,3,-3,6,6,-1,-8,2,7.92,normal
+2,1,ember_salamander,ember_salamander_d1_1,devo1,1,2,용암방패,ember_salamander,temperature|humidity,9,1,8,9,5,3,2,8,-5,1,-6,-4,-9,1,-9,-8,0,3,-3,3,-3,6,6,-1,-8,2,7.92,normal
+2,1,ember_salamander,ember_salamander_d1_2,devo1,1,3,온천도롱,ember_salamander,temperature|humidity,9,1,8,9,5,3,2,8,-5,1,-6,-4,-9,1,-9,-8,0,3,-3,3,-3,6,6,-1,-8,2,7.92,normal
+2,1,ember_salamander,ember_salamander_d1_3,devo1,1,4,섬광도롱,ember_salamander,temperature|humidity,9,1,8,9,5,3,2,8,-5,1,-6,-4,-9,1,-9,-8,0,3,-3,3,-3,6,6,-1,-8,2,7.92,normal
+2,1,ember_salamander,ember_salamander_d2_0,devo2,2,1,불씨애,ember_salamander_d1_0,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_1,devo2,2,2,온기애,ember_salamander_d1_0,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_2,devo2,2,3,바위애,ember_salamander_d1_1,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_3,devo2,2,4,섬광애,ember_salamander_d1_1,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_4,devo2,2,5,김이애,ember_salamander_d1_2,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_5,devo2,2,6,웅덩이애,ember_salamander_d1_2,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_6,devo2,2,7,번쩍애,ember_salamander_d1_3,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+2,1,ember_salamander,ember_salamander_d2_7,devo2,2,8,반딧애,ember_salamander_d1_3,temperature|humidity,9,1,8,9,7,2,5,9,-7,1,-8,-6,-9,1,-9,-8,0,2,-2,2,-3,6,8,-3,-8,4,14.49,brutal
+3,1,rot_toad,rot_toad,wild,0,0,썩은향 두꺼비,,smell|humidity,3,4,-1,7,-3,4,-7,1,6,2,4,8,6,2,4,8,-3,4,-7,1,0,1,-1,3,6,0,2.64,easy
+3,1,rot_toad,rot_toad_d1_0,devo1,1,1,향기두꺼비,rot_toad,smell|humidity,5,3,2,8,-5,3,-8,-2,9,1,8,9,9,1,8,9,-5,3,-8,-2,0,1,-1,4,9,2,8.18,hard
+3,1,rot_toad,rot_toad_d1_1,devo1,1,2,독안개,rot_toad,smell|humidity,5,3,2,8,-5,3,-8,-2,9,1,8,9,9,1,8,9,-5,3,-8,-2,0,1,-1,4,9,2,8.18,hard
+3,1,rot_toad,rot_toad_d1_2,devo1,1,3,맹독두꺼비,rot_toad,smell|humidity,5,3,2,8,-5,3,-8,-2,9,1,8,9,9,1,8,9,-5,3,-8,-2,0,1,-1,4,9,2,8.18,hard
+3,1,rot_toad,rot_toad_d2_0,devo2,2,1,약초올챙이,rot_toad_d1_0,smell|humidity,7,2,5,9,-7,2,-9,-5,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-3,4,9,5,16.9,brutal
+3,1,rot_toad,rot_toad_d2_1,devo2,2,2,향기올챙이,rot_toad_d1_0,smell|humidity,7,2,5,9,-7,2,-9,-5,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-3,4,9,5,16.9,brutal
+3,1,rot_toad,rot_toad_d2_2,devo2,2,3,안개올챙이,rot_toad_d1_1,smell|humidity,7,2,5,9,-7,2,-9,-5,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-3,4,9,5,16.9,brutal
+3,1,rot_toad,rot_toad_d2_3,devo2,2,4,짙은올챙이,rot_toad_d1_1,smell|humidity,7,2,5,9,-7,2,-9,-5,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-3,4,9,5,16.9,brutal
+3,1,rot_toad,rot_toad_d2_4,devo2,2,5,독침올챙이,rot_toad_d1_2,smell|humidity,7,2,5,9,-7,2,-9,-5,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-3,4,9,5,16.9,brutal
+3,1,rot_toad,rot_toad_d2_5,devo2,2,6,물웅올챙이,rot_toad_d1_2,smell|humidity,7,2,5,9,-7,2,-9,-5,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-3,4,9,5,16.9,brutal
+4,1,stalker_mantis,stalker_mantis,wild,0,0,그림자 사마귀,,sound|brightness,0,4,-4,4,3,2,1,5,0,4,-4,4,0,4,-4,4,-6,2,-8,-4,-4,-2,2,1,0,0,1.88,easy
+4,1,stalker_mantis,stalker_mantis_d1_0,devo1,1,1,춤사마귀,stalker_mantis,sound|brightness,0,3,-3,3,6,1,5,7,0,3,-3,3,0,3,-3,3,-9,1,-9,-8,-6,-3,4,2,0,1,5,normal
+4,1,stalker_mantis,stalker_mantis_d1_1,devo1,1,2,꽃사마귀,stalker_mantis,sound|brightness,0,3,-3,3,6,1,5,7,0,3,-3,3,0,3,-3,3,-9,1,-9,-8,-6,-3,4,2,0,1,5,normal
+4,1,stalker_mantis,stalker_mantis_d1_2,devo1,1,3,갑옷사마귀,stalker_mantis,sound|brightness,0,3,-3,3,6,1,5,7,0,3,-3,3,0,3,-3,3,-9,1,-9,-8,-6,-3,4,2,0,1,5,normal
+4,1,stalker_mantis,stalker_mantis_d2_0,devo2,2,1,빙글이,stalker_mantis_d1_0,sound|brightness,0,2,-2,2,9,1,8,9,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,-3,6,3,0,2,9.14,hard
+4,1,stalker_mantis,stalker_mantis_d2_1,devo2,2,2,지킴이,stalker_mantis_d1_0,sound|brightness,0,2,-2,2,9,1,8,9,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,-3,6,3,0,2,9.14,hard
+4,1,stalker_mantis,stalker_mantis_d2_2,devo2,2,3,꽃봉이,stalker_mantis_d1_1,sound|brightness,0,2,-2,2,9,1,8,9,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,-3,6,3,0,2,9.14,hard
+4,1,stalker_mantis,stalker_mantis_d2_3,devo2,2,4,잎새꼬미,stalker_mantis_d1_1,sound|brightness,0,2,-2,2,9,1,8,9,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,-3,6,3,0,2,9.14,hard
+4,1,stalker_mantis,stalker_mantis_d2_4,devo2,2,5,갑옷꼬미,stalker_mantis_d1_2,sound|brightness,0,2,-2,2,9,1,8,9,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,-3,6,3,0,2,9.14,hard
+4,1,stalker_mantis,stalker_mantis_d2_5,devo2,2,6,싹둑이,stalker_mantis_d1_2,sound|brightness,0,2,-2,2,9,1,8,9,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,-3,6,3,0,2,9.14,hard
+5,1,echo_bat,echo_bat,wild,0,0,초음파 박쥐,,brightness|humidity,0,4,-4,4,-6,2,-8,-4,0,4,-4,4,3,4,-1,7,-3,4,-7,1,-1,-1,-4,-2,2,0,1.94,easy
+5,1,echo_bat,echo_bat_d1_0,devo1,1,1,노래박쥐,echo_bat,brightness|humidity,0,3,-3,3,-9,1,-9,-8,0,3,-3,3,6,3,3,9,-5,3,-8,-2,-1,-2,-6,-3,4,1,5.26,normal
+5,1,echo_bat,echo_bat_d1_1,devo1,1,2,질풍박쥐,echo_bat,brightness|humidity,0,3,-3,3,-9,1,-9,-8,0,3,-3,3,6,3,3,9,-5,3,-8,-2,-1,-2,-6,-3,4,1,5.26,normal
+5,1,echo_bat,echo_bat_d2_0,devo2,2,1,흥얼이,echo_bat_d1_0,brightness|humidity,0,2,-2,2,-9,1,-9,-8,0,2,-2,2,9,2,7,9,-7,2,-9,-5,-2,-2,-6,-3,6,3,11.55,brutal
+5,1,echo_bat,echo_bat_d2_1,devo2,2,2,삑삑이,echo_bat_d1_0,brightness|humidity,0,2,-2,2,-9,1,-9,-8,0,2,-2,2,9,2,7,9,-7,2,-9,-5,-2,-2,-6,-3,6,3,11.55,brutal
+5,1,echo_bat,echo_bat_d2_2,devo2,2,3,파닥이,echo_bat_d1_1,brightness|humidity,0,2,-2,2,-9,1,-9,-8,0,2,-2,2,9,2,7,9,-7,2,-9,-5,-2,-2,-6,-3,6,3,11.55,brutal
+5,1,echo_bat,echo_bat_d2_3,devo2,2,4,포근이,echo_bat_d1_1,brightness|humidity,0,2,-2,2,-9,1,-9,-8,0,2,-2,2,9,2,7,9,-7,2,-9,-5,-2,-2,-6,-3,6,3,11.55,brutal
+6,1,frost_moth,frost_moth,wild,0,0,서리 나방,,temperature|brightness,-6,2,-8,-4,3,4,-1,7,0,4,-4,4,3,2,1,5,-3,4,-7,1,-1,-5,0,1,2,0,2.16,easy
+6,1,frost_moth,frost_moth_d1_0,devo1,1,1,눈꽃나방,frost_moth,temperature|brightness,-9,1,-9,-8,6,3,3,9,0,3,-3,3,5,1,4,6,-5,3,-8,-2,-1,-8,1,2,3,1,5.94,normal
+6,1,frost_moth,frost_moth_d1_1,devo1,1,2,얼음나방,frost_moth,temperature|brightness,-9,1,-9,-8,6,3,3,9,0,3,-3,3,5,1,4,6,-5,3,-8,-2,-1,-8,1,2,3,1,5.94,normal
+6,1,frost_moth,frost_moth_d2_0,devo2,2,1,눈송이,frost_moth_d1_0,temperature|brightness,-9,1,-9,-8,9,2,7,9,0,2,-2,2,7,1,6,8,-7,2,-9,-5,-3,-8,3,3,5,4,14.31,brutal
+6,1,frost_moth,frost_moth_d2_1,devo2,2,2,서늘이,frost_moth_d1_0,temperature|brightness,-9,1,-9,-8,9,2,7,9,0,2,-2,2,7,1,6,8,-7,2,-9,-5,-3,-8,3,3,5,4,14.31,brutal
+6,1,frost_moth,frost_moth_d2_2,devo2,2,3,얼음꼬미,frost_moth_d1_1,temperature|brightness,-9,1,-9,-8,9,2,7,9,0,2,-2,2,7,1,6,8,-7,2,-9,-5,-3,-8,3,3,5,4,14.31,brutal
+6,1,frost_moth,frost_moth_d2_3,devo2,2,4,반짝이,frost_moth_d1_1,temperature|brightness,-9,1,-9,-8,9,2,7,9,0,2,-2,2,7,1,6,8,-7,2,-9,-5,-3,-8,3,3,5,4,14.31,brutal
+7,1,mist_jellyfish,mist_jellyfish,wild,0,0,안개 해파리,,humidity|sound,-3,4,-7,1,-3,4,-7,1,-3,2,-5,-1,6,2,4,8,-6,2,-8,-4,-2,-4,-3,-3,3,0,2.72,easy
+7,1,mist_jellyfish,mist_jellyfish_d1_0,devo1,1,1,이슬해파리,mist_jellyfish,humidity|sound,-5,3,-8,-2,-5,3,-8,-2,-5,1,-6,-4,9,1,8,9,-9,1,-9,-8,-3,-6,-5,-5,4,2,8.39,hard
+7,1,mist_jellyfish,mist_jellyfish_d1_1,devo1,1,2,독촉수,mist_jellyfish,humidity|sound,-5,3,-8,-2,-5,3,-8,-2,-5,1,-6,-4,9,1,8,9,-9,1,-9,-8,-3,-6,-5,-5,4,2,8.39,hard
+7,1,mist_jellyfish,mist_jellyfish_d2_0,devo2,2,1,이슬방울,mist_jellyfish_d1_0,humidity|sound,-7,2,-9,-5,-7,2,-9,-5,-7,1,-8,-6,9,1,8,9,-9,1,-9,-8,-3,-8,-7,-7,4,5,17.08,brutal
+7,1,mist_jellyfish,mist_jellyfish_d2_1,devo2,2,2,한기방울,mist_jellyfish_d1_0,humidity|sound,-7,2,-9,-5,-7,2,-9,-5,-7,1,-8,-6,9,1,8,9,-9,1,-9,-8,-3,-8,-7,-7,4,5,17.08,brutal
+7,1,mist_jellyfish,mist_jellyfish_d2_2,devo2,2,3,쏘기방울,mist_jellyfish_d1_1,humidity|sound,-7,2,-9,-5,-7,2,-9,-5,-7,1,-8,-6,9,1,8,9,-9,1,-9,-8,-3,-8,-7,-7,4,5,17.08,brutal
+7,1,mist_jellyfish,mist_jellyfish_d2_3,devo2,2,4,안개솜,mist_jellyfish_d1_1,humidity|sound,-7,2,-9,-5,-7,2,-9,-5,-7,1,-8,-6,9,1,8,9,-9,1,-9,-8,-3,-8,-7,-7,4,5,17.08,brutal
+8,1,vine_spider,vine_spider,wild,0,0,덩굴 거미,,sound|brightness,0,4,-4,4,-3,2,-5,-1,3,2,1,5,3,4,-1,7,-6,2,-8,-4,-3,-2,-2,1,3,0,2.24,easy
+8,1,vine_spider,vine_spider_d1_0,devo1,1,1,꽃거미,vine_spider,sound|brightness,0,3,-3,3,-6,1,-7,-5,5,1,4,6,5,3,2,8,-9,1,-9,-8,-4,-3,-4,1,5,1,6.14,normal
+8,1,vine_spider,vine_spider_d1_1,devo1,1,2,실뿜이,vine_spider,sound|brightness,0,3,-3,3,-6,1,-7,-5,5,1,4,6,5,3,2,8,-9,1,-9,-8,-4,-3,-4,1,5,1,6.14,normal
+8,1,vine_spider,vine_spider_d1_2,devo1,1,3,약초거미,vine_spider,sound|brightness,0,3,-3,3,-6,1,-7,-5,5,1,4,6,5,3,2,8,-9,1,-9,-8,-4,-3,-4,1,5,1,6.14,normal
+8,1,vine_spider,vine_spider_d2_0,devo2,2,1,꽃봉이,vine_spider_d1_0,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,1,6,8,7,2,5,9,-9,1,-9,-8,-4,-3,-6,2,7,4,14.49,brutal
+8,1,vine_spider,vine_spider_d2_1,devo2,2,2,가시콩,vine_spider_d1_0,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,1,6,8,7,2,5,9,-9,1,-9,-8,-4,-3,-6,2,7,4,14.49,brutal
+8,1,vine_spider,vine_spider_d2_2,devo2,2,3,실뭉치,vine_spider_d1_1,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,1,6,8,7,2,5,9,-9,1,-9,-8,-4,-3,-6,2,7,4,14.49,brutal
+8,1,vine_spider,vine_spider_d2_3,devo2,2,4,잎잠이,vine_spider_d1_1,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,1,6,8,7,2,5,9,-9,1,-9,-8,-4,-3,-6,2,7,4,14.49,brutal
+8,1,vine_spider,vine_spider_d2_4,devo2,2,5,약콩이,vine_spider_d1_2,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,1,6,8,7,2,5,9,-9,1,-9,-8,-4,-3,-6,2,7,4,14.49,brutal
+8,1,vine_spider,vine_spider_d2_5,devo2,2,6,덩굴콩,vine_spider_d1_2,sound|brightness,0,2,-2,2,-9,1,-9,-8,7,1,6,8,7,2,5,9,-9,1,-9,-8,-4,-3,-6,2,7,4,14.49,brutal
+9,2,mirror_chameleon,mirror_chameleon,wild,0,0,거울 카멜레온,,temperature|sound,3,4,-1,7,0,2,-2,2,0,4,-4,4,0,4,-4,4,-3,2,-5,-1,-2,1,1,0,0,0,2.04,easy
+9,2,mirror_chameleon,mirror_chameleon_d1_0,devo1,1,1,빛도마뱀,mirror_chameleon,temperature|sound,6,3,3,9,0,1,-1,1,0,3,-3,3,0,3,-3,3,-6,1,-7,-5,-4,2,2,0,0,0,3.72,easy
+9,2,mirror_chameleon,mirror_chameleon_d1_1,devo1,1,2,위장도마뱀,mirror_chameleon,temperature|sound,6,3,3,9,0,1,-1,1,0,3,-3,3,0,3,-3,3,-6,1,-7,-5,-4,2,2,0,0,0,3.72,easy
+9,2,mirror_chameleon,mirror_chameleon_d2_0,devo2,2,1,반짝이,mirror_chameleon_d1_0,temperature|sound,9,2,7,9,0,1,-1,1,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,3,3,0,0,2,9.64,hard
+9,2,mirror_chameleon,mirror_chameleon_d2_1,devo2,2,2,섬광이,mirror_chameleon_d1_0,temperature|sound,9,2,7,9,0,1,-1,1,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,3,3,0,0,2,9.64,hard
+9,2,mirror_chameleon,mirror_chameleon_d2_2,devo2,2,3,쏜살이,mirror_chameleon_d1_1,temperature|sound,9,2,7,9,0,1,-1,1,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,3,3,0,0,2,9.64,hard
+9,2,mirror_chameleon,mirror_chameleon_d2_3,devo2,2,4,거울콩,mirror_chameleon_d1_1,temperature|sound,9,2,7,9,0,1,-1,1,0,2,-2,2,0,2,-2,2,-9,1,-9,-8,-6,3,3,0,0,2,9.64,hard
+10,2,crystal_stag,crystal_stag,wild,0,0,수정 사슴,,temperature|brightness,-3,2,-5,-1,3,2,1,5,3,4,-1,7,0,4,-4,4,-3,4,-7,1,-2,-3,1,3,1,0,2.31,easy
+10,2,crystal_stag,crystal_stag_d1_0,devo1,1,1,종소리사슴,crystal_stag,temperature|brightness,-6,1,-7,-5,6,1,5,7,5,3,2,8,0,3,-3,3,-5,3,-8,-2,-3,-6,2,5,2,0,4.66,easy
+10,2,crystal_stag,crystal_stag_d1_1,devo1,1,2,숲지기사슴,crystal_stag,temperature|brightness,-6,1,-7,-5,6,1,5,7,5,3,2,8,0,3,-3,3,-5,3,-8,-2,-3,-6,2,5,2,0,4.66,easy
+10,2,crystal_stag,crystal_stag_d1_2,devo1,1,3,수정갑사슴,crystal_stag,temperature|brightness,-6,1,-7,-5,6,1,5,7,5,3,2,8,0,3,-3,3,-5,3,-8,-2,-3,-6,2,5,2,0,4.66,easy
+10,2,crystal_stag,crystal_stag_d2_0,devo2,2,1,딸랑이,crystal_stag_d1_0,temperature|brightness,-9,1,-9,-8,9,1,8,9,7,2,5,9,0,2,-2,2,-7,2,-9,-5,-5,-8,3,8,2,4,14.81,brutal
+10,2,crystal_stag,crystal_stag_d2_1,devo2,2,2,수정솜이,crystal_stag_d1_0,temperature|brightness,-9,1,-9,-8,9,1,8,9,7,2,5,9,0,2,-2,2,-7,2,-9,-5,-5,-8,3,8,2,4,14.81,brutal
+10,2,crystal_stag,crystal_stag_d2_2,devo2,2,3,꽃사슴이,crystal_stag_d1_1,temperature|brightness,-9,1,-9,-8,9,1,8,9,7,2,5,9,0,2,-2,2,-7,2,-9,-5,-5,-8,3,8,2,4,14.81,brutal
+10,2,crystal_stag,crystal_stag_d2_3,devo2,2,4,보석깡총,crystal_stag_d1_1,temperature|brightness,-9,1,-9,-8,9,1,8,9,7,2,5,9,0,2,-2,2,-7,2,-9,-5,-5,-8,3,8,2,4,14.81,brutal
+10,2,crystal_stag,crystal_stag_d2_4,devo2,2,5,방패꼬마,crystal_stag_d1_2,temperature|brightness,-9,1,-9,-8,9,1,8,9,7,2,5,9,0,2,-2,2,-7,2,-9,-5,-5,-8,3,8,2,4,14.81,brutal
+10,2,crystal_stag,crystal_stag_d2_5,devo2,2,6,메아리,crystal_stag_d1_2,temperature|brightness,-9,1,-9,-8,9,1,8,9,7,2,5,9,0,2,-2,2,-7,2,-9,-5,-5,-8,3,8,2,4,14.81,brutal
+11,2,lava_crab,lava_crab,wild,0,0,용암 집게,,temperature|brightness,6,2,4,8,6,2,4,8,-3,4,-7,1,-6,2,-8,-4,0,4,-4,4,-2,4,6,0,-5,0,3.42,easy
+11,2,lava_crab,lava_crab_d1_0,devo1,1,1,온천게,lava_crab,temperature|brightness,9,1,8,9,9,1,8,9,-5,3,-8,-2,-8,1,-9,-7,0,3,-3,3,-3,6,9,0,-7,3,10.12,hard
+11,2,lava_crab,lava_crab_d1_1,devo1,1,2,화염집게,lava_crab,temperature|brightness,9,1,8,9,9,1,8,9,-5,3,-8,-2,-8,1,-9,-7,0,3,-3,3,-3,6,9,0,-7,3,10.12,hard
+11,2,lava_crab,lava_crab_d1_2,devo1,1,3,조력게,lava_crab,temperature|brightness,9,1,8,9,9,1,8,9,-5,3,-8,-2,-8,1,-9,-7,0,3,-3,3,-3,6,9,0,-7,3,10.12,hard
+11,2,lava_crab,lava_crab_d2_0,devo2,2,1,따끈돌,lava_crab_d1_0,temperature|brightness,9,1,8,9,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,-3,6,9,-2,-8,4,15.65,brutal
+11,2,lava_crab,lava_crab_d2_1,devo2,2,2,불꽃집게,lava_crab_d1_0,temperature|brightness,9,1,8,9,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,-3,6,9,-2,-8,4,15.65,brutal
+11,2,lava_crab,lava_crab_d2_2,devo2,2,3,불씨꼬마,lava_crab_d1_1,temperature|brightness,9,1,8,9,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,-3,6,9,-2,-8,4,15.65,brutal
+11,2,lava_crab,lava_crab_d2_3,devo2,2,4,김단추,lava_crab_d1_1,temperature|brightness,9,1,8,9,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,-3,6,9,-2,-8,4,15.65,brutal
+11,2,lava_crab,lava_crab_d2_4,devo2,2,5,웅덩이,lava_crab_d1_2,temperature|brightness,9,1,8,9,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,-3,6,9,-2,-8,4,15.65,brutal
+11,2,lava_crab,lava_crab_d2_5,devo2,2,6,용암알,lava_crab_d1_2,temperature|brightness,9,1,8,9,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,-3,6,9,-2,-8,4,15.65,brutal
+12,2,spore_fox,spore_fox,wild,0,0,포자 여우,,smell|brightness,0,4,-4,4,-3,4,-7,1,6,2,4,8,3,2,1,5,-3,4,-7,1,-1,-1,-2,3,4,0,2.66,easy
+12,2,spore_fox,spore_fox_d1_0,devo1,1,1,향여우,spore_fox,smell|brightness,0,3,-3,3,-6,3,-9,-3,9,1,8,9,5,1,4,6,-5,3,-8,-2,-1,-2,-4,4,6,1,6.44,normal
+12,2,spore_fox,spore_fox_d1_1,devo1,1,2,안개여우,spore_fox,smell|brightness,0,3,-3,3,-6,3,-9,-3,9,1,8,9,5,1,4,6,-5,3,-8,-2,-1,-2,-4,4,6,1,6.44,normal
+12,2,spore_fox,spore_fox_d2_0,devo2,2,1,향기꼬마,spore_fox_d1_0,smell|brightness,0,2,-2,2,-9,2,-9,-7,9,1,8,9,7,1,6,8,-7,2,-9,-5,-3,-2,-6,3,8,4,14.81,brutal
+12,2,spore_fox,spore_fox_d2_1,devo2,2,2,포자콩,spore_fox_d1_0,smell|brightness,0,2,-2,2,-9,2,-9,-7,9,1,8,9,7,1,6,8,-7,2,-9,-5,-3,-2,-6,3,8,4,14.81,brutal
+12,2,spore_fox,spore_fox_d2_2,devo2,2,3,안개솜이,spore_fox_d1_1,smell|brightness,0,2,-2,2,-9,2,-9,-7,9,1,8,9,7,1,6,8,-7,2,-9,-5,-3,-2,-6,3,8,4,14.81,brutal
+12,2,spore_fox,spore_fox_d2_3,devo2,2,4,버섯단추,spore_fox_d1_1,smell|brightness,0,2,-2,2,-9,2,-9,-7,9,1,8,9,7,1,6,8,-7,2,-9,-5,-3,-2,-6,3,8,4,14.81,brutal
+13,2,iron_boar,iron_boar,wild,0,0,강철 멧돼지,,smell|temperature,3,2,1,5,-3,4,-7,1,-6,2,-8,-4,0,4,-4,4,3,4,-1,7,2,3,-1,-5,-2,0,2.66,easy
+13,2,iron_boar,iron_boar_d1_0,devo1,1,1,철등멧돼지,iron_boar,smell|temperature,6,1,5,7,-5,3,-8,-2,-9,1,-9,-8,0,3,-3,3,5,3,2,8,3,6,-1,-8,-3,1,6.44,normal
+13,2,iron_boar,iron_boar_d1_1,devo1,1,2,화염멧돼지,iron_boar,smell|temperature,6,1,5,7,-5,3,-8,-2,-9,1,-9,-8,0,3,-3,3,5,3,2,8,3,6,-1,-8,-3,1,6.44,normal
+13,2,iron_boar,iron_boar_d1_2,devo1,1,3,약초멧돼지,iron_boar,smell|temperature,6,1,5,7,-5,3,-8,-2,-9,1,-9,-8,0,3,-3,3,5,3,2,8,3,6,-1,-8,-3,1,6.44,normal
+13,2,iron_boar,iron_boar_d1_3,devo1,1,4,돌진멧돼지,iron_boar,smell|temperature,6,1,5,7,-5,3,-8,-2,-9,1,-9,-8,0,3,-3,3,5,3,2,8,3,6,-1,-8,-3,1,6.44,normal
+13,2,iron_boar,iron_boar_d2_0,devo2,2,1,자갈돼지,iron_boar_d1_0,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_1,devo2,2,2,불꽃돼지,iron_boar_d1_0,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_2,devo2,2,3,숯불돼지,iron_boar_d1_1,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_3,devo2,2,4,쇠잠돼지,iron_boar_d1_1,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_4,devo2,2,5,풀향돼지,iron_boar_d1_2,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_5,devo2,2,6,쇠달돼지,iron_boar_d1_2,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_6,devo2,2,7,번개돼지,iron_boar_d1_3,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+13,2,iron_boar,iron_boar_d2_7,devo2,2,8,지킴돼지,iron_boar_d1_3,smell|temperature,9,1,8,9,-7,2,-9,-5,-9,1,-9,-8,0,2,-2,2,7,2,5,9,5,8,-2,-8,-3,4,14.81,brutal
+14,2,stone_tortoise,stone_tortoise,wild,0,0,바위 거북,,brightness|sound,0,2,-2,2,-6,2,-8,-4,0,4,-4,4,3,4,-1,7,-6,2,-8,-4,-3,-2,-4,-2,2,0,2.94,easy
+14,2,stone_tortoise,stone_tortoise_d1_0,devo1,1,1,이끼거북,stone_tortoise,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,3,-3,3,5,3,2,8,-9,1,-9,-8,-4,-3,-6,-3,3,2,7.95,normal
+14,2,stone_tortoise,stone_tortoise_d1_1,devo1,1,2,온천거북,stone_tortoise,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,3,-3,3,5,3,2,8,-9,1,-9,-8,-4,-3,-6,-3,3,2,7.95,normal
+14,2,stone_tortoise,stone_tortoise_d1_2,devo1,1,3,화석거북,stone_tortoise,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,3,-3,3,5,3,2,8,-9,1,-9,-8,-4,-3,-6,-3,3,2,7.95,normal
+14,2,stone_tortoise,stone_tortoise_d1_3,devo1,1,4,지진거북,stone_tortoise,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,3,-3,3,5,3,2,8,-9,1,-9,-8,-4,-3,-6,-3,3,2,7.95,normal
+14,2,stone_tortoise,stone_tortoise_d2_0,devo2,2,1,조약돌거북,stone_tortoise_d1_0,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_1,devo2,2,2,온기거북,stone_tortoise_d1_0,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_2,devo2,2,3,김거북,stone_tortoise_d1_1,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_3,devo2,2,4,쿵거북,stone_tortoise_d1_1,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_4,devo2,2,5,뼈거북,stone_tortoise_d1_2,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_5,devo2,2,6,총총거북,stone_tortoise_d1_2,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_6,devo2,2,7,달리거북,stone_tortoise_d1_3,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+14,2,stone_tortoise,stone_tortoise_d2_7,devo2,2,8,방패거북,stone_tortoise_d1_3,brightness|sound,0,1,-1,1,-9,1,-9,-8,0,2,-2,2,7,2,5,9,-9,1,-9,-8,-4,-3,-6,-3,5,3,12.41,brutal
+15,2,rumble_bear,rumble_bear,wild,0,0,진동 곰,,brightness|smell,0,4,-4,4,-3,2,-5,-1,3,4,-1,7,0,4,-4,4,-3,2,-5,-1,-2,-1,-2,1,1,0,2.18,easy
+15,2,rumble_bear,rumble_bear_d1_0,devo1,1,1,북소리곰,rumble_bear,brightness|smell,0,3,-3,3,-6,1,-7,-5,6,3,3,9,0,3,-3,3,-5,1,-6,-4,-3,-2,-4,2,2,0,4.19,easy
+15,2,rumble_bear,rumble_bear_d1_1,devo1,1,2,포옹곰,rumble_bear,brightness|smell,0,3,-3,3,-6,1,-7,-5,6,3,3,9,0,3,-3,3,-5,1,-6,-4,-3,-2,-4,2,2,0,4.19,easy
+15,2,rumble_bear,rumble_bear_d1_2,devo1,1,3,자장곰,rumble_bear,brightness|smell,0,3,-3,3,-6,1,-7,-5,6,3,3,9,0,3,-3,3,-5,1,-6,-4,-3,-2,-4,2,2,0,4.19,easy
+15,2,rumble_bear,rumble_bear_d1_3,devo1,1,4,돌진곰,rumble_bear,brightness|smell,0,3,-3,3,-6,1,-7,-5,6,3,3,9,0,3,-3,3,-5,1,-6,-4,-3,-2,-4,2,2,0,4.19,easy
+15,2,rumble_bear,rumble_bear_d2_0,devo2,2,1,톡톡곰,rumble_bear_d1_0,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_1,devo2,2,2,방패곰,rumble_bear_d1_0,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_2,devo2,2,3,안아곰,rumble_bear_d1_1,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_3,devo2,2,4,으르렁곰,rumble_bear_d1_1,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_4,devo2,2,5,콧노래곰,rumble_bear_d1_2,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_5,devo2,2,6,종종곰,rumble_bear_d1_2,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_6,devo2,2,7,돌진곰아,rumble_bear_d1_3,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+15,2,rumble_bear,rumble_bear_d2_7,devo2,2,8,노래곰아,rumble_bear_d1_3,brightness|smell,0,2,-2,2,-9,1,-9,-8,9,2,7,9,0,2,-2,2,-7,1,-8,-6,-5,-2,-6,3,3,3,12.23,brutal
+16,2,thorn_hedgehog,thorn_hedgehog,wild,0,0,가시 고슴도치,,sound|smell,0,4,-4,4,0,4,-4,4,3,2,1,5,0,2,-2,2,-6,2,-8,-4,-4,-2,0,2,1,0,2.46,easy
+16,2,thorn_hedgehog,thorn_hedgehog_d1_0,devo1,1,1,꽃가시,thorn_hedgehog,sound|smell,0,3,-3,3,0,3,-3,3,6,1,5,7,0,1,-1,1,-9,1,-9,-8,-6,-3,0,4,2,1,5.7,normal
+16,2,thorn_hedgehog,thorn_hedgehog_d1_1,devo1,1,2,향가시,thorn_hedgehog,sound|smell,0,3,-3,3,0,3,-3,3,6,1,5,7,0,1,-1,1,-9,1,-9,-8,-6,-3,0,4,2,1,5.7,normal
+16,2,thorn_hedgehog,thorn_hedgehog_d1_2,devo1,1,3,약가시,thorn_hedgehog,sound|smell,0,3,-3,3,0,3,-3,3,6,1,5,7,0,1,-1,1,-9,1,-9,-8,-6,-3,0,4,2,1,5.7,normal
+16,2,thorn_hedgehog,thorn_hedgehog_d2_0,devo2,2,1,꽃봉가시,thorn_hedgehog_d1_0,sound|smell,0,2,-2,2,0,2,-2,2,9,1,8,9,0,1,-1,1,-9,1,-9,-8,-6,-3,0,6,3,2,9.82,hard
+16,2,thorn_hedgehog,thorn_hedgehog_d2_1,devo2,2,2,향솔가시,thorn_hedgehog_d1_0,sound|smell,0,2,-2,2,0,2,-2,2,9,1,8,9,0,1,-1,1,-9,1,-9,-8,-6,-3,0,6,3,2,9.82,hard
+16,2,thorn_hedgehog,thorn_hedgehog_d2_2,devo2,2,3,달향가시,thorn_hedgehog_d1_1,sound|smell,0,2,-2,2,0,2,-2,2,9,1,8,9,0,1,-1,1,-9,1,-9,-8,-6,-3,0,6,3,2,9.82,hard
+16,2,thorn_hedgehog,thorn_hedgehog_d2_3,devo2,2,4,동글가시,thorn_hedgehog_d1_1,sound|smell,0,2,-2,2,0,2,-2,2,9,1,8,9,0,1,-1,1,-9,1,-9,-8,-6,-3,0,6,3,2,9.82,hard
+16,2,thorn_hedgehog,thorn_hedgehog_d2_4,devo2,2,5,약풀가시,thorn_hedgehog_d1_2,sound|smell,0,2,-2,2,0,2,-2,2,9,1,8,9,0,1,-1,1,-9,1,-9,-8,-6,-3,0,6,3,2,9.82,hard
+16,2,thorn_hedgehog,thorn_hedgehog_d2_5,devo2,2,6,살랑가시,thorn_hedgehog_d1_2,sound|smell,0,2,-2,2,0,2,-2,2,9,1,8,9,0,1,-1,1,-9,1,-9,-8,-6,-3,0,6,3,2,9.82,hard
+17,3,storm_hawk,storm_hawk,wild,0,0,폭풍 매,,brightness|temperature,-3,2,-5,-1,6,2,4,8,0,4,-4,4,3,4,-1,7,3,2,1,5,3,-1,3,2,2,0,3.24,easy
+17,3,storm_hawk,storm_hawk_d1_0,devo1,1,1,바람매,storm_hawk,brightness|temperature,-6,1,-7,-5,9,1,8,9,0,3,-3,3,5,3,2,8,5,1,4,6,5,-2,4,3,3,1,7.14,normal
+17,3,storm_hawk,storm_hawk_d1_1,devo1,1,2,급강하매,storm_hawk,brightness|temperature,-6,1,-7,-5,9,1,8,9,0,3,-3,3,5,3,2,8,5,1,4,6,5,-2,4,3,3,1,7.14,normal
+17,3,storm_hawk,storm_hawk_d1_2,devo1,1,3,둥지매,storm_hawk,brightness|temperature,-6,1,-7,-5,9,1,8,9,0,3,-3,3,5,3,2,8,5,1,4,6,5,-2,4,3,3,1,7.14,normal
+17,3,storm_hawk,storm_hawk_d2_0,devo2,2,1,솔바람병아리,storm_hawk_d1_0,brightness|temperature,-9,1,-9,-8,9,1,8,9,0,2,-2,2,7,2,5,9,7,1,6,8,7,-4,3,3,5,4,15.49,brutal
+17,3,storm_hawk,storm_hawk_d2_1,devo2,2,2,보금병아리,storm_hawk_d1_0,brightness|temperature,-9,1,-9,-8,9,1,8,9,0,2,-2,2,7,2,5,9,7,1,6,8,7,-4,3,3,5,4,15.49,brutal
+17,3,storm_hawk,storm_hawk_d2_2,devo2,2,3,쏜살병아리,storm_hawk_d1_1,brightness|temperature,-9,1,-9,-8,9,1,8,9,0,2,-2,2,7,2,5,9,7,1,6,8,7,-4,3,3,5,4,15.49,brutal
+17,3,storm_hawk,storm_hawk_d2_3,devo2,2,4,뭉게병아리,storm_hawk_d1_1,brightness|temperature,-9,1,-9,-8,9,1,8,9,0,2,-2,2,7,2,5,9,7,1,6,8,7,-4,3,3,5,4,15.49,brutal
+17,3,storm_hawk,storm_hawk_d2_4,devo2,2,5,구구병아리,storm_hawk_d1_2,brightness|temperature,-9,1,-9,-8,9,1,8,9,0,2,-2,2,7,2,5,9,7,1,6,8,7,-4,3,3,5,4,15.49,brutal
+17,3,storm_hawk,storm_hawk_d2_5,devo2,2,6,째깍병아리,storm_hawk_d1_2,brightness|temperature,-9,1,-9,-8,9,1,8,9,0,2,-2,2,7,2,5,9,7,1,6,8,7,-4,3,3,5,4,15.49,brutal
+18,3,shadow_cat,shadow_cat,wild,0,0,그림자 고양이,,brightness|sound,0,2,-2,2,-6,2,-8,-4,-3,4,-7,1,0,4,-4,4,-6,2,-8,-4,-4,-2,-4,-4,-1,0,3.44,easy
+18,3,shadow_cat,shadow_cat_d1_0,devo1,1,1,달빛고양이,shadow_cat,brightness|sound,0,1,-1,1,-9,1,-9,-8,-5,3,-8,-2,0,3,-3,3,-9,1,-9,-8,-6,-3,-6,-6,-2,2,8.45,hard
+18,3,shadow_cat,shadow_cat_d1_1,devo1,1,2,그늘고양이,shadow_cat,brightness|sound,0,1,-1,1,-9,1,-9,-8,-5,3,-8,-2,0,3,-3,3,-9,1,-9,-8,-6,-3,-6,-6,-2,2,8.45,hard
+18,3,shadow_cat,shadow_cat_d2_0,devo2,2,1,깜빡냥이,shadow_cat_d1_0,brightness|sound,0,1,-1,1,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,-8,-2,3,12.91,brutal
+18,3,shadow_cat,shadow_cat_d2_1,devo2,2,2,속삭냥이,shadow_cat_d1_0,brightness|sound,0,1,-1,1,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,-8,-2,3,12.91,brutal
+18,3,shadow_cat,shadow_cat_d2_2,devo2,2,3,그르렁냥이,shadow_cat_d1_1,brightness|sound,0,1,-1,1,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,-8,-2,3,12.91,brutal
+18,3,shadow_cat,shadow_cat_d2_3,devo2,2,4,덮치냥이,shadow_cat_d1_1,brightness|sound,0,1,-1,1,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-9,1,-9,-8,-6,-3,-6,-8,-2,3,12.91,brutal
+19,3,coral_seahorse,coral_seahorse,wild,0,0,산호 해마,,humidity|brightness,0,4,-4,4,3,2,1,5,-3,2,-5,-1,6,2,4,8,-3,4,-7,1,0,-1,2,-1,3,0,3.24,easy
+19,3,coral_seahorse,coral_seahorse_d1_0,devo1,1,1,온도해마,coral_seahorse,humidity|brightness,0,3,-3,3,6,1,5,7,-5,1,-6,-4,9,1,8,9,-5,3,-8,-2,0,-2,4,-1,4,1,7.14,normal
+19,3,coral_seahorse,coral_seahorse_d1_1,devo1,1,2,치유해마,coral_seahorse,humidity|brightness,0,3,-3,3,6,1,5,7,-5,1,-6,-4,9,1,8,9,-5,3,-8,-2,0,-2,4,-1,4,1,7.14,normal
+19,3,coral_seahorse,coral_seahorse_d2_0,devo2,2,1,불씨조랑,coral_seahorse_d1_0,humidity|brightness,0,2,-2,2,9,1,8,9,-7,1,-8,-6,9,1,8,9,-7,2,-9,-5,-2,-2,6,-2,4,4,15.49,brutal
+19,3,coral_seahorse,coral_seahorse_d2_1,devo2,2,2,파도알,coral_seahorse_d1_0,humidity|brightness,0,2,-2,2,9,1,8,9,-7,1,-8,-6,9,1,8,9,-7,2,-9,-5,-2,-2,6,-2,4,4,15.49,brutal
+19,3,coral_seahorse,coral_seahorse_d2_2,devo2,2,3,온기방울,coral_seahorse_d1_1,humidity|brightness,0,2,-2,2,9,1,8,9,-7,1,-8,-6,9,1,8,9,-7,2,-9,-5,-2,-2,6,-2,4,4,15.49,brutal
+19,3,coral_seahorse,coral_seahorse_d2_3,devo2,2,4,산호불꽃,coral_seahorse_d1_1,humidity|brightness,0,2,-2,2,9,1,8,9,-7,1,-8,-6,9,1,8,9,-7,2,-9,-5,-2,-2,6,-2,4,4,15.49,brutal
+20,3,wind_serpent,wind_serpent,wild,0,0,바람 뱀,,sound|temperature,-3,4,-7,1,3,4,-1,7,0,4,-4,4,-3,2,-5,-1,6,2,4,8,3,0,1,1,-2,0,3.16,easy
+20,3,wind_serpent,wind_serpent_d1_0,devo1,1,1,산들뱀,wind_serpent,sound|temperature,-6,3,-9,-3,5,3,2,8,0,3,-3,3,-5,1,-6,-4,9,1,8,9,4,-1,1,2,-3,1,6.94,normal
+20,3,wind_serpent,wind_serpent_d1_1,devo1,1,2,바람방패,wind_serpent,sound|temperature,-6,3,-9,-3,5,3,2,8,0,3,-3,3,-5,1,-6,-4,9,1,8,9,4,-1,1,2,-3,1,6.94,normal
+20,3,wind_serpent,wind_serpent_d1_2,devo1,1,3,번개뱀,wind_serpent,sound|temperature,-6,3,-9,-3,5,3,2,8,0,3,-3,3,-5,1,-6,-4,9,1,8,9,4,-1,1,2,-3,1,6.94,normal
+20,3,wind_serpent,wind_serpent_d2_0,devo2,2,1,돌풍이,wind_serpent_d1_0,sound|temperature,-9,2,-9,-7,7,2,5,9,0,2,-2,2,-7,1,-8,-6,9,1,8,9,4,-3,2,2,-5,4,15.31,brutal
+20,3,wind_serpent,wind_serpent_d2_1,devo2,2,2,솔솔이,wind_serpent_d1_0,sound|temperature,-9,2,-9,-7,7,2,5,9,0,2,-2,2,-7,1,-8,-6,9,1,8,9,4,-3,2,2,-5,4,15.31,brutal
+20,3,wind_serpent,wind_serpent_d2_2,devo2,2,3,방패콩,wind_serpent_d1_1,sound|temperature,-9,2,-9,-7,7,2,5,9,0,2,-2,2,-7,1,-8,-6,9,1,8,9,4,-3,2,2,-5,4,15.31,brutal
+20,3,wind_serpent,wind_serpent_d2_3,devo2,2,4,찌릿꿈틀,wind_serpent_d1_1,sound|temperature,-9,2,-9,-7,7,2,5,9,0,2,-2,2,-7,1,-8,-6,9,1,8,9,4,-3,2,2,-5,4,15.31,brutal
+20,3,wind_serpent,wind_serpent_d2_4,devo2,2,5,번쩍벌레,wind_serpent_d1_2,sound|temperature,-9,2,-9,-7,7,2,5,9,0,2,-2,2,-7,1,-8,-6,9,1,8,9,4,-3,2,2,-5,4,15.31,brutal
+20,3,wind_serpent,wind_serpent_d2_5,devo2,2,6,고요또리,wind_serpent_d1_2,sound|temperature,-9,2,-9,-7,7,2,5,9,0,2,-2,2,-7,1,-8,-6,9,1,8,9,4,-3,2,2,-5,4,15.31,brutal
+21,3,swamp_leech,swamp_leech,wild,0,0,늪지 거머리,,brightness|smell,3,4,-1,7,-6,2,-8,-4,6,2,4,8,6,2,4,8,-3,4,-7,1,0,1,-3,2,6,0,4.06,easy
+21,3,swamp_leech,swamp_leech_d1_0,devo1,1,1,약초거머리,swamp_leech,brightness|smell,5,3,2,8,-9,1,-9,-8,9,1,8,9,8,1,7,9,-5,3,-8,-2,0,1,-4,3,8,3,11.09,brutal
+21,3,swamp_leech,swamp_leech_d1_1,devo1,1,2,철갑거머리,swamp_leech,brightness|smell,5,3,2,8,-9,1,-9,-8,9,1,8,9,8,1,7,9,-5,3,-8,-2,0,1,-4,3,8,3,11.09,brutal
+21,3,swamp_leech,swamp_leech_d1_2,devo1,1,3,흡수거머리,swamp_leech,brightness|smell,5,3,2,8,-9,1,-9,-8,9,1,8,9,8,1,7,9,-5,3,-8,-2,0,1,-4,3,8,3,11.09,brutal
+21,3,swamp_leech,swamp_leech_d2_0,devo2,2,1,약초방울,swamp_leech_d1_0,brightness|smell,7,2,5,9,-9,1,-9,-8,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-4,3,9,5,18.73,brutal
+21,3,swamp_leech,swamp_leech_d2_1,devo2,2,2,늪짹짹,swamp_leech_d1_0,brightness|smell,7,2,5,9,-9,1,-9,-8,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-4,3,9,5,18.73,brutal
+21,3,swamp_leech,swamp_leech_d2_2,devo2,2,3,갑옷알,swamp_leech_d1_1,brightness|smell,7,2,5,9,-9,1,-9,-8,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-4,3,9,5,18.73,brutal
+21,3,swamp_leech,swamp_leech_d2_3,devo2,2,4,점액싹,swamp_leech_d1_1,brightness|smell,7,2,5,9,-9,1,-9,-8,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-4,3,9,5,18.73,brutal
+21,3,swamp_leech,swamp_leech_d2_4,devo2,2,5,흡수콩,swamp_leech_d1_2,brightness|smell,7,2,5,9,-9,1,-9,-8,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-4,3,9,5,18.73,brutal
+21,3,swamp_leech,swamp_leech_d2_5,devo2,2,6,진흙포근,swamp_leech_d1_2,brightness|smell,7,2,5,9,-9,1,-9,-8,9,1,8,9,9,1,8,9,-7,2,-9,-5,-2,3,-4,3,9,5,18.73,brutal
+22,3,thunder_eel,thunder_eel,wild,0,0,번개 장어,,humidity|temperature,-3,2,-5,-1,0,4,-4,4,-3,4,-7,1,6,2,4,8,3,2,1,5,4,-1,-1,-2,3,0,3.24,easy
+22,3,thunder_eel,thunder_eel_d1_0,devo1,1,1,불꽃장어,thunder_eel,humidity|temperature,-6,1,-7,-5,0,3,-3,3,-5,3,-8,-2,9,1,8,9,5,1,4,6,6,-2,-2,-3,4,1,7.14,normal
+22,3,thunder_eel,thunder_eel_d1_1,devo1,1,2,전기뱀장어,thunder_eel,humidity|temperature,-6,1,-7,-5,0,3,-3,3,-5,3,-8,-2,9,1,8,9,5,1,4,6,6,-2,-2,-3,4,1,7.14,normal
+22,3,thunder_eel,thunder_eel_d1_2,devo1,1,3,치유장어,thunder_eel,humidity|temperature,-6,1,-7,-5,0,3,-3,3,-5,3,-8,-2,9,1,8,9,5,1,4,6,6,-2,-2,-3,4,1,7.14,normal
+22,3,thunder_eel,thunder_eel_d2_0,devo2,2,1,불꽃콩,thunder_eel_d1_0,humidity|temperature,-9,1,-9,-8,0,2,-2,2,-7,2,-9,-5,9,1,8,9,7,1,6,8,8,-4,-3,-5,4,4,15.49,brutal
+22,3,thunder_eel,thunder_eel_d2_1,devo2,2,2,따끈꿈틀,thunder_eel_d1_0,humidity|temperature,-9,1,-9,-8,0,2,-2,2,-7,2,-9,-5,9,1,8,9,7,1,6,8,8,-4,-3,-5,4,4,15.49,brutal
+22,3,thunder_eel,thunder_eel_d2_2,devo2,2,3,전기올챙,thunder_eel_d1_1,humidity|temperature,-9,1,-9,-8,0,2,-2,2,-7,2,-9,-5,9,1,8,9,7,1,6,8,8,-4,-3,-5,4,4,15.49,brutal
+22,3,thunder_eel,thunder_eel_d2_3,devo2,2,4,전기방패,thunder_eel_d1_1,humidity|temperature,-9,1,-9,-8,0,2,-2,2,-7,2,-9,-5,9,1,8,9,7,1,6,8,8,-4,-3,-5,4,4,15.49,brutal
+22,3,thunder_eel,thunder_eel_d2_4,devo2,2,5,치유방울,thunder_eel_d1_2,humidity|temperature,-9,1,-9,-8,0,2,-2,2,-7,2,-9,-5,9,1,8,9,7,1,6,8,8,-4,-3,-5,4,4,15.49,brutal
+22,3,thunder_eel,thunder_eel_d2_5,devo2,2,6,찌릿톡,thunder_eel_d1_2,humidity|temperature,-9,1,-9,-8,0,2,-2,2,-7,2,-9,-5,9,1,8,9,7,1,6,8,8,-4,-3,-5,4,4,15.49,brutal
+23,3,smoke_weasel,smoke_weasel,wild,0,0,연기 족제비,,smell|temperature,3,2,1,5,-3,2,-5,-1,-6,2,-8,-4,-3,4,-7,1,0,4,-4,4,-1,2,-1,-5,-4,0,3.24,easy
+23,3,smoke_weasel,smoke_weasel_d1_0,devo1,1,1,안개족제비,smoke_weasel,smell|temperature,6,1,5,7,-5,1,-6,-4,-9,1,-9,-8,-5,3,-8,-2,0,3,-3,3,-2,4,-1,-8,-6,1,7.14,normal
+23,3,smoke_weasel,smoke_weasel_d1_1,devo1,1,2,그림자족제비,smoke_weasel,smell|temperature,6,1,5,7,-5,1,-6,-4,-9,1,-9,-8,-5,3,-8,-2,0,3,-3,3,-2,4,-1,-8,-6,1,7.14,normal
+23,3,smoke_weasel,smoke_weasel_d2_0,devo2,2,1,안개새끼,smoke_weasel_d1_0,smell|temperature,9,1,8,9,-7,1,-8,-6,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-2,6,-2,-8,-8,4,15.49,brutal
+23,3,smoke_weasel,smoke_weasel_d2_1,devo2,2,2,안개솜,smoke_weasel_d1_0,smell|temperature,9,1,8,9,-7,1,-8,-6,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-2,6,-2,-8,-8,4,15.49,brutal
+23,3,smoke_weasel,smoke_weasel_d2_2,devo2,2,3,그림자콩,smoke_weasel_d1_1,smell|temperature,9,1,8,9,-7,1,-8,-6,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-2,6,-2,-8,-8,4,15.49,brutal
+23,3,smoke_weasel,smoke_weasel_d2_3,devo2,2,4,불씨잠,smoke_weasel_d1_1,smell|temperature,9,1,8,9,-7,1,-8,-6,-9,1,-9,-8,-7,2,-9,-5,0,2,-2,2,-2,6,-2,-8,-8,4,15.49,brutal
+24,3,moss_golem,moss_golem,wild,0,0,이끼 골렘,,smell|humidity,0,4,-4,4,-3,4,-7,1,6,2,4,8,6,2,4,8,-6,2,-8,-4,-2,-2,-2,3,6,0,3.92,easy
+24,3,moss_golem,moss_golem_d1_0,devo1,1,1,숲골렘,moss_golem,smell|humidity,0,3,-3,3,-5,3,-8,-2,9,1,8,9,9,1,8,9,-8,1,-9,-7,-2,-3,-3,4,9,3,10.62,hard
+24,3,moss_golem,moss_golem_d1_1,devo1,1,2,울림골렘,moss_golem,smell|humidity,0,3,-3,3,-5,3,-8,-2,9,1,8,9,9,1,8,9,-8,1,-9,-7,-2,-3,-3,4,9,3,10.62,hard
+24,3,moss_golem,moss_golem_d1_2,devo1,1,3,치유골렘,moss_golem,smell|humidity,0,3,-3,3,-5,3,-8,-2,9,1,8,9,9,1,8,9,-8,1,-9,-7,-2,-3,-3,4,9,3,10.62,hard
+24,3,moss_golem,moss_golem_d1_3,devo1,1,4,지진골렘,moss_golem,smell|humidity,0,3,-3,3,-5,3,-8,-2,9,1,8,9,9,1,8,9,-8,1,-9,-7,-2,-3,-3,4,9,3,10.62,hard
+24,3,moss_golem,moss_golem_d2_0,devo2,2,1,숲조약돌,moss_golem_d1_0,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_1,devo2,2,2,수액새싹,moss_golem_d1_0,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_2,devo2,2,3,울림알,moss_golem_d1_1,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_3,devo2,2,4,이끼자장,moss_golem_d1_1,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_4,devo2,2,5,치유솜이끼,moss_golem_d1_2,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_5,devo2,2,6,돌멩우르,moss_golem_d1_2,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_6,devo2,2,7,지진콩돌,moss_golem_d1_3,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal
+24,3,moss_golem,moss_golem_d2_7,devo2,2,8,뿌리닻,moss_golem_d1_3,smell|humidity,0,2,-2,2,-7,2,-9,-5,9,1,8,9,9,1,8,9,-9,1,-9,-8,-3,-3,-5,4,9,4,16.15,brutal

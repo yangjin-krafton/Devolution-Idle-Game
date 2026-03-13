@@ -15,12 +15,14 @@ export default [
 
   // 3) 야생 몬스터 실루엣 여럿 — 세계 소개
   { speaker: '박사', text: '이 세계에는 다양한 몬스터들이 살고 있지.', effects: [
-    { type: 'sprite', img: wilds[0]?.img, id: 'w0', x: 60,  y: cy - 30, size: 65, alpha: 0.5, silhouette: true },
-    { type: 'sprite', img: wilds[1]?.img, id: 'w1', x: 160, y: cy + 25, size: 55, alpha: 0.4, silhouette: true },
-    { type: 'sprite', img: wilds[2]?.img, id: 'w2', x: 320, y: cy - 15, size: 60, alpha: 0.45, silhouette: true },
-    { type: 'sprite', img: wilds[3]?.img, id: 'w3', x: 420, y: cy + 35, size: 50, alpha: 0.35, silhouette: true },
-    { type: 'sprite', img: wilds[4]?.img, id: 'w4', x: 100, y: cy + 65, size: 45, alpha: 0.3, silhouette: true },
-    { type: 'sprite', img: wilds[5]?.img, id: 'w5', x: 380, y: cy - 45, size: 45, alpha: 0.3, silhouette: true },
+    { type: 'sprite', img: wilds[0]?.img, id: 'w0', x: 60,  y: 100, size: 100, alpha: 0.5, silhouette: true },
+    { type: 'sprite', img: wilds[1]?.img, id: 'w1', x: 350, y: 160, size: 90,  alpha: 0.45, silhouette: true },
+    { type: 'sprite', img: wilds[2]?.img, id: 'w2', x: 180, y: 260, size: 95,  alpha: 0.5, silhouette: true },
+    { type: 'sprite', img: wilds[3]?.img, id: 'w3', x: 390, y: 340, size: 85,  alpha: 0.4, silhouette: true },
+    { type: 'sprite', img: wilds[4]?.img, id: 'w4', x: 70,  y: 400, size: 80,  alpha: 0.35, silhouette: true },
+    { type: 'sprite', img: wilds[5]?.img, id: 'w5', x: 310, y: 470, size: 80,  alpha: 0.35, silhouette: true },
+    { type: 'sprite', img: wilds[6]?.img, id: 'w6', x: 100, y: 550, size: 85,  alpha: 0.4, silhouette: true },
+    { type: 'sprite', img: wilds[7]?.img, id: 'w7', x: 370, y: 600, size: 90,  alpha: 0.45, silhouette: true },
   ]},
 
   // 4) 공격 금지 — 몬스터들 경계
@@ -59,6 +61,8 @@ export default [
     { type: 'remove', target: 'w3' },
     { type: 'remove', target: 'w4' },
     { type: 'remove', target: 'w5' },
+    { type: 'remove', target: 'w6' },
+    { type: 'remove', target: 'w7' },
     { type: 'flash', color: 0xffffff, dur: 250 },
     ...(starters[0] ? [
       { type: 'sprite', img: starters[0].img, id: 's0', x: cx, y: cy, size: 100, alpha: 0 },

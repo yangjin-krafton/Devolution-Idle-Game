@@ -75,7 +75,7 @@ export function renderActions(team, cr) {
     const hd = new PIXI.Container(); hd.x = cx; hd.y = 0;
     // 몬스터 아이콘
     const pt = monster(20, ally.img); pt.x = 14; pt.y = 13;
-    if (ally.hp <= 0) pt.alpha = 0.3;
+    if (ally.inEgg) pt.alpha = 0.3;
     hd.addChild(pt);
     // 이름
     hd.addChild(Object.assign(lbl(ally.name, 6, isPend ? 0x00d4aa : 0x8888aa, true), { x: 26, y: 4 }));
@@ -87,8 +87,8 @@ export function renderActions(team, cr) {
     refs.actionContainer.addChild(hd);
 
     // 기절/알
-    if (ally.hp <= 0 || ally.inEgg) {
-      const fl = lbl(ally.inEgg ? '🥚' : '💤', 14, 0x555577, true);
+    if (ally.inEgg) {
+      const fl = lbl('🥚', 14, 0x555577, true);
       fl.anchor = { x: 0.5, y: 0.5 }; fl.x = cx + (colW - 4) / 2; fl.y = headH + cardH;
       refs.actionContainer.addChild(fl);
       continue;

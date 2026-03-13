@@ -122,7 +122,7 @@ export function collectAbilities(team, trigger) {
   const results = [];
   for (let i = 0; i < team.length; i++) {
     const ally = team[i];
-    if (!ally || ally.hp <= 0 || ally.inEgg) continue;
+    if (!ally || ally.inEgg) continue;
     const abilityId = ally.ability;
     if (!abilityId) continue;
     const ability = ABILITIES[abilityId];

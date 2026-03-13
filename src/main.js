@@ -200,7 +200,7 @@ function refreshCombatUI() {
 
   const previews = {};
   combat.team.forEach((ally, i) => {
-    if (ally.hp <= 0 || ally.inEgg) return;
+    if (ally.inEgg) return;
     previews[i] = ally.actions.map(action => combat.previewAction(ally, action));
   });
 
@@ -224,7 +224,6 @@ function handleAction(allyIndex, actionIndex) {
 function handleConfirm() {
   if (!combat || combat.state !== 'active') return;
 
-  const hpBefore = combat.team.map(a => a.hp);
   combat.confirmTurn();
 
   // VFX — 환경 조율 시스템
@@ -330,7 +329,7 @@ function onNextBattle() {
   }
   if (pendingDevoReveals.length > 0) { showDevoRevealScreen(); return; }
   const battleTeam = teamManager.getBattleTeam();
-  if (battleTeam.filter(a => a.hp > 0).length === 0) { showGameOverScreen(); return; }
+  if (battleTeam.length === 0) { showGameOverScreen(); return; }
   startBattle();
 }
 

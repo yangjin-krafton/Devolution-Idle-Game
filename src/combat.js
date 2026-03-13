@@ -4,7 +4,6 @@ import {
   tickEmotion,
   EMOTIONS,
 } from './emotion.js';
-import { getStat, awardStatXP } from './statSystem.js';
 import {
   applyPassiveAbilities,
   getDamageReduceAbility,
@@ -135,13 +134,13 @@ export class CombatSystem {
   }
 
   getAliveAllies() {
-    return this.team.filter(ally => ally.hp > 0 && !ally.inEgg);
+    return this.team.filter(ally => !ally.inEgg);
   }
 
   getPendingSlots() {
     const pending = [];
     this.team.forEach((ally, i) => {
-      if (ally.hp > 0 && !ally.inEgg && this.selectedActions[i] == null) pending.push(i);
+      if (!ally.inEgg && this.selectedActions[i] == null) pending.push(i);
     });
     return pending;
   }
@@ -156,7 +155,7 @@ export class CombatSystem {
 
   canUseAction(ally, action) {
     if (!ally || !action) return false;
-    if (ally.hp <= 0 || ally.inEgg) return false;
+    if (ally.inEgg) return false;
     if (action.pp <= 0) return false;
     return this._meetsCondition(action);
   }
@@ -164,7 +163,7 @@ export class CombatSystem {
   selectAction(allyIndex, actionIndex) {
     if (this.state !== 'active') return null;
     const ally = this.team[allyIndex];
-    if (!ally || ally.hp <= 0 || ally.inEgg) return null;
+    if (!ally || ally.inEgg) return null;
     const action = ally.actions[actionIndex];
     if (!action || !this.canUseAction(ally, action)) return null;
 
@@ -205,7 +204,7 @@ export class CombatSystem {
 
       const { allyIdx, actionIdx } = entry;
       const ally = this.team[allyIdx];
-      if (!ally || ally.hp <= 0 || ally.inEgg) continue;
+      if (!ally || ally.inEgg) continue;
 
       const action = ally.actions[actionIdx];
       if (!action) continue;
@@ -227,8 +226,6 @@ export class CombatSystem {
 
       this._handleEnvironmentAction(ally, action);
 
-      const statUp = awardStatXP(ally, action.category === 'survey' ? 'stimulate' : action.category);
-      if (statUp) this.log(`${ally.name}의 ${statUp.name}이(가) ${statUp.newValue}(으)로 올랐다!`);
     }
 
     if (this.state === 'active' && !enemyActed) {
@@ -270,8 +267,7 @@ export class CombatSystem {
   }
 
   _handleDefendAsEnv(ally, action) {
-    const stat = getStat(ally.stats, 'endurance');
-    this.defenseBoost += Math.round((action.defenseBoost || 2) * (0.8 + stat / 10));
+    this.defenseBoost += (action.defenseBoost || 2);
     this.log(GENERIC_LOGS.defendEffect(ally.name));
 
     if (this.phase === 'overtime') {
@@ -279,11 +275,6 @@ export class CombatSystem {
       this.log('도주 위험이 줄어든다. (-1)');
     }
 
-    if (action.healAmount > 0) {
-      const heal = Math.round(action.healAmount * (0.8 + stat / 10));
-      ally.hp = Math.min(ally.maxHp, ally.hp + heal);
-      this.log(GENERIC_LOGS.healEffect(ally.name, heal));
-    }
   }
 
   _handleSurvey(ally, action) {
@@ -425,11 +416,10 @@ export class CombatSystem {
       const idx = Number(i);
       const ally = this.team[idx];
       const action = ally?.actions[ai];
-      const agility = getStat(ally?.stats, 'agility');
       const category = action?.category || 'stimulate';
-      entries.push({ type: 'ally', allyIdx: idx, actionIdx: ai, priority: action?.priority ?? catPriority[category] ?? 0, agility });
+      entries.push({ type: 'ally', allyIdx: idx, actionIdx: ai, priority: action?.priority ?? catPriority[category] ?? 0, agility: 5 });
     }
-    entries.push({ type: 'enemy', allyIdx: -1, actionIdx: -1, priority: 0, agility: getStat(this.enemy.stats, 'agility') });
+    entries.push({ type: 'enemy', allyIdx: -1, actionIdx: -1, priority: 0, agility: 5 });
     entries.sort((a, b) => b.priority - a.priority || b.agility - a.agility);
     return entries.map((entry, order) => ({ ...entry, order: order + 1 }));
   }

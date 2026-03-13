@@ -17,7 +17,6 @@ export class TeamManager {
         skillPool: loadout.skillPool,
         equipped: [...loadout.equipped],
         actions: loadout.actions,
-        stats: { ...a.stats },
       };
     });
     this.collection = [];
@@ -33,7 +32,7 @@ export class TeamManager {
   }
 
   getBattleTeam() {
-    return this.getActiveTeam().filter(a => a.hp > 0);
+    return this.getActiveTeam();
   }
 
   getBenchTeam() {
@@ -56,7 +55,7 @@ export class TeamManager {
     return logs;
   }
 
-  // Structured battle rewards — xpCurve-based level-up, statGrowth, skillUnlocks
+  // Structured battle rewards — xpCurve-based level-up, skillUnlocks
   computeBattleRewards(actedAllyIds) {
     const allyResults = [];
     for (const id of actedAllyIds) {
@@ -80,23 +79,6 @@ export class TeamManager {
           levelAfter++;
           const sc = {};
           const sk = [];
-
-          // Stat growth
-          if (ally.statGrowth) {
-            for (const [stat, [min, max]] of Object.entries(ally.statGrowth)) {
-              const gain = min + Math.floor(Math.random() * (max - min + 1));
-              if (gain > 0) {
-                ally.stats[stat] = (ally.stats[stat] || 0) + gain;
-                sc[stat] = gain;
-              }
-            }
-          }
-
-          // HP growth (10% per level)
-          const hpGain = Math.ceil(ally.maxHp * 0.1);
-          ally.maxHp += hpGain;
-          ally.hp = Math.min(ally.hp + hpGain, ally.maxHp);
-          sc.hp = hpGain;
 
           // Skill unlocks
           if (ally.skillUnlocks && ally.skillUnlocks[levelAfter]) {
@@ -128,7 +110,6 @@ export class TeamManager {
       const maxLvl = ally.maxLevel || (curve ? curve.length : 10);
       if (levelAfter >= maxLvl && !ally.inEgg) {
         ally.inEgg = true;
-        ally.hp = 0;
         enteredEgg = true;
         this.eggTimers.set(ally.id, {
           startTime: Date.now(),
@@ -172,7 +153,6 @@ export class TeamManager {
       if (ally.inEgg || ally.devolved) continue;
       if (ally.xp >= ally.xpThreshold) {
         ally.inEgg = true;
-        ally.hp = 0;
         this.eggTimers.set(ally.id, {
           startTime: Date.now(),
           duration: 15000,
@@ -197,12 +177,7 @@ export class TeamManager {
           ally.name = ally.devolvedName;
           ally.desc = ally.devolvedDesc;
           ally.img = ally.devolvedImg || ally.img;
-          ally.hp = ally.maxHp;
           ally.xp = 0;
-          // Apply devolved stats (concentrated)
-          if (ally.devolvedStats) {
-            ally.stats = { ...ally.devolvedStats };
-          }
           // Boost first action power
           if (ally.actions[0]) {
             ally.actions[0].power += 3;
@@ -225,7 +200,6 @@ export class TeamManager {
   healTeam() {
     for (const ally of this.allies) {
       if (!ally.inEgg) {
-        ally.hp = Math.min(ally.maxHp, ally.hp + Math.ceil(ally.maxHp * 0.3));
         // PP 전체 회복
         for (const action of ally.actions) {
           if (action.maxPp != null) action.pp = action.maxPp;
@@ -256,7 +230,6 @@ export class TeamManager {
       skillPool: loadout.skillPool,
       equipped: [...loadout.equipped],
       actions: loadout.actions,
-      stats: { ...template.stats },
     };
     this.allies.push(ally);
     return ally;

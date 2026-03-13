@@ -21,7 +21,7 @@ export function initDebug(getState) {
       xpBefore: 5, xpAfter: 6, xpGain: 1,
       xpBase: 3, xpNeeded: 8,
       leveledUp: false, levelBefore: 2, levelAfter: 2,
-      statChanges: {}, newSkills: [], enteredEgg: false,
+      newSkills: [], enteredEgg: false,
       actions: a.actions || [
         { name: '기본 자극', category: 'stimulate', axis: 'sound', power: 5, pp: 6, maxPp: 6, escapeRisk: 2, key: 'mock-stim' },
         { name: '기본 포획', category: 'capture', axis: 'sound', power: 4, pp: 3, maxPp: 3, escapeRisk: 1, key: 'mock-cap' },
@@ -36,12 +36,11 @@ export function initDebug(getState) {
     killTeam() {
       const { combat, currentScreen, refreshCombatUI, endBattle } = getState();
       if (!combat || currentScreen !== 'combat') { console.warn('전투 중에만 사용 가능'); return; }
-      combat.team.forEach(a => { a.hp = 0; });
       combat.state = 'defeat';
       combat.log('모든 아군이 쓰러졌다 게임 오버.');
       refreshCombatUI();
       setTimeout(endBattle, 800);
-      console.log('아군 전원 HP → 0. 패배 처리 진행 중...');
+      console.log('패배 처리 진행 중...');
     },
     dialog(sceneName) {
       const data = DIALOG_SCENES[sceneName];
@@ -87,7 +86,7 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 7, xpAfter: 8, xpBase: 3, xpNeeded: 8,
             leveledUp: true, levelBefore: 2, levelAfter: 3,
-            levelUps: [{ from: 2, to: 3, statChanges: { hp: 3, affinity: 2, empathy: 1, endurance: 0, agility: 1 }, newSkills: [] }],
+            levelUps: [{ from: 2, to: 3, statChanges: {}, newSkills: [] }],
           }),
           mockAlly({ xpBefore: 1, xpAfter: 2, xpBase: 0, xpNeeded: 3 }),
           mockAlly({ xpBefore: 4, xpAfter: 5, xpBase: 3, xpNeeded: 8 }),
@@ -108,7 +107,7 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 7, xpAfter: 8, xpBase: 3, xpNeeded: 8,
             leveledUp: true, levelBefore: 2, levelAfter: 3,
-            levelUps: [{ from: 2, to: 3, statChanges: { hp: 2, affinity: 3, empathy: 0, endurance: 1, agility: 0 }, newSkills: [skill] }],
+            levelUps: [{ from: 2, to: 3, statChanges: {}, newSkills: [skill] }],
           }),
           mockAlly({ xpBefore: 2, xpAfter: 3, xpBase: 0, xpNeeded: 8 }),
           mockAlly({ xpBefore: 5, xpAfter: 6, xpBase: 3, xpNeeded: 15 }),
@@ -127,7 +126,7 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 99, xpAfter: 100, xpBase: 80, xpNeeded: 100,
             leveledUp: true, levelBefore: 9, levelAfter: 10,
-            levelUps: [{ from: 9, to: 10, statChanges: { hp: 2, affinity: 1 }, newSkills: [] }],
+            levelUps: [{ from: 9, to: 10, statChanges: {}, newSkills: [] }],
             enteredEgg: true,
           }),
           mockAlly({ xpBefore: 3, xpAfter: 4, xpBase: 0, xpNeeded: 8 }),
@@ -149,13 +148,13 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 99, xpAfter: 100, xpBase: 80, xpNeeded: 100,
             leveledUp: true, levelBefore: 9, levelAfter: 10,
-            levelUps: [{ from: 9, to: 10, statChanges: { hp: 3, affinity: 2, empathy: 1, endurance: 1, agility: 0 }, newSkills: [skill] }],
+            levelUps: [{ from: 9, to: 10, statChanges: {}, newSkills: [skill] }],
             enteredEgg: true,
           }),
           mockAlly({
             xpBefore: 14, xpAfter: 15, xpBase: 8, xpNeeded: 15,
             leveledUp: true, levelBefore: 3, levelAfter: 4,
-            levelUps: [{ from: 3, to: 4, statChanges: { hp: 2, affinity: 1, empathy: 1 }, newSkills: [] }],
+            levelUps: [{ from: 3, to: 4, statChanges: {}, newSkills: [] }],
           }),
           mockAlly({ xpBefore: 1, xpAfter: 2, xpBase: 0, xpNeeded: 3 }),
         ],
@@ -177,9 +176,9 @@ export function initDebug(getState) {
             xpBefore: 14, xpAfter: 15, xpBase: 0, xpNeeded: 24,
             leveledUp: true, levelBefore: 2, levelAfter: 5,
             levelUps: [
-              { from: 2, to: 3, statChanges: { hp: 2, affinity: 2, empathy: 1 }, newSkills: [skill1] },
-              { from: 3, to: 4, statChanges: { hp: 3, affinity: 1, endurance: 1, agility: 1 }, newSkills: [] },
-              { from: 4, to: 5, statChanges: { hp: 2, affinity: 3, empathy: 1 }, newSkills: [skill2] },
+              { from: 2, to: 3, statChanges: {}, newSkills: [skill1] },
+              { from: 3, to: 4, statChanges: {}, newSkills: [] },
+              { from: 4, to: 5, statChanges: {}, newSkills: [skill2] },
             ],
           }),
           mockAlly({ xpBefore: 1, xpAfter: 2, xpBase: 0, xpNeeded: 3 }),
@@ -218,13 +217,13 @@ export function initDebug(getState) {
     help() {
       console.log(`
 DEBUG 명령어:
-  DEBUG.killTeam()        — 전투 중 아군 전원 HP→0 (패배 처리)
+  DEBUG.killTeam()        — 전투 중 패배 처리
   DEBUG.dialog(name)      — 대화 씬 재생
   DEBUG.reset()           — localStorage 초기화 + 새로고침
 
 결과창 테스트:
   DEBUG.resultVictory()   — 승리 (XP만)
-  DEBUG.resultLevelUp()   — 승리 + 레벨업 + 스탯 성장
+  DEBUG.resultLevelUp()   — 승리 + 레벨업
   DEBUG.resultSkill()     — 승리 + 레벨업 + 스킬 습득
   DEBUG.resultEgg()       — 승리 + 퇴화(알) 진입
   DEBUG.resultFull()      — 풀 시나리오 (레벨업+스킬+알, 3아군)

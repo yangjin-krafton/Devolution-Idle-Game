@@ -2,15 +2,13 @@
 // Skill Card — 보드게임 토큰 카드 스타일
 //
 // 구조:
-//   헤더: 카테고리 아이콘 + 이름 + PP 도트
+//   헤더: 카테고리 아이콘 + 이름
 //   중앙: 핵심 효과 (큰 이모지 + 큰 수치)
 //   힌트: 방향 힌트 or 상태
-//   하단: 플레이버 텍스트 (1줄, 흐리게)
 // ============================================================
 
-import { S, lbl } from './theme.js';
+import { lbl } from './theme.js';
 import { ENV_AXIS_ICON, ENV_AXIS_LABEL } from '../data/index.js';
-import { AXIS_LABEL } from '../monsterRegistry.js';
 
 const D = {
   card: 0x262640, cardHi: 0x2e2e48,
@@ -56,29 +54,17 @@ export function buildSkillCard(action, w, h, opts = {}) {
   ct.addChild(bg);
 
   // ======== 헤더: 아이콘 + 이름 ========
-  const nameL = lbl(`${cat.icon} ${action.name}`, 7, opts.ppEmpty ? D.dimmer : D.text, true);
+  const nameL = lbl(action.name, 7, opts.ppEmpty ? D.dimmer : D.text, true);
   nameL.x = 8; nameL.y = 4; nameL.alpha = cardAlpha;
   ct.addChild(nameL);
 
-  // ======== PP 도트 (우상단) ========
+  // ======== PP 텍스트 (우하단, 포켓몬 스타일) ========
   if (action.pp != null && action.maxPp != null) {
-    const dotSize = 3, dotGap = 2;
-    const maxDots = Math.min(action.maxPp, 8); // 최대 8개까지 표시
-    const dotsW = maxDots * (dotSize * 2 + dotGap);
-    const dotStartX = w - 6 - dotsW;
-    const dotY = 8;
-    const dotG = new PIXI.Graphics();
-    for (let i = 0; i < maxDots; i++) {
-      const dx = dotStartX + i * (dotSize * 2 + dotGap) + dotSize;
-      const filled = i < action.pp;
-      if (filled) {
-        dotG.circle(dx, dotY, dotSize).fill({ color: cat.c, alpha: cardAlpha });
-      } else {
-        dotG.circle(dx, dotY, dotSize).fill({ color: 0x1a1a2e, alpha: cardAlpha });
-        dotG.circle(dx, dotY, dotSize).stroke({ color: cat.c, width: 0.8, alpha: 0.3 * cardAlpha });
-      }
-    }
-    ct.addChild(dotG);
+    const ppColor = action.pp === 0 ? D.red : D.dim;
+    const ppL = lbl(`${action.pp}/${action.maxPp}`, 6, ppColor);
+    ppL.anchor = { x: 1, y: 1 };
+    ppL.x = w - 6; ppL.y = h - 4; ppL.alpha = cardAlpha;
+    ct.addChild(ppL);
   }
 
   // ======== 턴 순서 배지 ========
@@ -99,7 +85,7 @@ export function buildSkillCard(action, w, h, opts = {}) {
 
   // ======== 중앙: 핵심 효과 ========
   const centerY = sepY + 4;
-  const centerH = h - sepY - 28; // 하단 플레이버 공간 확보
+  const centerH = h - sepY - 6;
 
   if (preview && !preview.blocked) {
     _renderPreview(ct, preview, action, cat, w, centerY, centerH, cardAlpha);
@@ -112,19 +98,6 @@ export function buildSkillCard(action, w, h, opts = {}) {
     _renderStatic(ct, action, cat, w, centerY, centerH, cardAlpha);
   }
 
-  // ======== 하단: 플레이버 (1줄) ========
-  const flavor = action.log || action.desc || '';
-  if (flavor) {
-    const flavorL = new PIXI.Text({ text: flavor, style: {
-      fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-      fontSize: 5 * S, fill: '#555577', fontWeight: '400',
-      wordWrap: true, wordWrapWidth: w - 14,
-      lineHeight: 5 * S * 1.3,
-    }});
-    flavorL.x = 7; flavorL.y = h - 24;
-    flavorL.alpha = cardAlpha * 0.45;
-    ct.addChild(flavorL);
-  }
 
   return ct;
 }

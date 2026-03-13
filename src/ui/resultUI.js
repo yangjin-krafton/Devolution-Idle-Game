@@ -17,9 +17,6 @@ const FEED_H = FEED_BOTTOM - FEED_TOP;
 const CARD_W = W - PAD * 2;
 const CARD_GAP = 12;
 
-const STAT_LABEL = { affinity: '친화', empathy: '공감', endurance: '인내', agility: '민첩', bond: '유대', instinct: '직감', hp: 'HP' };
-const STAT_COLOR = { affinity: D.neon, empathy: D.blue, endurance: 0xffaa60, agility: 0x88ddbb, bond: 0xeebb55, instinct: 0xcc88dd, hp: D.red };
-
 // ---- State ----
 let ct, feedContainer, feedMask, footerBtn;
 let cardQueue = [];
@@ -350,12 +347,7 @@ function drawBarFill(gfx, x, y, w, h, ratio) {
 // ---- Level Up Card ----
 
 function buildLevelUpCard(ally, lv) {
-  const sc = lv.statChanges || {};
-  const stats = Object.keys(sc).filter(k => k !== 'hp');
-  const hasHp = !!sc.hp;
-  const rowCount = stats.length + (hasHp ? 1 : 0);
-  const STAT_Y = 62;
-  const h = STAT_Y + 10 + Math.max(rowCount * 28, 70);
+  const h = 80;
   const card = new PIXI.Container();
   card.addChild(feedCard(CARD_W, h, D.neon));
 
@@ -390,51 +382,6 @@ function buildLevelUpCard(ally, lv) {
   const lvlTo = neonBadge('Lv.' + lv.to, D.neon);
   lvlTo.x = 96; lvlTo.y = 38;
   card.addChild(lvlTo);
-
-  // Stat section (full width bars)
-  card.addChild(sep(14, CARD_W - 14, STAT_Y, D.neon));
-
-  let y = STAT_Y + 10;
-  const allStats = [];
-  if (hasHp) allStats.push({ label: 'HP', gain: sc.hp, color: D.red });
-  stats.forEach(s => allStats.push({
-    label: STAT_LABEL[s] || s,
-    gain: sc[s],
-    color: STAT_COLOR[s] || D.dim,
-  }));
-
-  const LABEL_X = 20;
-  const BAR_X = 76;
-  const BAR_W = CARD_W - BAR_X - 56;
-
-  allStats.forEach(({ label, gain, color }) => {
-    const n = lbl(label, 7, D.dim, true);
-    n.x = LABEL_X; n.y = y;
-    card.addChild(n);
-
-    const maxG = 5;
-    const ratio = Math.min(1, gain / maxG);
-    card.addChild(new PIXI.Graphics()
-      .roundRect(BAR_X, y + 4, BAR_W, 8, 4).fill({ color: D.sep, alpha: 0.3 }));
-    if (ratio > 0) {
-      const bw = Math.max(8, BAR_W * ratio);
-      card.addChild(new PIXI.Graphics()
-        .roundRect(BAR_X, y + 4, bw, 8, 4).fill({ color, alpha: 0.55 }));
-      card.addChild(new PIXI.Graphics()
-        .roundRect(BAR_X + 0.5, y + 4.5, bw - 1, 3.5, 2).fill({ color: D.white, alpha: 0.1 }));
-    }
-
-    if (gain > 0) {
-      const v = lbl('+' + gain, 8, D.neon, true);
-      v.anchor = { x: 1, y: 0 }; v.x = CARD_W - 16; v.y = y;
-      card.addChild(v);
-    } else {
-      const v = lbl('─', 7, D.dimmer);
-      v.anchor = { x: 1, y: 0 }; v.x = CARD_W - 16; v.y = y + 1;
-      card.addChild(v);
-    }
-    y += 28;
-  });
 
   return { container: card, height: h };
 }
