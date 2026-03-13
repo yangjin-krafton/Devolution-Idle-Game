@@ -5,7 +5,7 @@
 import { W, H, C, S, hex, lbl, cuteBtn, star, addSparkles } from './theme.js';
 import { D, darkCard, neonBadge } from './theme-dark.js';
 import { monster } from './sprites.js';
-import { ALLY_MONSTERS, ENEMY_MONSTERS, STARTER_IDS, AXIS_LABEL, ALL_MONSTERS } from '../data/index.js';
+import { ALLY_MONSTERS, ENEMY_MONSTERS, STARTER_IDS, AXIS_LABEL, ALL_MONSTERS, ALL_CODEX_ENTRIES } from '../data/index.js';
 import { PERSONALITY_LABEL } from '../monsterRegistry.js';
 import { buildSkillCard } from './skillCard.js';
 
@@ -18,7 +18,7 @@ const SLOT_LEFT = Math.round((W - (SLOT_W * 3 + SLOT_GAP * 2)) / 2);
 const MAIN_SLOTS_Y = SLOTS_Y + 24;
 const CODEX_Y = MAIN_SLOTS_Y + SLOT_H + 8;
 const CODEX_HEADER_H = 30;
-const CODEX_FILTER_H = 26;
+const CODEX_FILTER_H = 46;
 const CODEX_GRID_Y = CODEX_Y + CODEX_HEADER_H + CODEX_FILTER_H;
 const CODEX_VISIBLE_H = H - CODEX_GRID_Y;
 const CODEX_CARD_W = 95, CODEX_CARD_H = 105, CODEX_COLS = 4, CODEX_GAP = 12;
@@ -36,9 +36,13 @@ const DRAG_THRESHOLD = 8;
 let scrollOffset = 0, maxScroll = 0, scrollStartOffset = 0;
 
 // ---- Codex filter/sort state ----
-let codexFilter = 'all'; // 'all' | 'ally' | 'enemy' | 'unlocked' | 'locked'
-let codexSort = 'default'; // 'default' | 'name' | 'hp'
+let codexFilter = 'all'; // 'all' | 'wild' | 'devo1' | 'devo2' | family sourceId
+let codexSort = 'default'; // 'default' | 'name' | 'family'
 let filteredList = [];     // cached for hit testing
+
+// Family name lookup (24 families)
+const FAMILY_NAMES = {};
+ALL_MONSTERS.forEach(m => { FAMILY_NAMES[m.id] = m.wild.name; });
 
 // ---- UI refs ----
 let ct, detailBody, slotGfx = [], codexContent, codexMask;
@@ -94,11 +98,8 @@ function resetState() {
   selectedMonster = null; scrollOffset = 0; mode = 'idle';
   codexFilter = 'all'; codexSort = 'default'; filteredList = [];
   codexEntries = {};
-  // Only starter monsters are unlocked; rest are locked
-  ALLY_MONSTERS.forEach(m => {
-    codexEntries[m.id] = STARTER_IDS.includes(m.id) ? 'unlocked' : 'locked';
-  });
-  ENEMY_MONSTERS.forEach(m => { codexEntries[m.id] = 'locked'; });
+  // All 232 monsters unlocked
+  ALL_CODEX_ENTRIES.forEach(m => { codexEntries[m.id] = 'unlocked'; });
 }
 
 function slotPos(i) {
@@ -524,24 +525,23 @@ function buildCodexPanel() {
 function buildFilterBar() {
   filterBarContainer.removeChildren();
 
-  const filters = [
-    { key: 'all',      label: '전체' },
-    { key: 'ally',     label: '아군' },
-    { key: 'enemy',    label: '적' },
-    { key: 'unlocked', label: '언락' },
-    { key: 'locked',   label: '잠금' },
+  // Row 1: type filters + sort
+  const typeFilters = [
+    { key: 'all',   label: '전체' },
+    { key: 'wild',  label: '야생' },
+    { key: 'devo1', label: '1차' },
+    { key: 'devo2', label: '2차' },
   ];
   const sorts = [
     { key: 'default', label: '기본' },
     { key: 'name',    label: '이름' },
-    { key: 'hp',      label: 'HP' },
+    { key: 'family',  label: '종족' },
   ];
 
   let x = PAD;
-  // Filter pills
-  filters.forEach(f => {
+  typeFilters.forEach(f => {
     const pill = filterPill(f.label, codexFilter === f.key, D.neon);
-    pill.x = x; pill.y = 4;
+    pill.x = x; pill.y = 2;
     pill.eventMode = 'static'; pill.cursor = 'pointer';
     pill.on('pointerdown', (e) => {
       e.stopPropagation();
@@ -551,20 +551,20 @@ function buildFilterBar() {
       refreshCodex();
     });
     filterBarContainer.addChild(pill);
-    x += (pill._pillWidth || 40) + 4;
+    x += (pill._pillWidth || 40) + 3;
   });
 
   // Separator dot
-  x += 4;
+  x += 3;
   filterBarContainer.addChild(new PIXI.Graphics()
-    .circle(x, 13, 1.5).fill({ color: D.sep }));
-  x += 8;
+    .circle(x, 11, 1.5).fill({ color: D.sep }));
+  x += 6;
 
   // Sort pills
   sorts.forEach(s => {
     const isActive = codexSort === s.key;
     const pill = filterPill(s.label + (isActive ? ' ▼' : ''), isActive, D.blue);
-    pill.x = x; pill.y = 4;
+    pill.x = x; pill.y = 2;
     pill.eventMode = 'static'; pill.cursor = 'pointer';
     pill.on('pointerdown', (e) => {
       e.stopPropagation();
@@ -574,8 +574,30 @@ function buildFilterBar() {
       refreshCodex();
     });
     filterBarContainer.addChild(pill);
-    x += (pill._pillWidth || 40) + 4;
+    x += (pill._pillWidth || 40) + 3;
   });
+
+  // Row 2: 24 family pills
+  const famRow = new PIXI.Container();
+  famRow.y = 20;
+  let fx = PAD;
+  ALL_MONSTERS.forEach(m => {
+    const isActive = codexFilter === 'fam:' + m.id;
+    const shortName = m.wild.name.slice(0, 3);
+    const pill = filterPill(shortName, isActive, 0xff8844);
+    pill.x = fx; pill.y = 0;
+    pill.eventMode = 'static'; pill.cursor = 'pointer';
+    pill.on('pointerdown', (e) => {
+      e.stopPropagation();
+      codexFilter = isActive ? 'all' : 'fam:' + m.id;
+      scrollOffset = 0;
+      buildFilterBar();
+      refreshCodex();
+    });
+    famRow.addChild(pill);
+    fx += (pill._pillWidth || 30) + 2;
+  });
+  filterBarContainer.addChild(famRow);
 }
 
 function refreshCodex() {
@@ -585,8 +607,8 @@ function refreshCodex() {
   const teamIds = new Set(teamSlots.filter(Boolean).map(m => m.id));
   let unlockedCount = 0;
 
-  // Count total unlocked (from full list, not filtered)
-  [...ALLY_MONSTERS, ...ENEMY_MONSTERS].forEach(m => {
+  // Count total unlocked (from full codex, not filtered)
+  ALL_CODEX_ENTRIES.forEach(m => {
     if (codexEntries[m.id] === 'unlocked') unlockedCount++;
   });
 
@@ -650,7 +672,7 @@ function refreshCodex() {
     codexContent.addChild(card);
   });
 
-  const totalAll = ALLY_MONSTERS.length + ENEMY_MONSTERS.length;
+  const totalAll = ALL_CODEX_ENTRIES.length;
   if (ct._codexCountLabel) ct._codexCountLabel.text = `${unlockedCount}/${totalAll} (${all.length}건)`;
   const rows = Math.ceil(all.length / CODEX_COLS);
   maxScroll = Math.max(0, rows * (CODEX_CARD_H + CODEX_GAP) + 16 - CODEX_VISIBLE_H);
