@@ -3,15 +3,15 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'stone_tortoise',
 
   wild: {
     id: 'stone_tortoise', name: '바위 거북', desc: '등에 이끼가 자란 거대한 고대 거북',
-    img: IMG + 'enemy_stone_turtle.png',
+    img: IMG + 'stone_tortoise_wild.png',
     attackPower: 8, tamingThreshold: 82, escapeThreshold: 115,
     sensoryType: ['temperature'], personality: 'stubborn',
     habitat: 'cave',
@@ -33,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'stone_tortoise_d1_0', name: '이끼거북', desc: '등의 이끼에서 약초가 자라나는 치유 거북', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'stone_tortoise_d1_0.png', devolvedImg: IMG + 'stone_tortoise_d2_0.png',
       hp: 42, maxHp: 42, stats: { affinity: 2, empathy: 2, endurance: 14, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '조약돌거북', devolvedDesc: '작고 둥근 돌등판으로 웅크리는 아기 거북',
       devolvedStats: { affinity: 2, empathy: 2, endurance: 8, agility: 2, bond: 2, instinct: 2 },
@@ -48,7 +48,7 @@ export default {
     },
     {
       id: 'stone_tortoise_d1_1', name: '온천거북', desc: '따뜻한 등에서 치유의 김이 올라오는 거북', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'stone_tortoise_d1_1.png', devolvedImg: IMG + 'stone_tortoise_d2_2.png',
       hp: 36, maxHp: 36, stats: { affinity: 3, empathy: 10, endurance: 5, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '김거북', devolvedDesc: '등에서 따뜻한 김이 솔솔 나는 치유 전문 아기 거북',
       devolvedStats: { affinity: 2, empathy: 7, endurance: 3, agility: 2, bond: 2, instinct: 2 },
@@ -63,7 +63,7 @@ export default {
     },
     {
       id: 'stone_tortoise_d1_2', name: '화석거북', desc: '고대의 힘으로 강렬한 소리를 울리는 거북', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'stone_tortoise_d1_2.png', devolvedImg: IMG + 'stone_tortoise_d2_4.png',
       hp: 32, maxHp: 32, stats: { affinity: 10, empathy: 2, endurance: 6, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '뼈거북', devolvedDesc: '등판에 작은 화석 무늬가 있는 공격형 아기 거북',
       devolvedStats: { affinity: 7, empathy: 2, endurance: 2, agility: 3, bond: 2, instinct: 2 },
@@ -78,7 +78,7 @@ export default {
     },
     {
       id: 'stone_tortoise_d1_3', name: '지진거북', desc: '무거운 발걸음으로 지면을 흔드는 거북', role: 'speedster',
-      img: AIMG.speedster[0], devolvedImg: AIMG.speedster[1],
+      img: IMG + 'stone_tortoise_d1_3.png', devolvedImg: IMG + 'stone_tortoise_d2_6.png',
       hp: 30, maxHp: 30, stats: { affinity: 4, empathy: 3, endurance: 4, agility: 9, bond: 3, instinct: 3 },
       devolvedName: '달리거북', devolvedDesc: '작은 다리로 지면을 탁탁 치며 달리는 아기 거북',
       devolvedStats: { affinity: 3, empathy: 2, endurance: 2, agility: 7, bond: 2, instinct: 2 },
