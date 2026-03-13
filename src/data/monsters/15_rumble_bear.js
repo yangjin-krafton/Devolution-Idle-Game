@@ -16,8 +16,7 @@ export default {
     sensoryType: ['sound', 'behavior'], personality: 'stubborn',
     habitat: 'cave',
     hp: 34, maxHp: 34, stats: { affinity: 6, empathy: 3, endurance: 6, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'intimidation_roar', nameKr: '위협 포효', descKr: 'HP가 30% 이하일 때 포효하여 모든 아군의 순화 효율이 1턴간 50% 감소한다.', trigger: 'hp_below_30', effect: 'reduce_all_taming_efficiency' },
-    skills: ['sound-stimulate', 'behavior-defend', 'sound-capture'],
+    wildMechanic: { id: 'intimidation_roar', nameKr: '위협 포효', descKr: 'HP가 30% 이하일 때 포효하여 모든 아군의 순화 효율이 1턴간 50% 감소한다.', trigger: 'hp_below_30', effect: 'reduce_all_taming_efficiency' },
     reactions: REACTIONS.stubborn,
   },
 

@@ -16,8 +16,7 @@ export default {
     sensoryType: ['temperature'], personality: 'aggressive',
     habitat: 'volcano',
     hp: 24, maxHp: 24, stats: { affinity: 8, empathy: 3, endurance: 4, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'lava_armor', nameKr: '용암 갑옷', descKr: '온도 자극에 대한 저항이 턴마다 올라간다. 냄새/행동 축으로 우회해야 한다.', trigger: 'passive_scaling', effect: 'temperature_resist_increase' },
-    skills: ['temperature-stimulate', 'temperature-defend', 'temperature-capture'],
+    wildMechanic: { id: 'lava_armor', nameKr: '용암 갑옷', descKr: '온도 자극에 대한 저항이 턴마다 올라간다. 냄새/행동 축으로 우회해야 한다.', trigger: 'passive_scaling', effect: 'temperature_resist_increase' },
     reactions: REACTIONS.aggressive,
   },
 

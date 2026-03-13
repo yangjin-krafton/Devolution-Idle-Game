@@ -16,8 +16,7 @@ export default {
     sensoryType: ['behavior', 'sound'], personality: 'aggressive',
     habitat: 'sky',
     hp: 24, maxHp: 24, stats: { affinity: 7, empathy: 4, endurance: 3, agility: 6, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'wind_evasion', nameKr: '바람 회피', descKr: '매 턴 첫 번째 자극 시도를 자동 회피한다. 두 번째 자극부터 유효.', trigger: 'first_stimulate_per_turn', effect: 'auto_dodge_first' },
-    skills: ['behavior-stimulate', 'behavior-defend', 'behavior-capture'],
+    wildMechanic: { id: 'wind_evasion', nameKr: '바람 회피', descKr: '매 턴 첫 번째 자극 시도를 자동 회피한다. 두 번째 자극부터 유효.', trigger: 'first_stimulate_per_turn', effect: 'auto_dodge_first' },
     reactions: REACTIONS.aggressive,
   },
 

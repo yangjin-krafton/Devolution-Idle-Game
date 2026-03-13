@@ -16,8 +16,7 @@ export default {
     sensoryType: ['smell'], personality: 'timid',
     habitat: 'forest',
     hp: 30, maxHp: 30, stats: { affinity: 3, empathy: 5, endurance: 7, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'web_trap', nameKr: '거미줄 속박', descKr: '매 2턴마다 앞 줄 아군 한 마리를 거미줄로 구속해 1턴 행동불가로 만든다.', trigger: 'every_2_turns', effect: 'bind_front_ally' },
-    skills: ['smell-stimulate', 'smell-defend', 'smell-capture'],
+    wildMechanic: { id: 'web_trap', nameKr: '거미줄 속박', descKr: '매 2턴마다 앞 줄 아군 한 마리를 거미줄로 구속해 1턴 행동불가로 만든다.', trigger: 'every_2_turns', effect: 'bind_front_ally' },
     reactions: REACTIONS.timid,
   },
 

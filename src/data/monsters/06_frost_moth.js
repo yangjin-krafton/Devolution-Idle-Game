@@ -16,8 +16,7 @@ export default {
     sensoryType: ['temperature'], personality: 'timid',
     habitat: 'sky',
     hp: 22, maxHp: 22, stats: { affinity: 4, empathy: 7, endurance: 5, agility: 4, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'frost_barrier', nameKr: '서리 결계', descKr: '순화도가 40% 이상이 되면 서리 방벽을 생성해 다음 자극 1회를 무효화한다.', trigger: 'taming_threshold_40', effect: 'block_next_stimulation' },
-    skills: ['temperature-stimulate', 'temperature-defend', 'behavior-capture'],
+    wildMechanic: { id: 'frost_barrier', nameKr: '서리 결계', descKr: '순화도가 40% 이상이 되면 서리 방벽을 생성해 다음 자극 1회를 무효화한다.', trigger: 'taming_threshold_40', effect: 'block_next_stimulation' },
     reactions: REACTIONS.timid,
   },
 

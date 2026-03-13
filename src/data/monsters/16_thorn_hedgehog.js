@@ -16,8 +16,7 @@ export default {
     sensoryType: ['smell'], personality: 'stubborn',
     habitat: 'forest',
     hp: 32, maxHp: 32, stats: { affinity: 4, empathy: 3, endurance: 8, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'thorn_reflect', nameKr: '가시 반사', descKr: '행동 축 자극(물리적 접근) 시 가시에 찔려 자극한 아군이 HP 데미지를 받는다.', trigger: 'on_behavior_stimulate', effect: 'damage_attacker' },
-    skills: ['smell-stimulate', 'smell-defend', 'smell-capture'],
+    wildMechanic: { id: 'thorn_reflect', nameKr: '가시 반사', descKr: '행동 축 자극(물리적 접근) 시 가시에 찔려 자극한 아군이 HP 데미지를 받는다.', trigger: 'on_behavior_stimulate', effect: 'damage_attacker' },
     reactions: REACTIONS.stubborn,
   },
 

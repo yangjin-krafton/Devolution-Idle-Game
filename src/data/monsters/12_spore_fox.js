@@ -16,8 +16,7 @@ export default {
     sensoryType: ['smell', 'behavior'], personality: 'curious',
     habitat: 'forest',
     hp: 22, maxHp: 22, stats: { affinity: 6, empathy: 5, endurance: 3, agility: 6, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'hallucination_spore', nameKr: '환각 포자', descKr: '무작위로 아군 스킬의 대상을 다른 아군으로 변경시킨다. 예측 불가능한 혼란 유발.', trigger: 'random_chance_30', effect: 'redirect_skill_target' },
-    skills: ['behavior-stimulate', 'behavior-defend', 'smell-capture'],
+    wildMechanic: { id: 'hallucination_spore', nameKr: '환각 포자', descKr: '무작위로 아군 스킬의 대상을 다른 아군으로 변경시킨다. 예측 불가능한 혼란 유발.', trigger: 'random_chance_30', effect: 'redirect_skill_target' },
     reactions: REACTIONS.curious,
   },
 

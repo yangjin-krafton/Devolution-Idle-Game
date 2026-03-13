@@ -16,8 +16,7 @@ export default {
     sensoryType: ['temperature', 'smell'], personality: 'timid',
     habitat: 'sea',
     hp: 20, maxHp: 20, stats: { affinity: 7, empathy: 5, endurance: 3, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'tidal_flux', nameKr: '조류 변동', descKr: '매 턴 무작위로 한 감각축의 자극 효과가 1.5배 또는 0.5배가 된다. 운과 적응력 시험.', trigger: 'every_turn_random', effect: 'random_axis_modifier' },
-    skills: ['temperature-stimulate', 'temperature-defend', 'temperature-capture'],
+    wildMechanic: { id: 'tidal_flux', nameKr: '조류 변동', descKr: '매 턴 무작위로 한 감각축의 자극 효과가 1.5배 또는 0.5배가 된다. 운과 적응력 시험.', trigger: 'every_turn_random', effect: 'random_axis_modifier' },
     reactions: REACTIONS.timid,
   },
 

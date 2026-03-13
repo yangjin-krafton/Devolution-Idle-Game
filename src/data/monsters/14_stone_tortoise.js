@@ -16,8 +16,7 @@ export default {
     sensoryType: ['temperature'], personality: 'stubborn',
     habitat: 'cave',
     hp: 40, maxHp: 40, stats: { affinity: 3, empathy: 3, endurance: 9, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'shell_retreat', nameKr: '은둔 방어', descKr: '3턴마다 등껍질에 숨어 모든 자극 효과가 50% 감소한다. 1턴 지속.', trigger: 'every_3_turns', effect: 'half_stimulation_effectiveness' },
-    skills: ['temperature-stimulate', 'temperature-defend', 'temperature-capture'],
+    wildMechanic: { id: 'shell_retreat', nameKr: '은둔 방어', descKr: '3턴마다 등껍질에 숨어 모든 자극 효과가 50% 감소한다. 1턴 지속.', trigger: 'every_3_turns', effect: 'half_stimulation_effectiveness' },
     reactions: REACTIONS.stubborn,
   },
 

@@ -16,8 +16,7 @@ export default {
     sensoryType: ['behavior'], personality: 'aggressive',
     habitat: 'forest',
     hp: 22, maxHp: 22, stats: { affinity: 5, empathy: 5, endurance: 2, agility: 8, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'ambush_stealth', nameKr: '은닉 매복', descKr: '무작위 턴에 숨기를 시전한다. 숨은 동안 행동 축 자극만 유효하다.', trigger: 'random_turns', effect: 'stealth_immune_except_behavior' },
-    skills: ['behavior-stimulate', 'sound-defend', 'behavior-capture'],
+    wildMechanic: { id: 'ambush_stealth', nameKr: '은닉 매복', descKr: '무작위 턴에 숨기를 시전한다. 숨은 동안 행동 축 자극만 유효하다.', trigger: 'random_turns', effect: 'stealth_immune_except_behavior' },
     reactions: REACTIONS.aggressive,
   },
 

@@ -85,7 +85,8 @@
       "Bash(cd \"D:\\\\Weeks\\\\Devolution-Idle-Game\" && grep -oP '\\(?<=\"skillFocus\": \"\\)[^\"]+' tools/monster-pipeline/roster/*.json | sed 's/.*://' | tr '/' '\\\\n' | sed 's/^ *//;s/ *$//' | sort -u)",
       "Bash(node -e \"import\\(''''./src/ui/skillCard.js''''\\)\")",
       "Bash(cd D:/Weeks/Devolution-Idle-Game/tools/monster-pipeline/roster && for f in *.json; do node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('$f','utf-8'\\)\\); JSON.stringify\\(d\\)\" 2>&1 && echo \"$f: valid JSON ✓\" || echo \"$f: INVALID JSON ✗\"; done)",
-      "Bash(grep -c \"''reveal''\" \"f:/Workspace/Devolution-Idle-Game/src/data/dialogs/encounters/index.js\")"
+      "Bash(grep -c \"''reveal''\" \"f:/Workspace/Devolution-Idle-Game/src/data/dialogs/encounters/index.js\")",
+      "Bash(cd D:/Weeks/Devolution-Idle-Game && node -e \"\nconst fs = require\\('fs'\\);\nconst path = require\\('path'\\);\nconst dir = 'src/data/monsters';\nconst files = fs.readdirSync\\(dir\\).filter\\(f => f.endsWith\\('.js'\\)\\);\nlet count = 0;\n\nfor \\(const file of files\\) {\n  const fp = path.join\\(dir, file\\);\n  let c = fs.readFileSync\\(fp, 'utf8'\\);\n  const orig = c;\n  // Remove 'skills: [...],' line from wild block\n  c = c.replace\\(/\\\\n\\\\s*skills:\\\\s*\\\\[.*?\\\\],?/g, ''\\);\n  if \\(c !== orig\\) { fs.writeFileSync\\(fp, c\\); count++; }\n}\nconsole.log\\('Removed skills field from', count, 'files'\\);\n\")"
     ],
     "additionalDirectories": [
       "\\tmp"

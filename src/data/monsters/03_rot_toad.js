@@ -16,8 +16,7 @@ export default {
     sensoryType: ['smell'], personality: 'aggressive',
     habitat: 'swamp',
     hp: 35, maxHp: 35, stats: { affinity: 4, empathy: 3, endurance: 8, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'toxic_spread', nameKr: '독기 확산', descKr: '매 턴 독 안개가 퍼져 순화도가 소량 감소한다. 냄새 계열 스킬로 독기를 중화할 수 있다.', trigger: 'every_turn', effect: 'taming_gauge_decay' },
-    skills: ['smell-stimulate', 'smell-defend', 'smell-capture'],
+    wildMechanic: { id: 'toxic_spread', nameKr: '독기 확산', descKr: '매 턴 독 안개가 퍼져 순화도가 소량 감소한다. 냄새 계열 스킬로 독기를 중화할 수 있다.', trigger: 'every_turn', effect: 'taming_gauge_decay' },
     reactions: REACTIONS.aggressive,
   },
 

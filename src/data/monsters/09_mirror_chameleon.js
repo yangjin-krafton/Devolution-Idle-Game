@@ -16,8 +16,7 @@ export default {
     sensoryType: ['behavior'], personality: 'curious',
     habitat: 'forest',
     hp: 25, maxHp: 25, stats: { affinity: 5, empathy: 7, endurance: 4, agility: 4, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'mirror_copy', nameKr: '거울 모방', descKr: '마지막으로 사용된 아군 스킬을 복사해 역으로 사용한다. 순화도 대신 탈출 게이지를 올린다.', trigger: 'after_ally_skill', effect: 'copy_reverse_skill' },
-    skills: ['behavior-stimulate', 'temperature-defend', 'behavior-capture'],
+    wildMechanic: { id: 'mirror_copy', nameKr: '거울 모방', descKr: '마지막으로 사용된 아군 스킬을 복사해 역으로 사용한다. 순화도 대신 탈출 게이지를 올린다.', trigger: 'after_ally_skill', effect: 'copy_reverse_skill' },
     reactions: REACTIONS.curious,
   },
 

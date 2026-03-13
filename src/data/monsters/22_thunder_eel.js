@@ -16,8 +16,7 @@ export default {
     sensoryType: ['sound', 'temperature'], personality: 'timid',
     habitat: 'sea',
     hp: 22, maxHp: 22, stats: { affinity: 8, empathy: 4, endurance: 3, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'electric_charge', nameKr: '전기 충전', descKr: '3턴간 충전 후 방전하여 전체 아군의 스킬 쿨다운이 +1턴 증가한다.', trigger: 'every_3_turns_charge', effect: 'increase_all_cooldowns' },
-    skills: ['sound-stimulate', 'temperature-defend', 'temperature-capture'],
+    wildMechanic: { id: 'electric_charge', nameKr: '전기 충전', descKr: '3턴간 충전 후 방전하여 전체 아군의 스킬 쿨다운이 +1턴 증가한다.', trigger: 'every_3_turns_charge', effect: 'increase_all_cooldowns' },
     reactions: REACTIONS.timid,
   },
 

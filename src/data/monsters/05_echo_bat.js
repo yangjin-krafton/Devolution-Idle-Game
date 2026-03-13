@@ -16,8 +16,7 @@ export default {
     sensoryType: ['sound'], personality: 'timid',
     habitat: 'cave',
     hp: 20, maxHp: 20, stats: { affinity: 5, empathy: 6, endurance: 2, agility: 7, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'sonar_disruption', nameKr: '초음파 교란', descKr: '소리 자극이 빗나가면 아군 한 마리가 1턴 혼란 상태에 빠진다.', trigger: 'on_sound_miss', effect: 'ally_confusion' },
-    skills: ['sound-stimulate', 'smell-defend', 'sound-capture'],
+    wildMechanic: { id: 'sonar_disruption', nameKr: '초음파 교란', descKr: '소리 자극이 빗나가면 아군 한 마리가 1턴 혼란 상태에 빠진다.', trigger: 'on_sound_miss', effect: 'ally_confusion' },
     reactions: REACTIONS.timid,
   },
 

@@ -16,8 +16,7 @@ export default {
     sensoryType: ['smell', 'sound'], personality: 'stubborn',
     habitat: 'swamp',
     hp: 42, maxHp: 42, stats: { affinity: 3, empathy: 3, endurance: 9, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'moss_regen', nameKr: '이끼 재생', descKr: '매 턴 순화도가 5% 자연 감소한다. 지속적인 자극 유지가 필요하다.', trigger: 'every_turn', effect: 'taming_gauge_passive_decay' },
-    skills: ['sound-stimulate', 'smell-defend', 'smell-capture'],
+    wildMechanic: { id: 'moss_regen', nameKr: '이끼 재생', descKr: '매 턴 순화도가 5% 자연 감소한다. 지속적인 자극 유지가 필요하다.', trigger: 'every_turn', effect: 'taming_gauge_passive_decay' },
     reactions: REACTIONS.stubborn,
   },
 

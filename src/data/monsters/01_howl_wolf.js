@@ -13,8 +13,7 @@ export default {
     sensoryType: ['sound'], personality: 'aggressive',
     habitat: 'forest',
     hp: 26, maxHp: 26, stats: { affinity: 7, empathy: 4, endurance: 4, agility: 5, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'sonic_buildup', nameKr: '음파 축적', descKr: '매 턴 음파 게이지가 쌓이며, 3턴마다 전체 탈출 게이지가 크게 상승한다. 빠른 순화가 필요하다.', trigger: 'every_3_turns', effect: 'escape_gauge_burst' },
-    skills: ['sound-stimulate', 'behavior-defend', 'sound-capture'],
+    wildMechanic: { id: 'sonic_buildup', nameKr: '음파 축적', descKr: '매 턴 음파 게이지가 쌓이며, 3턴마다 전체 탈출 게이지가 크게 상승한다. 빠른 순화가 필요하다.', trigger: 'every_3_turns', effect: 'escape_gauge_burst' },
     reactions: REACTIONS.aggressive,
   },
 

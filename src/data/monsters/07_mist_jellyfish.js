@@ -16,8 +16,7 @@ export default {
     sensoryType: ['smell', 'temperature'], personality: 'timid',
     habitat: 'sea',
     hp: 24, maxHp: 24, stats: { affinity: 5, empathy: 7, endurance: 5, agility: 3, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'tentacle_counter', nameKr: '촉수 반격', descKr: '행동 축 자극 시 30% 확률로 촉수가 반격해 자극한 아군의 HP를 감소시킨다.', trigger: 'on_behavior_stimulate', effect: 'counter_hp_damage' },
-    skills: ['temperature-stimulate', 'smell-defend', 'smell-capture'],
+    wildMechanic: { id: 'tentacle_counter', nameKr: '촉수 반격', descKr: '행동 축 자극 시 30% 확률로 촉수가 반격해 자극한 아군의 HP를 감소시킨다.', trigger: 'on_behavior_stimulate', effect: 'counter_hp_damage' },
     reactions: REACTIONS.timid,
   },
 

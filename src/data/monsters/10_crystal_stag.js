@@ -16,8 +16,7 @@ export default {
     sensoryType: ['sound', 'smell'], personality: 'curious',
     habitat: 'forest',
     hp: 26, maxHp: 26, stats: { affinity: 7, empathy: 5, endurance: 4, agility: 4, bond: 3, instinct: 3 },
-    wildMechanic: { id: 'crystal_reflect', nameKr: '수정 반사', descKr: '소리 축 자극을 반사해 순화도 대신 탈출 게이지가 상승한다. 다른 축을 사용해야 한다.', trigger: 'on_sound_stimulate', effect: 'reflect_to_escape_gauge' },
-    skills: ['sound-stimulate', 'smell-defend', 'sound-capture'],
+    wildMechanic: { id: 'crystal_reflect', nameKr: '수정 반사', descKr: '소리 축 자극을 반사해 순화도 대신 탈출 게이지가 상승한다. 다른 축을 사용해야 한다.', trigger: 'on_sound_stimulate', effect: 'reflect_to_escape_gauge' },
     reactions: REACTIONS.curious,
   },
 
