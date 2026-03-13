@@ -33,6 +33,17 @@ import { CombatSystem } from './combat.js';
 import { TeamManager } from './team.js';
 
 // ============================================================
+// Game Version — 구 세이브 자동 삭제
+// ============================================================
+const GAME_VERSION = '0.2.0'; // 6스탯 + 어빌리티 + 턴 인터리빙
+const SAVE_VERSION_KEY = 'devo_version';
+
+if (localStorage.getItem(SAVE_VERSION_KEY) !== GAME_VERSION) {
+  localStorage.clear();
+  localStorage.setItem(SAVE_VERSION_KEY, GAME_VERSION);
+}
+
+// ============================================================
 // Pixi App Init
 // ============================================================
 (async () => {
