@@ -209,6 +209,7 @@ export class CombatSystem {
             actor: 'enemy', name: this.enemy.name, img: this.enemy.img,
             skillName: skill.name || '교란', category: 'attack',
             log: skill.log, axis: skill.axis, delta: skill.delta,
+            envAfter: { ...this.environment },
           });
         }
         enemyActed = true;
@@ -243,6 +244,7 @@ export class CombatSystem {
         actor: 'ally', allyIdx, name: ally.name, img: ally.img,
         skillName: action.name, category: action.category,
         log: action.log, axis: action.axis,
+        envAfter: { ...this.environment },
       });
     }
 
@@ -256,6 +258,7 @@ export class CombatSystem {
           actor: 'enemy', name: this.enemy.name, img: this.enemy.img,
           skillName: skill.name || '교란', category: 'attack',
           log: skill.log, axis: skill.axis, delta: skill.delta,
+          envAfter: { ...this.environment },
         });
       }
     }
