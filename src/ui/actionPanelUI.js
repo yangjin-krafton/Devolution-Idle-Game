@@ -176,12 +176,14 @@ function _renderTurnOrderBar(parent, team, sel, order, enemyOrd, colW, startX) {
     defend: 0x4dabf7,
     stimulate: 0x00d4aa,
     capture: 0xff6b6b,
+    survey: 0xccaaee,
     enemy: 0xff8844,
   };
   const catIcons = {
     defend: '🛡️',
     stimulate: '💫',
     capture: '🤝',
+    survey: '🔍',
     enemy: '⚔️',
   };
 

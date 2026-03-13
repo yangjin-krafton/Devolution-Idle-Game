@@ -3,18 +3,28 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'crystal_stag',
 
   wild: {
     id: 'crystal_stag', name: '수정 사슴', desc: '수정 뿔에서 맑은 소리가 울려퍼지는 기품 있는 사슴',
-    img: IMG + 'enemy_crystal_deer.png',
+    img: IMG + 'crystal_stag_wild.png',
     attackPower: 5, tamingThreshold: 65, escapeThreshold: 75,
     sensoryType: ['sound', 'smell'], personality: 'curious',
     habitat: 'forest',
+    environmentPreference: {
+      temperature: { ideal: -1, tolerance: 0 }, brightness: { ideal: 1, tolerance: 0 },
+      smell: { ideal: 1, tolerance: 1 }, humidity: { ideal: 0, tolerance: 1 }, sound: { ideal: -1, tolerance: 1 },
+    },
+    fleeProfile: { baseGain: 1, mismatchBonus: 1 },
+    environmentSkills: [
+      { axis: 'brightness', delta: -1, log: '수정 사슴의 뿔이 빛을 굴절시킨다!' },
+      { axis: 'sound', delta: 1, log: '수정 사슴이 뿔을 부딪혀 맑은 소리를 낸다!' },
+    ],
+    captureRule: { sustainTurns: 3 },
     hp: 26, maxHp: 26, stats: { affinity: 7, empathy: 5, endurance: 4, agility: 4, bond: 3, instinct: 3 },
     wildMechanic: { id: 'crystal_reflect', nameKr: '수정 반사', descKr: '소리 축 자극을 반사해 순화도 대신 탈출 게이지가 상승한다. 다른 축을 사용해야 한다.', trigger: 'on_sound_stimulate', effect: 'reflect_to_escape_gauge' },
     reactions: REACTIONS.curious,
@@ -23,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'crystal_stag_d1_0', name: '종소리사슴', desc: '뿔에서 맑은 종소리가 울려 적을 매혹시키는 사슴', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'crystal_stag_d1_0.png', devolvedImg: IMG + 'crystal_stag_d2_0.png',
       hp: 24, maxHp: 24, stats: { affinity: 12, empathy: 3, endurance: 3, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '딸랑이', devolvedDesc: '작은 뿔에서 딸랑딸랑 소리를 내는 아기 사슴',
       devolvedStats: { affinity: 7, empathy: 2, endurance: 2, agility: 3, bond: 2, instinct: 2 },
@@ -32,13 +42,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [1, 3], empathy: [0, 1], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['sound-stimulate', 'sound-surge', 'sound-capture'], 3: 'sound-pulse', 5: 'smell-stimulate', 7: 'sound-snare', 9: 'sound-defend' },
-      skillPool: ['sound-stimulate', 'sound-pulse', 'sound-surge', 'smell-stimulate', 'sound-capture', 'sound-snare', 'sound-defend'],
+      skillPool: ['sound-stimulate', 'sound-pulse', 'sound-surge', 'smell-stimulate', 'sound-capture', 'sound-snare', 'sound-defend', 'survey-sound'],
       equipped: ['sound-stimulate', 'sound-surge', 'sound-capture'],
       actions: makeActions(['sound-stimulate', 'sound-surge', 'sound-capture']),
     },
     {
       id: 'crystal_stag_d1_1', name: '숲지기사슴', desc: '숲의 향기로 아군을 치유하는 수호 사슴', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'crystal_stag_d1_1.png', devolvedImg: IMG + 'crystal_stag_d2_2.png',
       hp: 26, maxHp: 26, stats: { affinity: 4, empathy: 10, endurance: 4, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '꽃사슴이', devolvedDesc: '이마의 작은 수정꽃에서 은은한 향이 나는 아기 사슴',
       devolvedStats: { affinity: 2, empathy: 7, endurance: 3, agility: 2, bond: 2, instinct: 2 },
@@ -47,13 +57,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [1, 3], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-herb', 'sound-recover', 'smell-capture'], 3: 'smell-bloom', 5: 'smell-defend', 7: 'smell-sanctuary', 9: 'sound-stimulate' },
-      skillPool: ['smell-herb', 'smell-bloom', 'smell-defend', 'smell-sanctuary', 'smell-capture', 'sound-stimulate', 'sound-recover'],
+      skillPool: ['smell-herb', 'smell-bloom', 'smell-defend', 'smell-sanctuary', 'smell-capture', 'sound-stimulate', 'sound-recover', 'survey-sound'],
       equipped: ['smell-herb', 'sound-recover', 'smell-capture'],
       actions: makeActions(['smell-herb', 'sound-recover', 'smell-capture']),
     },
     {
       id: 'crystal_stag_d1_2', name: '수정갑사슴', desc: '수정 뿔로 아군을 감싸는 방어의 사슴', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'crystal_stag_d1_2.png', devolvedImg: IMG + 'crystal_stag_d2_4.png',
       hp: 32, maxHp: 32, stats: { affinity: 3, empathy: 3, endurance: 11, agility: 3, bond: 3, instinct: 3 },
       devolvedName: '방패꼬마', devolvedDesc: '이마에 작은 수정 방패를 달고 돌진하는 아기 사슴',
       devolvedStats: { affinity: 2, empathy: 2, endurance: 8, agility: 2, bond: 2, instinct: 2 },
@@ -62,7 +72,7 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [1, 3], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['sound-defend', 'sound-guard', 'sound-capture'], 3: 'sound-shelter', 5: 'sound-mend', 7: 'smell-stimulate', 9: 'smell-lullaby' },
-      skillPool: ['sound-defend', 'sound-guard', 'sound-shelter', 'sound-mend', 'smell-stimulate', 'sound-capture', 'smell-lullaby'],
+      skillPool: ['sound-defend', 'sound-guard', 'sound-shelter', 'sound-mend', 'smell-stimulate', 'sound-capture', 'smell-lullaby', 'survey-sound'],
       equipped: ['sound-defend', 'sound-guard', 'sound-capture'],
       actions: makeActions(['sound-defend', 'sound-guard', 'sound-capture']),
     },

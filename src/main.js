@@ -14,7 +14,7 @@ import {
   triggerBondingFailVFX, triggerEscapeVFX, triggerFaintVFX,
   tickCombat, resetDanmaku,
 } from './ui/combatUI.js';
-import { randomEnvironment } from './backgrounds.js';
+import { randomEnvironment, environmentToBackground } from './backgrounds.js';
 import { initTitle, resetTitle } from './ui/titleUI.js';
 import {
   initTeam, renderTeamCards, updateEggProgress,
@@ -35,7 +35,7 @@ import { TeamManager } from './team.js';
 // ============================================================
 // Game Version — 구 세이브 자동 삭제
 // ============================================================
-const GAME_VERSION = '0.2.0'; // 6스탯 + 어빌리티 + 턴 인터리빙
+const GAME_VERSION = '0.3.0'; // 환경 5축 조율형 전투 시스템
 const SAVE_VERSION_KEY = 'devo_version';
 
 if (localStorage.getItem(SAVE_VERSION_KEY) !== GAME_VERSION) {
@@ -162,7 +162,7 @@ function startBattle() {
   const enemy = teamManager.getRandomEnemy();
   combat = new CombatSystem(battleTeam, enemy);
   resetDanmaku();
-  applyBackground(randomEnvironment());
+  applyBackground(environmentToBackground(combat.getResult().environment));
 
   setCombatCallbacks({
     action: handleAction,
@@ -189,8 +189,11 @@ function startBattle() {
 function refreshCombatUI() {
   const r = combat.getResult();
   setEmotion(r.emotion);
-  updateGauges(r.tamingPercent, r.escapePercent, r.turn);
+  updateGauges(r);
   renderLogs(r.logs);
+
+  // 환경 변화에 따라 배경 갱신
+  applyBackground(environmentToBackground(r.environment));
 
   renderAlly();
   renderAllyTabs(combat.team, r.aggroTarget, combat.state, combat.enemy.attackPower);
@@ -202,7 +205,6 @@ function refreshCombatUI() {
   });
 
   renderActions(combat.team, {
-    tamingPercent: r.tamingPercent,
     escapePercent: r.escapePercent,
     pendingSlots: r.pendingSlots,
     selectedActions: r.selectedActions,
@@ -225,15 +227,11 @@ function handleConfirm() {
   const hpBefore = combat.team.map(a => a.hp);
   combat.confirmTurn();
 
-  // VFX
+  // VFX — 환경 조율 시스템
   shakeEnemy();
   triggerTamingVFX('behavior', true);
   if (combat.state === 'victory') setTimeout(() => triggerBondingSuccessVFX(), 200);
   if (combat.state === 'escaped') triggerEscapeVFX();
-  combat.team.forEach((a, i) => {
-    if (a.hp < hpBefore[i]) setTimeout(() => triggerAttackVFX(), 200);
-    if (a.hp <= 0 && hpBefore[i] > 0) setTimeout(() => triggerFaintVFX(), 300);
-  });
 
   refreshCombatUI();
   if (combat.state !== 'active') setTimeout(endBattle, 800);

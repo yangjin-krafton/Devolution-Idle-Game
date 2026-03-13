@@ -123,3 +123,93 @@ export function randomEnvironment() {
     time: Math.random() < 0.5 ? TIME_OF_DAY.day : TIME_OF_DAY.night,
   };
 }
+
+// ============================================================
+// 환경 5축 → 배경 매핑
+//
+// temperature: -2 snow → -1 rain → 0 clear → +1 wind → +2 volcanic
+// brightness:  -2 night(deep) → -1 night → 0 day(cloudy) → +1 day → +2 day(bright)
+// smell:       -2 rock → -1 sand → 0 grass → +1 swamp → +2 swamp(dense)
+// humidity:    -2 sand(dry) → -1 rock → 0 grass → +1 sea → +2 sea+rain
+// sound:       조용(-2)→파티클 없음, 시끄러움(+2)→파티클 많음+바람
+// ============================================================
+
+const TEMP_SKY = [
+  SKY_TYPES.snow,      // -2
+  SKY_TYPES.rain,      // -1
+  SKY_TYPES.clear,     //  0
+  SKY_TYPES.wind,      // +1
+  SKY_TYPES.volcanic,  // +2
+];
+
+const HUMIDITY_GROUND = [
+  GROUND_TYPES.sand,    // -2 건조
+  GROUND_TYPES.rock,    // -1
+  GROUND_TYPES.grass,   //  0
+  GROUND_TYPES.swamp,   // +1
+  GROUND_TYPES.sea,     // +2 습함
+];
+
+const SMELL_GROUND = [
+  GROUND_TYPES.rock,     // -2 무취
+  GROUND_TYPES.sand,     // -1
+  GROUND_TYPES.grass,    //  0
+  GROUND_TYPES.swamp,    // +1
+  GROUND_TYPES.swamp,    // +2 강한 냄새
+];
+
+function envIdx(val) {
+  return Math.max(0, Math.min(4, val + 2));
+}
+
+/**
+ * 환경 5축 값으로 배경 생성
+ * @param {{ temperature:number, brightness:number, smell:number, humidity:number, sound:number }} env
+ */
+export function environmentToBackground(env) {
+  // sky: temperature 기반
+  const sky = { ...TEMP_SKY[envIdx(env.temperature)] };
+
+  // ground: humidity 우선, smell 보조 블렌드
+  const humGround = HUMIDITY_GROUND[envIdx(env.humidity)];
+  const smellGround = SMELL_GROUND[envIdx(env.smell)];
+  // humidity가 극단이면 humidity 우선, 아니면 smell과 블렌드
+  const ground = Math.abs(env.humidity) >= 2 ? humGround : smellGround;
+
+  // time: brightness 기반
+  let time;
+  if (env.brightness <= -1) {
+    time = { ...TIME_OF_DAY.night };
+    // -2면 더 어둡게
+    if (env.brightness <= -2) {
+      time.alpha = 0.5;
+      time.starCount = 40;
+    }
+  } else {
+    time = { ...TIME_OF_DAY.day };
+    // +2면 더 밝게 (tint 없음)
+    if (env.brightness >= 2) {
+      time.alpha = 0;
+    }
+  }
+
+  // sound: 파티클 강도 조절
+  if (sky.particles) {
+    const soundMul = Math.max(0.2, (env.sound + 2) / 4); // -2→0.2, +2→1.0
+    sky.particles = {
+      ...sky.particles,
+      count: Math.round(sky.particles.count * soundMul),
+      speed: sky.particles.speed * (0.5 + soundMul * 0.5),
+    };
+  }
+  // sound +2이고 파티클 없으면 바람 파티클 추가
+  if (!sky.particles && env.sound >= 2) {
+    sky.particles = { type: 'leaf', count: 15, color: 0x66aa44, speed: 2.0, size: 4 };
+  }
+  // sound -2이면 파티클 제거 (고요)
+  if (env.sound <= -2) {
+    sky.particles = null;
+  }
+
+  return { sky, ground, time };
+}

@@ -20,6 +20,7 @@ export const SKILL_CAT = {
   stimulate: { c: D.neon, bg: 0x1a3330, icon: '💫', dark: 0x009977 },
   capture:   { c: D.red,  bg: 0x33222a, icon: '🤝', dark: 0xcc4444 },
   defend:    { c: D.blue,  bg: 0x1a2a3a, icon: '🛡️', dark: 0x2b7fc4 },
+  survey:    { c: 0xccaaee, bg: 0x2a2040, icon: '🔍', dark: 0x8866bb },
 };
 
 const AXIS_ICON = { sound: '🔊', temperature: '🌡️', smell: '🌿', behavior: '👁️' };
@@ -172,50 +173,58 @@ function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
   const line = (size) => size * S * LH;
 
   if (preview.type === 'stimulate') {
-    const pctColor = preview.totalPct >= 120 ? 0x00ff88 : preview.totalPct <= 80 ? 0xff6666 : D.neon;
-    ct.addChild(Object.assign(lbl(`순화 +${preview.taming} (${preview.totalPct}%)`, F.hero, pctColor, true), { x: 0, y, alpha }));
+    // 환경 조율 프리뷰 — 변화 방향 + 힌트
+    const axisLabel = preview.envAxisLabel || preview.envAxis || '???';
+    const delta = preview.delta || 0;
+    const deltaSign = delta > 0 ? `+${delta}` : String(delta);
+    const newSign = preview.newVal > 0 ? '+' : '';
+
+    ct.addChild(Object.assign(lbl(`${axisLabel} ${deltaSign} → ${newSign}${preview.newVal}`, F.hero, D.text, true), { x: 0, y, alpha }));
     y += line(F.hero);
 
-    if (preview.sensoryPct !== 100) {
-      const sColor = preview.sensoryPct > 100 ? 0x00ff88 : 0xff6666;
-      ct.addChild(Object.assign(lbl(`상성 ${preview.sensoryPct}%`, F.main, sColor), { x: 0, y, alpha }));
-      y += line(F.main);
-    }
-
-    const escSign = preview.escape >= 0 ? `+${preview.escape}` : String(preview.escape);
-    ct.addChild(Object.assign(lbl(`도주 ${escSign}`, F.main, preview.escape > 0 ? D.red : D.neon), { x: 0, y, alpha }));
+    // 힌트 표시: 방향이 맞는지
+    const hintMap = { low: '▲ 올려야', high: '▼ 내려야', ok: '● 적절' };
+    const hintColor = preview.hint === 'ok' ? D.neon : preview.hint === 'low' ? 0xff8866 : 0x66aaff;
+    const hintText = hintMap[preview.hint] || '?';
+    ct.addChild(Object.assign(lbl(`현재: ${hintText}`, F.main, hintColor), { x: 0, y, alpha }));
     y += line(F.main);
 
-    if (preview.saturated || preview.repeated) {
-      const warns = [];
-      if (preview.saturated) warns.push('둔감');
-      if (preview.repeated) warns.push('반복↓');
-      const pill = new PIXI.Graphics();
-      pill.roundRect(-2, y, w - 16, F.sub * S * LH, 4).fill({ color: D.orange, alpha: 0.15 });
-      ct.addChild(pill);
-      ct.addChild(Object.assign(lbl(`⚠ ${warns.join(' · ')}`, F.sub, D.orange, true), { x: 2, y: y + 1, alpha }));
+    // 공개된 축이면 목표값 표시
+    if (preview.revealed && preview.idealVal != null) {
+      const iSign = preview.idealVal > 0 ? '+' : '';
+      const tolText = preview.tolerance > 0 ? ` ±${preview.tolerance}` : '';
+      ct.addChild(Object.assign(lbl(`목표: ${iSign}${preview.idealVal}${tolText}`, F.sub, 0xccaaee), { x: 0, y, alpha }));
       y += line(F.sub);
     }
   }
 
   else if (preview.type === 'capture') {
-    const chanceColor = preview.chance >= 60 ? D.neon : preview.chance >= 30 ? D.yellow : D.red;
-    ct.addChild(Object.assign(lbl(`교감 ${preview.chance}%`, F.hero + 2, chanceColor, true), { x: 0, y, alpha }));
+    ct.addChild(Object.assign(lbl('교감 시도', F.hero + 2, D.yellow, true), { x: 0, y, alpha }));
     y += line(F.hero + 2);
-
-    ct.addChild(Object.assign(lbl(`실패 시 도주 +${preview.escape}`, F.main, D.red), { x: 0, y, alpha }));
+    ct.addChild(Object.assign(lbl(`도주 -${preview.escapeReduce}`, F.main, D.neon), { x: 0, y, alpha }));
     y += line(F.main);
   }
 
   else if (preview.type === 'defend') {
-    if (preview.defense) {
-      ct.addChild(Object.assign(lbl(`방어 +${preview.defense}`, F.hero, D.blue, true), { x: 0, y, alpha }));
-      y += line(F.hero);
-    }
+    ct.addChild(Object.assign(lbl('수비', F.hero, D.blue, true), { x: 0, y, alpha }));
+    y += line(F.hero);
+    ct.addChild(Object.assign(lbl(`도주 -${preview.escapeReduce || 1}`, F.main, D.neon), { x: 0, y, alpha }));
+    y += line(F.main);
     if (preview.heal) {
       ct.addChild(Object.assign(lbl(`회복 +${preview.heal} HP`, F.main + 1, D.neon), { x: 0, y, alpha }));
       y += line(F.main + 1);
     }
+  }
+
+  else if (preview.type === 'survey') {
+    ct.addChild(Object.assign(lbl('🔍 환경 조사', F.hero, 0xccaaee, true), { x: 0, y, alpha }));
+    y += line(F.hero);
+    const countText = preview.unrevealedCount > 0
+      ? `미공개 ${preview.unrevealedCount}축 중 1개 공개`
+      : '모두 공개됨';
+    const countColor = preview.unrevealedCount > 0 ? D.text : D.dim;
+    ct.addChild(Object.assign(lbl(countText, F.main, countColor), { x: 0, y, alpha }));
+    y += line(F.main);
   }
 
   return y;
@@ -245,6 +254,11 @@ function _renderStaticDesc(ct, action, cat, w, y, alpha) {
       ct.addChild(Object.assign(lbl(`회복 ${action.healAmount}`, F.main + 1, D.neon), { x: 0, y, alpha }));
       y += line(F.main + 1);
     }
+  } else if (action.category === 'survey') {
+    ct.addChild(Object.assign(lbl('환경 조사', F.main + 1, 0xccaaee), { x: 0, y, alpha }));
+    y += line(F.main + 1);
+    ct.addChild(Object.assign(lbl(`PP ${action.pp}/${action.maxPp}`, F.main, D.dim), { x: 0, y, alpha }));
+    y += line(F.main);
   }
   return y;
 }

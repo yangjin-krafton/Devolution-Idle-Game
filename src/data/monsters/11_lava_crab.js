@@ -3,18 +3,28 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'lava_crab',
 
   wild: {
     id: 'lava_crab', name: '용암 집게', desc: '뜨거운 집게로 바위를 녹이는 화산 지대의 게',
-    img: IMG + 'enemy_iron_boar.png',
+    img: IMG + 'lava_crab_wild.png',
     attackPower: 5, tamingThreshold: 60, escapeThreshold: 85,
     sensoryType: ['temperature', 'behavior'], personality: 'curious',
     habitat: 'volcano',
+    environmentPreference: {
+      temperature: { ideal: 2, tolerance: 0 }, brightness: { ideal: 2, tolerance: 0 },
+      smell: { ideal: -1, tolerance: 1 }, humidity: { ideal: -2, tolerance: 0 }, sound: { ideal: 0, tolerance: 1 },
+    },
+    fleeProfile: { baseGain: 1, mismatchBonus: 1 },
+    environmentSkills: [
+      { axis: 'temperature', delta: -1, log: '용암 게가 껍질로 열기를 차단한다!' },
+      { axis: 'humidity', delta: 2, log: '용암 게가 분수를 뿜는다!' },
+    ],
+    captureRule: { sustainTurns: 3 },
     hp: 34, maxHp: 34, stats: { affinity: 4, empathy: 4, endurance: 7, agility: 5, bond: 3, instinct: 3 },
     wildMechanic: { id: 'molten_shell', nameKr: '용암 껍질', descKr: 'HP가 50% 이하가 되면 방어력이 2배로 증가한다. 온도 축 자극으로만 해제 가능하다.', trigger: 'hp_below_50', effect: 'double_defense_until_temp_stimulate' },
     reactions: REACTIONS.curious,
@@ -23,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'lava_crab_d1_0', name: '온천게', desc: '집게에서 따뜻한 물이 나오는 온화한 게', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'lava_crab_d1_0.png', devolvedImg: IMG + 'lava_crab_d2_0.png',
       hp: 36, maxHp: 36, stats: { affinity: 2, empathy: 3, endurance: 13, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '따끈돌', devolvedDesc: '따끈따끈한 등딱지에서 김이 모락모락 나는 꼬마 게',
       devolvedStats: { affinity: 2, empathy: 2, endurance: 8, agility: 2, bond: 2, instinct: 2 },
@@ -32,13 +42,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [1, 3], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['temperature-defend', 'temperature-ward', 'temperature-capture'], 3: 'temperature-heal', 5: 'temperature-mend', 7: 'behavior-stimulate', 9: 'behavior-bow' },
-      skillPool: ['temperature-defend', 'temperature-heal', 'temperature-ward', 'temperature-mend', 'behavior-stimulate', 'temperature-capture', 'behavior-bow'],
+      skillPool: ['temperature-defend', 'temperature-heal', 'temperature-ward', 'temperature-mend', 'behavior-stimulate', 'temperature-capture', 'behavior-bow', 'survey-warmth'],
       equipped: ['temperature-defend', 'temperature-ward', 'temperature-capture'],
       actions: makeActions(['temperature-defend', 'temperature-ward', 'temperature-capture']),
     },
     {
       id: 'lava_crab_d1_1', name: '화염집게', desc: '불타는 집게로 강렬한 자극을 주는 게', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'lava_crab_d1_1.png', devolvedImg: IMG + 'lava_crab_d2_2.png',
       hp: 28, maxHp: 28, stats: { affinity: 10, empathy: 3, endurance: 5, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '불씨꼬마', devolvedDesc: '집게에서 작은 불씨를 톡톡 튀기는 아기 게',
       devolvedStats: { affinity: 7, empathy: 2, endurance: 2, agility: 3, bond: 2, instinct: 2 },
@@ -47,13 +57,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [1, 3], empathy: [0, 1], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['temperature-stimulate', 'temperature-overdrive', 'temperature-capture'], 3: 'temperature-flare', 5: 'behavior-stimulate', 7: 'temperature-snare', 9: 'temperature-defend' },
-      skillPool: ['temperature-stimulate', 'temperature-flare', 'temperature-overdrive', 'behavior-stimulate', 'temperature-capture', 'temperature-snare', 'temperature-defend'],
+      skillPool: ['temperature-stimulate', 'temperature-flare', 'temperature-overdrive', 'behavior-stimulate', 'temperature-capture', 'temperature-snare', 'temperature-defend', 'survey-warmth'],
       equipped: ['temperature-stimulate', 'temperature-overdrive', 'temperature-capture'],
       actions: makeActions(['temperature-stimulate', 'temperature-overdrive', 'temperature-capture']),
     },
     {
       id: 'lava_crab_d1_2', name: '조력게', desc: '물과 열을 조절해 아군을 돕는 서포터 게', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'lava_crab_d1_2.png', devolvedImg: IMG + 'lava_crab_d2_4.png',
       hp: 30, maxHp: 30, stats: { affinity: 3, empathy: 9, endurance: 5, agility: 3, bond: 3, instinct: 3 },
       devolvedName: '웅덩이', devolvedDesc: '작은 웅덩이를 만들어 그 안에서 쉬는 꼬마 게',
       devolvedStats: { affinity: 2, empathy: 7, endurance: 3, agility: 2, bond: 2, instinct: 2 },
@@ -62,7 +72,7 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [1, 3], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['temperature-hush', 'temperature-defend', 'temperature-capture'], 3: 'temperature-bloom', 5: 'temperature-shelter', 7: 'behavior-stimulate', 9: 'behavior-guard' },
-      skillPool: ['temperature-hush', 'temperature-bloom', 'temperature-defend', 'temperature-shelter', 'temperature-capture', 'behavior-stimulate', 'behavior-guard'],
+      skillPool: ['temperature-hush', 'temperature-bloom', 'temperature-defend', 'temperature-shelter', 'temperature-capture', 'behavior-stimulate', 'behavior-guard', 'survey-warmth'],
       equipped: ['temperature-hush', 'temperature-defend', 'temperature-capture'],
       actions: makeActions(['temperature-hush', 'temperature-defend', 'temperature-capture']),
     },

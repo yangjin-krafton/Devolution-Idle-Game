@@ -3,18 +3,28 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'iron_boar',
 
   wild: {
     id: 'iron_boar', name: '강철 멧돼지', desc: '강철처럼 단단한 갈기를 세우고 돌진하는 멧돼지',
-    img: IMG + 'enemy_iron_boar.png',
+    img: IMG + 'iron_boar_wild.png',
     attackPower: 9, tamingThreshold: 85, escapeThreshold: 120,
     sensoryType: ['smell', 'temperature'], personality: 'stubborn',
     habitat: 'cave',
+    environmentPreference: {
+      temperature: { ideal: 1, tolerance: 0 }, brightness: { ideal: -1, tolerance: 1 },
+      smell: { ideal: -2, tolerance: 0 }, humidity: { ideal: 0, tolerance: 1 }, sound: { ideal: 1, tolerance: 1 },
+    },
+    fleeProfile: { baseGain: 1, mismatchBonus: 2 },
+    environmentSkills: [
+      { axis: 'smell', delta: 2, log: '철갑 멧돼지가 땅을 파헤쳐 악취가 풍긴다!' },
+      { axis: 'sound', delta: 2, log: '철갑 멧돼지가 요란하게 코를 고른다!' },
+    ],
+    captureRule: { sustainTurns: 3 },
     hp: 38, maxHp: 38, stats: { affinity: 3, empathy: 3, endurance: 9, agility: 5, bond: 3, instinct: 3 },
     wildMechanic: { id: 'iron_charge', nameKr: '철벽 돌진', descKr: '2턴마다 돌진 준비 자세를 취하고, 다음 턴에 탈출 게이지가 폭증한다. 준비 턴에 행동 자극으로 중단 가능.', trigger: 'every_2_turns_charge', effect: 'escape_burst_next_turn_interruptible' },
     reactions: REACTIONS.stubborn,
@@ -23,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'iron_boar_d1_0', name: '철등멧돼지', desc: '강철 등으로 아군을 지키는 든든한 방패', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'iron_boar_d1_0.png', devolvedImg: IMG + 'iron_boar_d2_0.png',
       hp: 40, maxHp: 40, stats: { affinity: 2, empathy: 2, endurance: 14, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '자갈돼지', devolvedDesc: '작고 단단한 등판으로 뒹굴며 방어하는 아기 멧돼지',
       devolvedStats: { affinity: 2, empathy: 2, endurance: 8, agility: 2, bond: 2, instinct: 2 },
@@ -32,13 +42,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [1, 3], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-defend', 'smell-aroma-wall', 'smell-capture'], 3: 'smell-shelter', 5: 'smell-mend', 7: 'temperature-stimulate', 9: 'temperature-hush' },
-      skillPool: ['smell-defend', 'smell-aroma-wall', 'smell-shelter', 'smell-mend', 'temperature-stimulate', 'smell-capture', 'temperature-hush'],
+      skillPool: ['smell-defend', 'smell-aroma-wall', 'smell-shelter', 'smell-mend', 'temperature-stimulate', 'smell-capture', 'temperature-hush', 'survey-scent'],
       equipped: ['smell-defend', 'smell-aroma-wall', 'smell-capture'],
       actions: makeActions(['smell-defend', 'smell-aroma-wall', 'smell-capture']),
     },
     {
       id: 'iron_boar_d1_1', name: '화염멧돼지', desc: '뜨거운 갈기로 순화도를 올리는 공격형', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'iron_boar_d1_1.png', devolvedImg: IMG + 'iron_boar_d2_2.png',
       hp: 30, maxHp: 30, stats: { affinity: 11, empathy: 2, endurance: 5, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '숯불돼지', devolvedDesc: '등에서 따뜻한 열기가 나는 작은 공격형 아기 멧돼지',
       devolvedStats: { affinity: 7, empathy: 2, endurance: 2, agility: 3, bond: 2, instinct: 2 },
@@ -47,13 +57,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [1, 3], empathy: [0, 1], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['temperature-stimulate', 'temperature-flare', 'temperature-capture'], 3: 'temperature-overdrive', 5: 'smell-stimulate', 7: 'temperature-clasp', 9: 'temperature-defend' },
-      skillPool: ['temperature-stimulate', 'temperature-flare', 'temperature-overdrive', 'smell-stimulate', 'temperature-capture', 'temperature-clasp', 'temperature-defend'],
+      skillPool: ['temperature-stimulate', 'temperature-flare', 'temperature-overdrive', 'smell-stimulate', 'temperature-capture', 'temperature-clasp', 'temperature-defend', 'survey-scent'],
       equipped: ['temperature-stimulate', 'temperature-flare', 'temperature-capture'],
       actions: makeActions(['temperature-stimulate', 'temperature-flare', 'temperature-capture']),
     },
     {
       id: 'iron_boar_d1_2', name: '약초멧돼지', desc: '갈기에서 약초 향이 나는 치유의 멧돼지', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'iron_boar_d1_2.png', devolvedImg: IMG + 'iron_boar_d2_4.png',
       hp: 34, maxHp: 34, stats: { affinity: 3, empathy: 9, endurance: 6, agility: 2, bond: 3, instinct: 3 },
       devolvedName: '풀향돼지', devolvedDesc: '콧등에서 약초 냄새가 나는 치유 전문 아기 멧돼지',
       devolvedStats: { affinity: 2, empathy: 7, endurance: 3, agility: 2, bond: 2, instinct: 2 },
@@ -62,13 +72,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [1, 3], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-herb', 'temperature-heal', 'smell-capture'], 3: 'smell-spiral', 5: 'smell-defend', 7: 'smell-sanctuary', 9: 'temperature-stimulate' },
-      skillPool: ['smell-herb', 'smell-spiral', 'smell-defend', 'smell-sanctuary', 'smell-capture', 'temperature-stimulate', 'temperature-heal'],
+      skillPool: ['smell-herb', 'smell-spiral', 'smell-defend', 'smell-sanctuary', 'smell-capture', 'temperature-stimulate', 'temperature-heal', 'survey-scent'],
       equipped: ['smell-herb', 'temperature-heal', 'smell-capture'],
       actions: makeActions(['smell-herb', 'temperature-heal', 'smell-capture']),
     },
     {
       id: 'iron_boar_d1_3', name: '돌진멧돼지', desc: '맹렬한 돌진으로 적에게 압박을 주는 멧돼지', role: 'speedster',
-      img: AIMG.speedster[0], devolvedImg: AIMG.speedster[1],
+      img: IMG + 'iron_boar_d1_3.png', devolvedImg: IMG + 'iron_boar_d2_6.png',
       hp: 28, maxHp: 28, stats: { affinity: 4, empathy: 3, endurance: 4, agility: 9, bond: 3, instinct: 3 },
       devolvedName: '번개돼지', devolvedDesc: '짧은 다리로 빠르게 돌진하는 작고 빠른 아기 멧돼지',
       devolvedStats: { affinity: 3, empathy: 2, endurance: 2, agility: 7, bond: 2, instinct: 2 },
@@ -77,7 +87,7 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [0, 1], agility: [1, 3], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-spark', 'smell-stimulate', 'temperature-capture'], 3: 'smell-bridge', 5: 'smell-sweep', 7: 'temperature-pact', 9: 'smell-defend' },
-      skillPool: ['smell-spark', 'smell-bridge', 'smell-stimulate', 'smell-sweep', 'temperature-pact', 'temperature-capture', 'smell-defend'],
+      skillPool: ['smell-spark', 'smell-bridge', 'smell-stimulate', 'smell-sweep', 'temperature-pact', 'temperature-capture', 'smell-defend', 'survey-scent'],
       equipped: ['smell-spark', 'smell-stimulate', 'temperature-capture'],
       actions: makeActions(['smell-spark', 'smell-stimulate', 'temperature-capture']),
     },

@@ -3,18 +3,28 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'mirror_chameleon',
 
   wild: {
     id: 'mirror_chameleon', name: '거울 카멜레온', desc: '몸을 투명하게 바꿔 상대의 행동을 관찰하는 카멜레온',
-    img: IMG + 'enemy_shadow_cat.png',
+    img: IMG + 'mirror_chameleon_wild.png',
     attackPower: 4, tamingThreshold: 55, escapeThreshold: 70,
     sensoryType: ['behavior'], personality: 'curious',
     habitat: 'forest',
+    environmentPreference: {
+      temperature: { ideal: 1, tolerance: 1 }, brightness: { ideal: 0, tolerance: 0 },
+      smell: { ideal: 0, tolerance: 1 }, humidity: { ideal: 0, tolerance: 1 }, sound: { ideal: -1, tolerance: 0 },
+    },
+    fleeProfile: { baseGain: 1, mismatchBonus: 1 },
+    environmentSkills: [
+      { axis: 'brightness', delta: 2, log: '거울 카멜레온이 빛을 반사해 눈부시게 한다!' },
+      { axis: 'brightness', delta: -2, log: '거울 카멜레온이 주변의 빛을 흡수한다!' },
+    ],
+    captureRule: { sustainTurns: 3 },
     hp: 25, maxHp: 25, stats: { affinity: 5, empathy: 7, endurance: 4, agility: 4, bond: 3, instinct: 3 },
     wildMechanic: { id: 'mirror_copy', nameKr: '거울 모방', descKr: '마지막으로 사용된 아군 스킬을 복사해 역으로 사용한다. 순화도 대신 탈출 게이지를 올린다.', trigger: 'after_ally_skill', effect: 'copy_reverse_skill' },
     reactions: REACTIONS.curious,
@@ -23,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'mirror_chameleon_d1_0', name: '빛도마뱀', desc: '빛을 반사해 아군의 스킬을 증폭시키는 도마뱀', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'mirror_chameleon_d1_0.png', devolvedImg: IMG + 'mirror_chameleon_d2_0.png',
       hp: 24, maxHp: 24, stats: { affinity: 3, empathy: 12, endurance: 2, agility: 3, bond: 3, instinct: 3 },
       devolvedName: '반짝이', devolvedDesc: '몸에서 작은 빛을 반사하며 반짝거리는 꼬마 도마뱀',
       devolvedStats: { affinity: 2, empathy: 7, endurance: 3, agility: 2, bond: 2, instinct: 2 },
@@ -32,13 +42,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [1, 3], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['behavior-bow', 'behavior-defend', 'behavior-capture'], 3: 'behavior-spiral', 5: 'behavior-stimulate', 7: 'behavior-bloom', 9: 'behavior-guard' },
-      skillPool: ['behavior-bow', 'behavior-spiral', 'behavior-stimulate', 'behavior-bloom', 'behavior-capture', 'behavior-defend', 'behavior-guard'],
+      skillPool: ['behavior-bow', 'behavior-spiral', 'behavior-stimulate', 'behavior-bloom', 'behavior-capture', 'behavior-defend', 'behavior-guard', 'survey-gaze'],
       equipped: ['behavior-bow', 'behavior-defend', 'behavior-capture'],
       actions: makeActions(['behavior-bow', 'behavior-defend', 'behavior-capture']),
     },
     {
       id: 'mirror_chameleon_d1_1', name: '위장도마뱀', desc: '완벽한 위장으로 적의 공격을 피하는 도마뱀', role: 'speedster',
-      img: AIMG.speedster[0], devolvedImg: AIMG.speedster[1],
+      img: IMG + 'mirror_chameleon_d1_1.png', devolvedImg: IMG + 'mirror_chameleon_d2_2.png',
       hp: 20, maxHp: 20, stats: { affinity: 4, empathy: 4, endurance: 2, agility: 10, bond: 3, instinct: 3 },
       devolvedName: '쏜살이', devolvedDesc: '재빠르게 숨었다 나타났다 하는 장난꾸러기 꼬마 도마뱀',
       devolvedStats: { affinity: 3, empathy: 2, endurance: 2, agility: 7, bond: 2, instinct: 2 },
@@ -47,7 +57,7 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [0, 1], agility: [1, 3], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['behavior-spark', 'behavior-stimulate', 'behavior-capture'], 3: 'behavior-relay', 5: 'behavior-sweep', 7: 'behavior-clasp', 9: 'behavior-defend' },
-      skillPool: ['behavior-spark', 'behavior-relay', 'behavior-stimulate', 'behavior-sweep', 'behavior-clasp', 'behavior-capture', 'behavior-defend'],
+      skillPool: ['behavior-spark', 'behavior-relay', 'behavior-stimulate', 'behavior-sweep', 'behavior-clasp', 'behavior-capture', 'behavior-defend', 'survey-gaze'],
       equipped: ['behavior-spark', 'behavior-stimulate', 'behavior-capture'],
       actions: makeActions(['behavior-spark', 'behavior-stimulate', 'behavior-capture']),
     },

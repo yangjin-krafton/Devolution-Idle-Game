@@ -4,6 +4,21 @@
 
 export const SENSORY_AXES = ['sound', 'temperature', 'smell', 'behavior'];
 
+// ---- 환경 5축 조율 시스템 ----
+export const ENVIRONMENT_AXES = ['temperature', 'brightness', 'smell', 'humidity', 'sound'];
+
+export const ENV_AXIS_LABEL = {
+  temperature: '온도', brightness: '밝기', smell: '냄새', humidity: '습도', sound: '소리',
+};
+
+export const ENV_AXIS_ICON = {
+  temperature: '🌡️', brightness: '☀️', smell: '🌿', humidity: '💧', sound: '🔊',
+};
+
+export const ENV_VALUE_LABEL = {
+  '-2': '매우 낮음', '-1': '낮음', '0': '보통', '1': '높음', '2': '매우 높음',
+};
+
 export const SENSORY_EFFECTIVENESS = {
   sound:       { sound: 1.0, temperature: 0.5, smell: 1.0, behavior: 1.5 },
   temperature: { sound: 1.5, temperature: 1.0, smell: 0.5, behavior: 1.0 },
@@ -24,6 +39,7 @@ export const SKILL_CATEGORY = {
   stimulate: { id: 'stimulate', name: '자극', color: 'axis' },
   capture:   { id: 'capture',   name: '포획', color: 'orange' },
   defend:    { id: 'defend',    name: '수비', color: 'water' },
+  survey:    { id: 'survey',    name: '조사', color: 'lavender' },
 };
 
 export const AXIS_LABEL = { sound: '소리', temperature: '온도', smell: '냄새', behavior: '행동' };
@@ -46,4 +62,7 @@ export const GENERIC_LOGS = {
   emotionApply: (name, emotion) => `${name}이(가) ${emotion} 상태가 되었다!`,
   emotionExpire: (name, emotion) => `${name}의 ${emotion} 상태가 풀렸다.`,
   ppEmpty: (name) => `${name}은(는) 더 이상 쓸 수 없다!`,
+  envStable: (count, target) => `🌿 환경 안정! (${count}/${target})`,
+  envBroken: '⚠️ 환경이 흐트러졌다! 안정 카운트가 초기화된다.',
+  bondingSuccess: (name) => `${name}과(와)의 교감에 성공했다!`,
 };

@@ -3,18 +3,28 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'vine_spider',
 
   wild: {
     id: 'vine_spider', name: '덩굴 거미', desc: '냄새나는 덩굴로 거미줄을 치고 먹이를 기다리는 거미',
-    img: IMG + 'enemy_glass_moth.png',
+    img: IMG + 'vine_spider_wild.png',
     attackPower: 4, tamingThreshold: 58, escapeThreshold: 75,
     sensoryType: ['smell'], personality: 'timid',
     habitat: 'forest',
+    environmentPreference: {
+      temperature: { ideal: 0, tolerance: 1 }, brightness: { ideal: -1, tolerance: 0 },
+      smell: { ideal: 1, tolerance: 0 }, humidity: { ideal: 1, tolerance: 1 }, sound: { ideal: -2, tolerance: 0 },
+    },
+    fleeProfile: { baseGain: 2, mismatchBonus: 1 },
+    environmentSkills: [
+      { axis: 'smell', delta: -1, log: '덩굴 거미가 꽃가루를 날려 냄새를 흩뜨린다!' },
+      { axis: 'sound', delta: 1, log: '덩굴 거미가 줄을 튕기며 소리를 낸다!' },
+    ],
+    captureRule: { sustainTurns: 3 },
     hp: 30, maxHp: 30, stats: { affinity: 3, empathy: 5, endurance: 7, agility: 5, bond: 3, instinct: 3 },
     wildMechanic: { id: 'web_trap', nameKr: '거미줄 속박', descKr: '매 2턴마다 앞 줄 아군 한 마리를 거미줄로 구속해 1턴 행동불가로 만든다.', trigger: 'every_2_turns', effect: 'bind_front_ally' },
     reactions: REACTIONS.timid,
@@ -23,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'vine_spider_d1_0', name: '꽃거미', desc: '꽃향기 나는 실을 짜서 아군을 보호하는 거미', role: 'tank',
-      img: AIMG.tank[0], devolvedImg: AIMG.tank[1],
+      img: IMG + 'vine_spider_d1_0.png', devolvedImg: IMG + 'vine_spider_d2_0.png',
       hp: 32, maxHp: 32, stats: { affinity: 2, empathy: 3, endurance: 12, agility: 3, bond: 3, instinct: 3 },
       devolvedName: '꽃봉이', devolvedDesc: '등에 작은 꽃봉오리를 달고 다니는 꼬마 거미',
       devolvedStats: { affinity: 2, empathy: 2, endurance: 8, agility: 2, bond: 2, instinct: 2 },
@@ -32,13 +42,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [1, 3], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-defend', 'smell-ward', 'smell-capture'], 3: 'smell-reserve', 5: 'smell-mend', 7: 'smell-stimulate', 9: 'smell-sweet' },
-      skillPool: ['smell-defend', 'smell-ward', 'smell-reserve', 'smell-mend', 'smell-stimulate', 'smell-capture', 'smell-sweet'],
+      skillPool: ['smell-defend', 'smell-ward', 'smell-reserve', 'smell-mend', 'smell-stimulate', 'smell-capture', 'smell-sweet', 'survey-scent'],
       equipped: ['smell-defend', 'smell-ward', 'smell-capture'],
       actions: makeActions(['smell-defend', 'smell-ward', 'smell-capture']),
     },
     {
       id: 'vine_spider_d1_1', name: '실뿜이', desc: '빠르게 실을 뿜어 적을 묶는 거미', role: 'speedster',
-      img: AIMG.speedster[0], devolvedImg: AIMG.speedster[1],
+      img: IMG + 'vine_spider_d1_1.png', devolvedImg: IMG + 'vine_spider_d2_2.png',
       hp: 24, maxHp: 24, stats: { affinity: 4, empathy: 4, endurance: 3, agility: 9, bond: 3, instinct: 3 },
       devolvedName: '실뭉치', devolvedDesc: '실을 뭉쳐서 공처럼 데굴데굴 굴러다니는 아기 거미',
       devolvedStats: { affinity: 3, empathy: 2, endurance: 2, agility: 7, bond: 2, instinct: 2 },
@@ -47,13 +57,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [0, 1], agility: [1, 3], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-spark', 'smell-stimulate', 'smell-capture'], 3: 'smell-bridge', 5: 'smell-sweep', 7: 'smell-pact', 9: 'smell-defend' },
-      skillPool: ['smell-spark', 'smell-bridge', 'smell-stimulate', 'smell-sweep', 'smell-pact', 'smell-capture', 'smell-defend'],
+      skillPool: ['smell-spark', 'smell-bridge', 'smell-stimulate', 'smell-sweep', 'smell-pact', 'smell-capture', 'smell-defend', 'survey-scent'],
       equipped: ['smell-spark', 'smell-stimulate', 'smell-capture'],
       actions: makeActions(['smell-spark', 'smell-stimulate', 'smell-capture']),
     },
     {
       id: 'vine_spider_d1_2', name: '약초거미', desc: '거미줄에 약초 성분을 섞어 아군을 치유하는 거미', role: 'support',
-      img: AIMG.support[0], devolvedImg: AIMG.support[1],
+      img: IMG + 'vine_spider_d1_2.png', devolvedImg: IMG + 'vine_spider_d2_4.png',
       hp: 28, maxHp: 28, stats: { affinity: 3, empathy: 9, endurance: 5, agility: 3, bond: 3, instinct: 3 },
       devolvedName: '약콩이', devolvedDesc: '작은 약초 잎을 꼭 안고 있는 동그란 아기 거미',
       devolvedStats: { affinity: 2, empathy: 7, endurance: 3, agility: 2, bond: 2, instinct: 2 },
@@ -62,7 +72,7 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [1, 3], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-sweet', 'smell-sanctuary', 'smell-capture'], 3: 'smell-spiral', 5: 'smell-defend', 7: 'smell-stimulate', 9: 'smell-aroma-wall' },
-      skillPool: ['smell-sweet', 'smell-spiral', 'smell-sanctuary', 'smell-defend', 'smell-capture', 'smell-stimulate', 'smell-aroma-wall'],
+      skillPool: ['smell-sweet', 'smell-spiral', 'smell-sanctuary', 'smell-defend', 'smell-capture', 'smell-stimulate', 'smell-aroma-wall', 'survey-scent'],
       equipped: ['smell-sweet', 'smell-sanctuary', 'smell-capture'],
       actions: makeActions(['smell-sweet', 'smell-sanctuary', 'smell-capture']),
     },

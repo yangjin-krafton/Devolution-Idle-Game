@@ -3,18 +3,28 @@ import { REACTIONS } from '../reactions.js';
 
 const IMG = 'asset/monsters/'; // placeholder prefix
 
-// Image assignments by role (temporary placeholders)
-const AIMG = { attacker: [IMG+'fire_ally.png', IMG+'fire_devolved.png'], tank: [IMG+'grass_ally.png', IMG+'grass_devolved.png'], support: [IMG+'water_ally.png', IMG+'water_devolved.png'], speedster: [IMG+'fire_ally.png', IMG+'fire_devolved.png'] };
+
+
 
 export default {
   id: 'spore_fox',
 
   wild: {
     id: 'spore_fox', name: '포자 여우', desc: '꼬리에서 환각 포자를 뿌리며 장난치는 여우',
-    img: IMG + 'enemy_shadow_cat.png',
+    img: IMG + 'spore_fox_wild.png',
     attackPower: 4, tamingThreshold: 55, escapeThreshold: 70,
     sensoryType: ['smell', 'behavior'], personality: 'curious',
     habitat: 'forest',
+    environmentPreference: {
+      temperature: { ideal: 0, tolerance: 1 }, brightness: { ideal: -1, tolerance: 1 },
+      smell: { ideal: 2, tolerance: 0 }, humidity: { ideal: 1, tolerance: 0 }, sound: { ideal: -1, tolerance: 1 },
+    },
+    fleeProfile: { baseGain: 1, mismatchBonus: 1 },
+    environmentSkills: [
+      { axis: 'smell', delta: -2, log: '포자 여우가 포자를 날려 냄새를 제거한다!' },
+      { axis: 'humidity', delta: -1, log: '포자 여우가 주변의 습기를 흡수한다!' },
+    ],
+    captureRule: { sustainTurns: 3 },
     hp: 22, maxHp: 22, stats: { affinity: 6, empathy: 5, endurance: 3, agility: 6, bond: 3, instinct: 3 },
     wildMechanic: { id: 'hallucination_spore', nameKr: '환각 포자', descKr: '무작위로 아군 스킬의 대상을 다른 아군으로 변경시킨다. 예측 불가능한 혼란 유발.', trigger: 'random_chance_30', effect: 'redirect_skill_target' },
     reactions: REACTIONS.curious,
@@ -23,7 +33,7 @@ export default {
   devo1: [
     {
       id: 'spore_fox_d1_0', name: '향여우', desc: '달콤한 향기로 적의 경계를 풀어버리는 여우', role: 'attacker',
-      img: AIMG.attacker[0], devolvedImg: AIMG.attacker[1],
+      img: IMG + 'spore_fox_d1_0.png', devolvedImg: IMG + 'spore_fox_d2_0.png',
       hp: 22, maxHp: 22, stats: { affinity: 10, empathy: 3, endurance: 2, agility: 5, bond: 3, instinct: 3 },
       devolvedName: '향기꼬마', devolvedDesc: '코를 킁킁거리며 달콤한 향을 뿌리는 아기 여우',
       devolvedStats: { affinity: 7, empathy: 2, endurance: 2, agility: 3, bond: 2, instinct: 2 },
@@ -32,13 +42,13 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [1, 3], empathy: [0, 1], endurance: [0, 1], agility: [0, 1], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['smell-stimulate', 'smell-surge', 'smell-capture'], 3: 'smell-sweet', 5: 'behavior-stimulate', 7: 'smell-clasp', 9: 'smell-defend' },
-      skillPool: ['smell-stimulate', 'smell-sweet', 'smell-surge', 'behavior-stimulate', 'smell-capture', 'smell-clasp', 'smell-defend'],
+      skillPool: ['smell-stimulate', 'smell-sweet', 'smell-surge', 'behavior-stimulate', 'smell-capture', 'smell-clasp', 'smell-defend', 'survey-scent'],
       equipped: ['smell-stimulate', 'smell-surge', 'smell-capture'],
       actions: makeActions(['smell-stimulate', 'smell-surge', 'smell-capture']),
     },
     {
       id: 'spore_fox_d1_1', name: '안개여우', desc: '포자 안개로 아군을 숨겨주는 여우', role: 'speedster',
-      img: AIMG.speedster[0], devolvedImg: AIMG.speedster[1],
+      img: IMG + 'spore_fox_d1_1.png', devolvedImg: IMG + 'spore_fox_d2_2.png',
       hp: 20, maxHp: 20, stats: { affinity: 4, empathy: 4, endurance: 2, agility: 10, bond: 3, instinct: 3 },
       devolvedName: '안개솜이', devolvedDesc: '보솜보솜한 꼬리에서 안개가 살짝 피어오르는 아기 여우',
       devolvedStats: { affinity: 3, empathy: 2, endurance: 2, agility: 7, bond: 2, instinct: 2 },
@@ -47,7 +57,7 @@ export default {
       ivRange: [0, 4],
       statGrowth: { affinity: [0, 1], empathy: [0, 1], endurance: [0, 1], agility: [1, 3], bond: [0, 1], instinct: [0, 1] },
       skillUnlocks: { 1: ['behavior-spark', 'behavior-stimulate', 'smell-capture'], 3: 'behavior-bridge', 5: 'behavior-sweep', 7: 'smell-pact', 9: 'behavior-defend' },
-      skillPool: ['behavior-spark', 'behavior-bridge', 'behavior-stimulate', 'behavior-sweep', 'smell-pact', 'smell-capture', 'behavior-defend'],
+      skillPool: ['behavior-spark', 'behavior-bridge', 'behavior-stimulate', 'behavior-sweep', 'smell-pact', 'smell-capture', 'behavior-defend', 'survey-scent'],
       equipped: ['behavior-spark', 'behavior-stimulate', 'smell-capture'],
       actions: makeActions(['behavior-spark', 'behavior-stimulate', 'smell-capture']),
     },

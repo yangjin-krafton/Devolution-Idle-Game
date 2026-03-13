@@ -9,24 +9,16 @@ import {
   playBondingAttempt, playBondingSuccess, playBondingFail,
   playEscapeEffect, playFaintEffect,
 } from '../effects.js';
+import { ENVIRONMENT_AXES, ENV_AXIS_LABEL, ENV_AXIS_ICON, ENV_VALUE_LABEL } from '../data/index.js';
 
-// Mood tag system — maps taming/escape percentages to visible mood
-const MOOD_TAGS = [
-  { tag: '경계',  color: C.dim,      check: (t, e) => t < 20 && e < 30 },
-  { tag: '긴장',  color: C.escape,   check: (t, e) => e >= 60 },
-  { tag: '불안',  color: C.orange,   check: (t, e) => e >= 30 && t < 40 },
-  { tag: '의심',  color: C.lavender, check: (t, e) => t >= 20 && t < 50 && e < 30 },
-  { tag: '관심',  color: C.taming,   check: (t, e) => t >= 50 && t < 75 && e < 40 },
-  { tag: '호감',  color: C.mint,     check: (t, e) => t >= 75 && e < 50 },
-  { tag: '친근',  color: C.pink,     check: (t, e) => t >= 90 },
-];
-
-function getMoodTag(tamingPct, escapePct) {
-  for (const m of MOOD_TAGS) {
-    if (m.check(tamingPct, escapePct)) return m;
-  }
-  return { tag: '경계', color: C.dim };
-}
+// 환경 축 색상 매핑
+const ENV_AXIS_COLOR = {
+  temperature: 0xffaa77,
+  brightness: 0xffe060,
+  smell: 0x88cc88,
+  humidity: 0x88bbee,
+  sound: 0xccaaee,
+};
 
 // Danmaku log color categorization
 const DANMAKU_COLORS = {
@@ -54,6 +46,21 @@ let lastLogCount = 0;
 let weatherParticles = [];
 let currentEmotion = null;
 
+// 적 감정 파티클 시스템
+let enemyMood = 'happy';      // 'happy' | 'neutral' | 'uneasy' | 'angry' | 'overtime'
+let moodParticles = [];        // 떠다니는 이모지 파티클들
+let moodEmitTimer = 0;         // 다음 파티클 스폰까지 남은 시간
+let moodFaceTimer = 0;         // 얼굴 이모지 전환 타이머
+let moodFaceVisible = false;   // 현재 얼굴 이모지 표시 중?
+
+const MOOD_CONFIG = {
+  happy:   { face: '😊', particles: ['💚', '💚', '✨', '🌿'], color: 0x00d4aa, interval: 3.0, faceInterval: 5.0 },
+  neutral: { face: '😐', particles: ['💛', '...'],             color: 0xffe060, interval: 3.5, faceInterval: 4.0 },
+  uneasy:  { face: '😟', particles: ['💧', '❓', '💦'],       color: 0xff8866, interval: 2.5, faceInterval: 3.0 },
+  angry:   { face: '😠', particles: ['💢', '🔥', '💢', '💥'], color: 0xff4444, interval: 1.5, faceInterval: 2.0 },
+  overtime:{ face: '😰', particles: ['💨', '⚡', '💢', '😱'], color: 0xff2222, interval: 1.0, faceInterval: 1.5 },
+};
+
 export function setEmotion(emotion) { currentEmotion = emotion; }
 
 export function initBattleField(parentContainer, sharedRefs) {
@@ -79,9 +86,9 @@ function buildEnemyArea() {
   refs.enemyBaseY = ePlatY;
   container.addChild(refs.enemySprite);
 
-  // HUD — 좌상단 컴팩트 패널 (적 가리지 않음)
+  // HUD — 좌측 패널 + 5축 프레임
   refs.enemyHud = new PIXI.Container();
-  refs.enemyHud.x = 8; refs.enemyHud.y = 6;
+  refs.enemyHud.x = 0; refs.enemyHud.y = 2;
   container.addChild(refs.enemyHud);
 }
 
@@ -126,124 +133,178 @@ function buildDanmaku() {
 
 // ---- Dynamic Rendering ----
 
-const SENSORY_ICONS = {
-  sound: { icon: '🔊', label: '소리', color: 0x88bbff },
-  temperature: { icon: '🌡️', label: '온도', color: 0xffaa77 },
-  smell: { icon: '🌿', label: '냄새', color: 0x88cc88 },
-  behavior: { icon: '👁️', label: '행동', color: 0xccaaee },
-};
-
 export function renderEnemy(enemy) {
   refs.enemySprite.removeChildren();
   refs.enemySprite.alpha = 1;
   refs.enemySprite.y = refs.enemyBaseY;
   refs.enemySprite.addChild(monster(140, enemy.img));
 
-  refs.enemyLevel = Math.max(1, Math.round(enemy.tamingThreshold / 10));
   refs._enemyName = enemy.name;
-  refs._enemySensory = enemy.sensoryType || [];
-
-  _renderEnemyHud(0, 0);
+  _renderEnvironmentHud({});
 }
 
-function _renderEnemyHud(tamingPct, escapePct) {
+// ============================================================
+// 환경 대시보드 — 좌측 상태 패널 + 5축 프레임
+//
+// 좌측: 턴/타이머 프레임 + 도주 프레임 (연장전)
+// 우측: 5축 프레임 (이모지 + 이름 + 수치 + ✔️/힌트)
+// ============================================================
+
+const HINT_ICON = {
+  low:  { arrow: '▲', color: 0xff8866 },
+  high: { arrow: '▼', color: 0x66aaff },
+  ok:   { arrow: '',  color: 0x00d4aa },
+};
+
+function _renderEnvironmentHud(result) {
   if (!refs.enemyHud) return;
   refs.enemyHud.removeChildren();
 
-  const hasEmotion = !!currentEmotion;
-  const hasSensory = refs._enemySensory && refs._enemySensory.length > 0;
-  const sensoryRowH = hasSensory ? 16 : 0;
-  const pw = 200, ph = (hasEmotion ? 82 : 68) + sensoryRowH, bw = 120;
-  const mood = getMoodTag(tamingPct, escapePct);
+  const envStatus = result.envStatus || {};
+  const phase = result.phase || 'regular';
+  const turn = result.turn || refs._turn || 0;
+  const turnsRemaining = result.turnsRemaining ?? 0;
+  const matchCount = result.matchCount || 0;
+  const escapeGauge = result.escapeGauge || 0;
+  const escapeMax = result.escapeMax || 10;
+  const escapePct = result.escapePercent || 0;
+  refs._turn = turn;
 
-  // 패널 배경 — 둥근 다크 카드
-  const bg = new PIXI.Graphics();
-  bg.roundRect(0, 0, pw, ph, 14).fill({ color: 0x1a1a2e, alpha: 0.9 });
-  bg.roundRect(0, 0, pw, ph, 14).stroke({ color: 0x333355, width: 1 });
-  // 좌측 무드 컬러 바
-  bg.roundRect(0, 6, 3, ph - 12, 1.5).fill({ color: mood.color, alpha: 0.8 });
-  refs.enemyHud.addChild(bg);
+  const isOvertime = phase === 'overtime';
 
-  // 1행: 이름 + 무드 pill
-  const nameL = lbl(refs._enemyName || '???', 7, 0xeeeeff, true);
-  nameL.x = 10; nameL.y = 5;
-  refs.enemyHud.addChild(nameL);
+  // ---- 레이아웃 ----
+  const leftW = 72;
+  const leftGap = 5;
+  const envGap = 3;
+  const envFrameW = Math.floor((W - leftW - leftGap - 8 - envGap * 4) / 5);
+  const envFrameH = 24;
+  const envStartX = leftW + leftGap + 4;
+  const leftH = envFrameH;
 
-  const moodPill = new PIXI.Graphics();
-  moodPill.roundRect(pw - 52, 6, 44, 14, 7).fill({ color: mood.color, alpha: 0.2 });
-  moodPill.roundRect(pw - 52, 6, 44, 14, 7).stroke({ color: mood.color, width: 0.5, alpha: 0.5 });
-  refs.enemyHud.addChild(moodPill);
-  const moodL = lbl(mood.tag, 5, mood.color, true);
-  moodL.anchor = { x: 0.5, y: 0.5 }; moodL.x = pw - 30; moodL.y = 13;
-  refs.enemyHud.addChild(moodL);
+  // ======== 좌측: 통합 프레임 ========
+  const lx = 3, ly = 0;
+  const lg = new PIXI.Graphics();
+  const leftBorderCol = isOvertime ? 0xff4444 : 0xffe060;
+  lg.roundRect(lx, ly, leftW, leftH, 6)
+    .fill({ color: 0x13132a });
+  lg.roundRect(lx, ly, leftW, leftH, 6)
+    .stroke({ color: leftBorderCol, width: 1.5, alpha: 0.7 });
+  refs.enemyHud.addChild(lg);
 
-  // 2행 (NEW): 감각 타입 힌트 — 적이 민감한 감각을 보여줌
-  let rowOffset = 0;
-  if (hasSensory) {
-    rowOffset = sensoryRowH;
-    let sx = 10;
-    for (const sType of refs._enemySensory) {
-      const info = SENSORY_ICONS[sType];
-      if (!info) continue;
-      const pill = new PIXI.Graphics();
-      const pillW = 42;
-      pill.roundRect(sx, 22, pillW, 12, 6).fill({ color: info.color, alpha: 0.15 });
-      pill.roundRect(sx, 22, pillW, 12, 6).stroke({ color: info.color, width: 0.5, alpha: 0.4 });
-      refs.enemyHud.addChild(pill);
-      const sL = lbl(`${info.icon}${info.label}`, 4.5, info.color, true);
-      sL.anchor = { x: 0.5, y: 0.5 }; sL.x = sx + pillW / 2; sL.y = 28;
-      refs.enemyHud.addChild(sL);
-      sx += pillW + 4;
+  if (!isOvertime) {
+    // 정규전: ⌛️ 남은턴 T턴 일치수
+    const urgent = turnsRemaining <= 1;
+    const col = urgent ? 0xff4444 : 0xffe060;
+    const textL = lbl(`⌛️${turnsRemaining}  T${turn}  ${matchCount}/5`, 5, col, true);
+    textL.anchor = { x: 0.5, y: 0.5 };
+    textL.x = lx + leftW / 2; textL.y = ly + leftH / 2;
+    refs.enemyHud.addChild(textL);
+  } else {
+    // 연장전: ⏰ + 도주바 + 수치
+    const barX = lx + 18, barY = ly + 4;
+    const barW = leftW - 22, barH = 8;
+    const ratio = Math.min(1, escapeGauge / escapeMax);
+    const barG = new PIXI.Graphics();
+    barG.roundRect(barX, barY, barW, barH, 4).fill({ color: 0x331122 });
+    if (ratio > 0) {
+      const fillCol = escapePct >= 70 ? 0xff2222 : 0xff6644;
+      barG.roundRect(barX + 1, barY + 1, Math.max(4, (barW - 2) * ratio), barH - 2, 3)
+        .fill({ color: fillCol, alpha: 0.9 });
+    }
+    refs.enemyHud.addChild(barG);
+
+    const otIcon = lbl('⏰', 5, 0xff4444, true);
+    otIcon.x = lx + 3; otIcon.y = ly + 3;
+    refs.enemyHud.addChild(otIcon);
+
+    const escL = lbl(`${escapeGauge}/${escapeMax}  T${turn}`, 4, escapePct >= 70 ? 0xff4444 : 0xaa7777, true);
+    escL.x = lx + 18; escL.y = ly + 14;
+    refs.enemyHud.addChild(escL);
+  }
+
+  // ======== 5축 프레임 (한 줄: 이모지 이름 수치 힌트) ========
+  for (let ai = 0; ai < ENVIRONMENT_AXES.length; ai++) {
+    const axis = ENVIRONMENT_AXES[ai];
+    const info = envStatus[axis];
+    const current = info?.current ?? 0;
+    const hint = info?.hint ?? 'ok';
+    const matched = info?.matched ?? false;
+    const revealed = info?.revealed ?? false;
+    const ideal = info?.ideal;
+    const color = ENV_AXIS_COLOR[axis] || 0xaaaaaa;
+    const hd = HINT_ICON[hint] || HINT_ICON.ok;
+
+    const fx = envStartX + ai * (envFrameW + envGap);
+    const fy = 0;
+
+    // 프레임 배경
+    const g = new PIXI.Graphics();
+    let borderCol = matched ? 0x00d4aa : 0x333355;
+    if (isOvertime && !matched) borderCol = 0xff4444;
+    g.roundRect(fx, fy, envFrameW, envFrameH, 6)
+      .fill({ color: 0x13132a });
+    g.roundRect(fx, fy, envFrameW, envFrameH, 6)
+      .stroke({ color: borderCol, width: matched ? 1.5 : 1, alpha: matched ? 0.8 : (isOvertime && !matched ? 0.9 : 0.5) });
+    refs.enemyHud.addChild(g);
+
+    // 한 줄: 이모지 + 이름 + 수치 + 힌트
+    const icon = lbl(ENV_AXIS_ICON[axis], 6, color, true);
+    icon.x = fx + 2; icon.y = fy + 3;
+    refs.enemyHud.addChild(icon);
+
+    const valSign = current > 0 ? '+' : '';
+    let valText = `${ENV_AXIS_LABEL[axis]} ${valSign}${current}`;
+    if (revealed && ideal != null) {
+      const iSign = ideal > 0 ? '+' : '';
+      valText += `→${iSign}${ideal}`;
+    }
+    const valL = lbl(valText, 5, matched ? 0x00d4aa : 0xaaaacc, true);
+    valL.x = fx + 16; valL.y = fy + 5;
+    refs.enemyHud.addChild(valL);
+
+    // 우측: 힌트 화살표 (불일치 시)
+    if (!matched && hd.arrow) {
+      const arr = lbl(hd.arrow, 6, hd.color, true);
+      arr.anchor = { x: 1, y: 0 }; arr.x = fx + envFrameW - 3; arr.y = fy + 3;
+      refs.enemyHud.addChild(arr);
+    }
+
+    // ✔️ 오버레이: 일치 시 반투명 초록 덮기 + 큰 체크마크
+    if (matched) {
+      const overlay = new PIXI.Graphics();
+      overlay.roundRect(fx, fy, envFrameW, envFrameH, 6)
+        .fill({ color: 0x00d4aa, alpha: 0.15 });
+      refs.enemyHud.addChild(overlay);
+
+      const chk = lbl('✔', 10, 0x00d4aa, true);
+      chk.anchor = { x: 0.5, y: 0.5 };
+      chk.x = fx + envFrameW / 2; chk.y = fy + envFrameH / 2;
+      chk.alpha = 0.5;
+      refs.enemyHud.addChild(chk);
     }
   }
-
-  // 3행: 💫 순화 바
-  const tamY = 24 + rowOffset;
-  refs.enemyHud.addChild(Object.assign(lbl('💫', 5, 0x00d4aa), { x: 8, y: tamY }));
-  const tamBar = new PIXI.Graphics();
-  tamBar.roundRect(24, tamY + 2, bw, 8, 4).fill({ color: 0x333355 });
-  if (tamingPct > 0) tamBar.roundRect(24, tamY + 2, Math.max(8, bw * tamingPct / 100), 8, 4).fill({ color: 0x00d4aa });
-  refs.enemyHud.addChild(tamBar);
-  const tamL = lbl(tamingPct + '%', 5, 0xaaccbb, true);
-  tamL.x = 24 + bw + 4; tamL.y = tamY;
-  refs.enemyHud.addChild(tamL);
-
-  // 4행: 💨 도주 바
-  const escY = 40 + rowOffset;
-  refs.enemyHud.addChild(Object.assign(lbl('💨', 5, 0xff6b6b), { x: 8, y: escY }));
-  const escCol = escapePct >= 70 ? 0xff4444 : 0xff6b6b;
-  const escBar = new PIXI.Graphics();
-  escBar.roundRect(24, escY + 2, bw, 8, 4).fill({ color: 0x333355 });
-  if (escapePct > 0) escBar.roundRect(24, escY + 2, Math.max(8, bw * escapePct / 100), 8, 4).fill({ color: escCol });
-  refs.enemyHud.addChild(escBar);
-  const escL = lbl(escapePct + '%', 5, escapePct >= 70 ? 0xff6666 : 0xccaaaa, true);
-  escL.x = 24 + bw + 4; escL.y = escY;
-  refs.enemyHud.addChild(escL);
-
-  // 5행: 감정 상태 (있을 때만)
-  let bottomY = 55 + rowOffset;
-  if (currentEmotion) {
-    const emoText = `${currentEmotion.icon} ${currentEmotion.name}`;
-    const turnsText = currentEmotion.turns > 0 ? ` (${currentEmotion.turnsLeft}턴)` : '';
-    const emoPill = new PIXI.Graphics();
-    emoPill.roundRect(8, bottomY, pw - 16, 14, 7).fill({ color: currentEmotion.color, alpha: 0.15 });
-    emoPill.roundRect(8, bottomY, pw - 16, 14, 7).stroke({ color: currentEmotion.color, width: 0.5, alpha: 0.4 });
-    refs.enemyHud.addChild(emoPill);
-    const emoL = lbl(emoText + turnsText, 5, currentEmotion.color, true);
-    emoL.anchor = { x: 0.5, y: 0.5 }; emoL.x = pw / 2; emoL.y = bottomY + 7;
-    refs.enemyHud.addChild(emoL);
-    bottomY += 15;
-  }
-
-  // 하단: 턴 번호
-  const turnL = lbl(`Turn ${refs._turn || 0}`, 4, 0x666688);
-  turnL.x = 10; turnL.y = bottomY;
-  refs.enemyHud.addChild(turnL);
 }
 
-export function updateGauges(tamingPercent, escapePercent, turn) {
-  if (turn != null) refs._turn = turn;
-  _renderEnemyHud(tamingPercent, escapePercent);
+export function updateGauges(result) {
+  _renderEnvironmentHud(result);
+  _updateEnemyMood(result);
+}
+
+function _updateEnemyMood(result) {
+  const phase = result.phase || 'regular';
+  const matchCount = result.matchCount || 0;
+
+  if (phase === 'overtime') {
+    enemyMood = 'overtime';
+  } else if (matchCount >= 5) {
+    enemyMood = 'happy';
+  } else if (matchCount >= 4) {
+    enemyMood = 'neutral';
+  } else if (matchCount >= 2) {
+    enemyMood = 'uneasy';
+  } else {
+    enemyMood = 'angry';
+  }
 }
 
 export function renderAlly() {
@@ -356,6 +417,15 @@ export function resetDanmaku() {
   lastLogCount = 0;
   logQueue = [];
   logTimer = 0;
+  // mood 파티클 정리
+  for (const p of moodParticles) {
+    if (container) container.removeChild(p.sprite);
+    p.sprite.destroy();
+  }
+  moodParticles = [];
+  moodEmitTimer = 0;
+  moodFaceTimer = 0;
+  enemyMood = 'happy';
 }
 
 // ---- Background ----
@@ -444,6 +514,99 @@ export function applyBackground(env) {
   container.addChildAt(refs.timeTint, tintIdx);
 }
 
+// ---- Enemy Mood Particles ----
+
+function _spawnMoodParticle(emoji, x, y) {
+  if (!container) return;
+  const t = new PIXI.Text({ text: emoji, style: {
+    fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
+    fontSize: 20 + Math.random() * 10,
+    fill: '#ffffff',
+  }});
+  t.anchor.set(0.5);
+  t.x = x + (Math.random() - 0.5) * 60;
+  t.y = y - 20 - Math.random() * 20;
+  t.alpha = 0.9;
+  container.addChild(t);
+  moodParticles.push({
+    sprite: t,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: -0.3 - Math.random() * 0.3,
+    life: 1.5 + Math.random() * 0.5,  // 초
+    age: 0,
+  });
+}
+
+function _spawnFaceEmoji(emoji, x, y) {
+  if (!container) return;
+  const t = new PIXI.Text({ text: emoji, style: {
+    fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
+    fontSize: 36,
+    fill: '#ffffff',
+  }});
+  t.anchor.set(0.5);
+  t.x = x + 30;
+  t.y = y - 50;
+  t.alpha = 0;
+  container.addChild(t);
+  moodParticles.push({
+    sprite: t,
+    vx: 0,
+    vy: -0.15,
+    life: 2.0,
+    age: 0,
+    isFace: true,  // 페이드인→유지→페이드아웃
+  });
+}
+
+function _tickEnemyMood(tick) {
+  const dt = 0.016;  // ~60fps
+  const cfg = MOOD_CONFIG[enemyMood] || MOOD_CONFIG.happy;
+  const ex = refs.enemySprite?.x ?? W * 0.5;
+  const ey = refs.enemySprite?.y ?? 130;
+
+  // 파티클 스폰 타이머
+  moodEmitTimer -= dt;
+  if (moodEmitTimer <= 0) {
+    const emoji = cfg.particles[Math.floor(Math.random() * cfg.particles.length)];
+    _spawnMoodParticle(emoji, ex, ey);
+    moodEmitTimer = cfg.interval * (0.7 + Math.random() * 0.6);
+  }
+
+  // 얼굴 이모지 타이머
+  moodFaceTimer -= dt;
+  if (moodFaceTimer <= 0) {
+    _spawnFaceEmoji(cfg.face, ex, ey);
+    moodFaceTimer = cfg.faceInterval * (0.8 + Math.random() * 0.4);
+  }
+
+  // 파티클 업데이트
+  for (let i = moodParticles.length - 1; i >= 0; i--) {
+    const p = moodParticles[i];
+    p.age += dt;
+    p.sprite.x += p.vx;
+    p.sprite.y += p.vy;
+
+    if (p.isFace) {
+      // 페이드인(0~0.3s) → 유지 → 페이드아웃(마지막 0.5s)
+      const fadeIn = Math.min(1, p.age / 0.3);
+      const fadeOut = Math.max(0, 1 - (p.age - p.life + 0.5) / 0.5);
+      p.sprite.alpha = Math.min(fadeIn, fadeOut) * 0.85;
+      p.sprite.scale.set(0.8 + fadeIn * 0.2);
+    } else {
+      // 일반 파티클: 서서히 페이드아웃 + 위로 부유
+      p.sprite.alpha = Math.max(0, 0.9 * (1 - p.age / p.life));
+      p.sprite.scale.set(0.6 + (1 - p.age / p.life) * 0.4);
+    }
+
+    if (p.age >= p.life) {
+      container.removeChild(p.sprite);
+      p.sprite.destroy();
+      moodParticles.splice(i, 1);
+    }
+  }
+}
+
 // ---- VFX Wrappers ----
 
 export function shakeEnemy() {
@@ -469,6 +632,7 @@ export function triggerFaintVFX() { playFaintEffect(refs.allySprite); }
 
 export function tickBattleField(tick) {
   processLogQueue();
+  _tickEnemyMood(tick);
   const bounce = Math.sin(tick * 3);
   if (refs.enemySprite && refs.enemyBaseY != null) {
     refs.enemySprite.y = refs.enemyBaseY + bounce * 4;

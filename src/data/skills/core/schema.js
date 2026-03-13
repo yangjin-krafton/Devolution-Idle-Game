@@ -2,6 +2,7 @@ const DEFAULT_PP_BY_CATEGORY = {
   stimulate: 6,
   capture: 3,
   defend: 5,
+  survey: 2,
 };
 
 function cloneEffects(effects = []) {

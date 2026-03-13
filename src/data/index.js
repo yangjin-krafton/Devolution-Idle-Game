@@ -2,7 +2,7 @@
 // Data Index — aggregates all monster data + re-exports constants
 // ============================================================
 
-export { SENSORY_AXES, SENSORY_EFFECTIVENESS, calcSensoryMod, SKILL_CATEGORY, AXIS_LABEL, GENERIC_LOGS } from './constants.js';
+export { SENSORY_AXES, SENSORY_EFFECTIVENESS, calcSensoryMod, SKILL_CATEGORY, AXIS_LABEL, GENERIC_LOGS, ENVIRONMENT_AXES, ENV_AXIS_LABEL, ENV_AXIS_ICON, ENV_VALUE_LABEL } from './constants.js';
 export { makeSkill, makeActions } from './skills.js';
 export { REACTIONS } from './reactions.js';
 
