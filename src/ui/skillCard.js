@@ -2,6 +2,7 @@
 // Skill Card — 하스스톤 스타일 카드 컴포넌트
 // 헤더: 아이콘 + 이름 + PP
 // 설명: 실시간 수치 → 부가효과 → 경고 → 플레이버
+// 설명 영역은 카드 높이에 맞게 자동 스케일
 // ============================================================
 
 import { S, lbl } from './theme.js';
@@ -21,26 +22,18 @@ export const SKILL_CAT = {
   defend:    { c: D.blue,  bg: 0x1a2a3a, icon: '🛡️', dark: 0x2b7fc4 },
 };
 
-const AXIS_ICON = {
-  sound: '🔊', temperature: '🌡️', smell: '🌿', behavior: '👁️',
-};
+const AXIS_ICON = { sound: '🔊', temperature: '🌡️', smell: '🌿', behavior: '👁️' };
 
 const EMOTION_LABEL = {
   calm: '진정', curious: '호기심', fear: '공포',
   charmed: '매혹', rage: '분노', trust: '신뢰',
 };
 
-/**
- * @param {object} action  — 스킬 데이터
- * @param {number} w, h    — 카드 크기
- * @param {object} [opts]
- *   .selected, .locked, .ppEmpty, .orderNum — 기존 옵션
- *   .preview — 프리뷰 데이터 (combat에서 계산된 실시간 수치)
- *     stimulate: { taming, escape, effective, saturated, repeated }
- *     capture:   { chance, escape }
- *     defend:    { heal, defense }
- *   .compact — true면 팀 화면용 컴팩트 레이아웃
- */
+// 기본 폰트 크기 (자동 스케일 전)
+const F = { hero: 10, main: 8, sub: 7, tiny: 6 };
+// 줄 높이 배율
+const LH = 1.8;
+
 export function buildSkillCard(action, w, h, opts = {}) {
   const ct = new PIXI.Container();
   const cat = SKILL_CAT[action.category] || SKILL_CAT.stimulate;
@@ -59,8 +52,7 @@ export function buildSkillCard(action, w, h, opts = {}) {
   }
   ct.addChild(bg);
 
-  // ---- Row 1: 아이콘 + 이름 + PP ----
-  const axisIcon = AXIS_ICON[action.axis] || '';
+  // ---- 헤더: 아이콘 + 이름 + PP ----
   const nameText = `${cat.icon} ${action.name}`;
   const nameLbl = lbl(nameText, 7, opts.ppEmpty ? D.dimmer : D.text, true);
   nameLbl.x = 8; nameLbl.y = 4; nameLbl.alpha = cardAlpha;
@@ -73,14 +65,12 @@ export function buildSkillCard(action, w, h, opts = {}) {
     ct.addChild(ppLbl);
   }
 
-  // 축 태그 (이름 옆)
   if (action.axis) {
-    const axisTag = lbl(`${axisIcon}${AXIS_LABEL[action.axis] || ''}`, 4.5, D.dim);
+    const axisTag = lbl(`${AXIS_ICON[action.axis] || ''}${AXIS_LABEL[action.axis] || ''}`, 4.5, D.dim);
     axisTag.anchor = { x: 1, y: 0 }; axisTag.x = w - 6; axisTag.y = 16; axisTag.alpha = cardAlpha;
     ct.addChild(axisTag);
   }
 
-  // Order badge
   if (opts.orderNum != null) {
     const oB = new PIXI.Graphics();
     oB.roundRect(w - 20, 0, 18, 16, 4).fill({ color: cat.c });
@@ -96,36 +86,32 @@ export function buildSkillCard(action, w, h, opts = {}) {
     .moveTo(8, sepY).lineTo(w - 8, sepY)
     .stroke({ color: D.sep, width: 0.5, alpha: 0.3 * a }));
 
-  // ---- 설명 영역: 프리뷰가 있으면 실시간 수치, 없으면 기본 스탯 ----
+  // ---- 설명 영역 → 서브 컨테이너에 렌더 후 자동 스케일 ----
+  const descContainer = new PIXI.Container();
   const preview = opts.preview;
-  let curY = sepY + 4;
+  let curY = 0;
 
   if (preview && !preview.blocked) {
-    curY = _renderLivePreview(ct, preview, action, cat, w, curY, cardAlpha);
+    curY = _renderLivePreview(descContainer, preview, action, cat, w, curY, cardAlpha);
   } else if (preview?.blocked) {
-    const blockLbl = lbl('⚠ 조건 미충족', 6, D.orange, true);
-    blockLbl.x = 10; blockLbl.y = curY; blockLbl.alpha = cardAlpha;
-    ct.addChild(blockLbl);
-    curY += 14;
+    descContainer.addChild(Object.assign(lbl('⚠ 조건 미충족', F.hero, D.orange, true), { x: 0, y: curY, alpha: cardAlpha }));
+    curY += F.hero * S * LH;
   } else {
-    // 프리뷰 없음 (팀 화면 등) — 기본 스탯 표시
-    curY = _renderStaticDesc(ct, action, cat, w, curY, cardAlpha);
+    curY = _renderStaticDesc(descContainer, action, cat, w, curY, cardAlpha);
   }
 
-  // ---- 부가효과 (감정 유발) ----
-  if (action.effects && action.effects.length > 0 && curY < h - 22) {
+  // 부가효과
+  if (action.effects?.length > 0) {
     for (const eff of action.effects) {
       const emotionName = EMOTION_LABEL[eff.type] || eff.type;
       const pct = Math.round(eff.chance * 100);
-      const effLbl = lbl(`${emotionName} ${pct}%`, 5, D.yellow);
-      effLbl.x = 10; effLbl.y = curY; effLbl.alpha = cardAlpha;
-      ct.addChild(effLbl);
-      curY += 11;
+      descContainer.addChild(Object.assign(lbl(`${emotionName} ${pct}%`, F.sub, D.yellow), { x: 0, y: curY, alpha: cardAlpha }));
+      curY += F.sub * S * LH;
     }
   }
 
-  // ---- 조건부 보너스 (stateBonus) ----
-  if (action.stateBonus && curY < h - 20) {
+  // 조건부 보너스
+  if (action.stateBonus) {
     const sb = action.stateBonus;
     let bonusText = '';
     if (sb.ifEnemyEmotion) bonusText = `${EMOTION_LABEL[sb.ifEnemyEmotion] || sb.ifEnemyEmotion} 시`;
@@ -133,15 +119,13 @@ export function buildSkillCard(action, w, h, opts = {}) {
     if (sb.tamingPowerBonus) bonusText += ` 순화 +${sb.tamingPowerBonus}`;
     if (sb.captureChanceBonus) bonusText += ` 교감 +${Math.round(sb.captureChanceBonus * 100)}%`;
     if (bonusText) {
-      const bLbl = lbl(`▸ ${bonusText}`, 4.5, D.blue);
-      bLbl.x = 10; bLbl.y = curY; bLbl.alpha = cardAlpha * 0.8;
-      ct.addChild(bLbl);
-      curY += 10;
+      descContainer.addChild(Object.assign(lbl(`▸ ${bonusText}`, F.tiny, D.blue), { x: 0, y: curY, alpha: cardAlpha * 0.8 }));
+      curY += F.tiny * S * LH;
     }
   }
 
-  // ---- 조건 (condition) ----
-  if (action.condition && curY < h - 16) {
+  // 조건
+  if (action.condition) {
     const cond = action.condition;
     const parts = [];
     if (cond.minTamingPercent) parts.push(`순화 ${cond.minTamingPercent}%+`);
@@ -151,96 +135,86 @@ export function buildSkillCard(action, w, h, opts = {}) {
       parts.push(emotions.map(e => EMOTION_LABEL[e] || e).join('/') + ' 필요');
     }
     if (parts.length > 0) {
-      const condLbl = lbl(`조건: ${parts.join(', ')}`, 4.5, D.orange);
-      condLbl.x = 10; condLbl.y = curY; condLbl.alpha = cardAlpha * 0.7;
-      ct.addChild(condLbl);
-      curY += 10;
+      descContainer.addChild(Object.assign(lbl(`조건: ${parts.join(', ')}`, F.tiny, D.orange), { x: 0, y: curY, alpha: cardAlpha * 0.7 }));
+      curY += F.tiny * S * LH;
     }
   }
 
-  // ---- 플레이버 텍스트 (하단, dim) ----
-  if (curY < h - 12) {
-    const flavorText = new PIXI.Text({ text: action.log || action.desc || '', style: {
+  // 플레이버
+  const flavor = action.log || action.desc || '';
+  if (flavor) {
+    const flavorText = new PIXI.Text({ text: flavor, style: {
       fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif',
-      fontSize: 5.5 * S, fill: '#666688', fontWeight: '400',
+      fontSize: F.tiny * S, fill: '#666688', fontWeight: '400',
       wordWrap: true, wordWrapWidth: w - 18,
-      lineHeight: 7 * S,
+      lineHeight: F.tiny * S * 1.4,
     }});
-    flavorText.x = 10; flavorText.y = Math.max(curY + 2, h - 28);
-    flavorText.alpha = cardAlpha * 0.6;
-    ct.addChild(flavorText);
+    flavorText.y = curY + 2; flavorText.alpha = cardAlpha * 0.5;
+    descContainer.addChild(flavorText);
+    curY += F.tiny * S * 2.5;
   }
+
+  // ---- 자동 스케일: 설명 영역이 카드에 맞도록 ----
+  const availH = h - sepY - 8; // 사용 가능한 높이
+  const contentH = curY;
+  const scale = contentH > availH ? availH / contentH : 1;
+
+  descContainer.x = 10;
+  descContainer.y = sepY + 4;
+  descContainer.scale.set(scale);
+  ct.addChild(descContainer);
 
   return ct;
 }
 
-// ---- 실시간 프리뷰 렌더 (전투 중) ----
+// ---- 실시간 프리뷰 (전투 중) ----
 function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
+  const line = (size) => size * S * LH;
+
   if (preview.type === 'stimulate') {
-    // 1행: 순화 +N (총배율%)
     const pctColor = preview.totalPct >= 120 ? 0x00ff88 : preview.totalPct <= 80 ? 0xff6666 : D.neon;
-    const tamLbl = lbl(`순화 +${preview.taming} (${preview.totalPct}%)`, 7, pctColor, true);
-    tamLbl.x = 10; tamLbl.y = y; tamLbl.alpha = alpha;
-    ct.addChild(tamLbl);
-    y += 15;
+    ct.addChild(Object.assign(lbl(`순화 +${preview.taming} (${preview.totalPct}%)`, F.hero, pctColor, true), { x: 0, y, alpha }));
+    y += line(F.hero);
 
-    // 2행: 상성 + 도주 (한 줄에)
-    const parts = [];
-    if (preview.sensoryPct !== 100) parts.push({ t: `상성${preview.sensoryPct}%`, c: preview.sensoryPct > 100 ? 0x00ff88 : 0xff6666 });
-    const escSign = preview.escape >= 0 ? `+${preview.escape}` : String(preview.escape);
-    parts.push({ t: `도주${escSign}`, c: preview.escape > 0 ? D.red : D.neon });
-
-    let px = 10;
-    for (const p of parts) {
-      const l = lbl(p.t, 5.5, p.c);
-      l.x = px; l.y = y; l.alpha = alpha;
-      ct.addChild(l);
-      px += p.t.length * 5.5 * S + 8;
+    if (preview.sensoryPct !== 100) {
+      const sColor = preview.sensoryPct > 100 ? 0x00ff88 : 0xff6666;
+      ct.addChild(Object.assign(lbl(`상성 ${preview.sensoryPct}%`, F.main, sColor), { x: 0, y, alpha }));
+      y += line(F.main);
     }
-    y += 12;
 
-    // 경고 태그
+    const escSign = preview.escape >= 0 ? `+${preview.escape}` : String(preview.escape);
+    ct.addChild(Object.assign(lbl(`도주 ${escSign}`, F.main, preview.escape > 0 ? D.red : D.neon), { x: 0, y, alpha }));
+    y += line(F.main);
+
     if (preview.saturated || preview.repeated) {
       const warns = [];
       if (preview.saturated) warns.push('둔감');
       if (preview.repeated) warns.push('반복↓');
-      const warnPill = new PIXI.Graphics();
-      warnPill.roundRect(8, y, w - 16, 12, 4).fill({ color: D.orange, alpha: 0.15 });
-      ct.addChild(warnPill);
-      const warnLbl = lbl(`⚠ ${warns.join(' · ')}`, 4.5, D.orange, true);
-      warnLbl.x = 12; warnLbl.y = y + 1; warnLbl.alpha = alpha;
-      ct.addChild(warnLbl);
-      y += 14;
+      const pill = new PIXI.Graphics();
+      pill.roundRect(-2, y, w - 16, F.sub * S * LH, 4).fill({ color: D.orange, alpha: 0.15 });
+      ct.addChild(pill);
+      ct.addChild(Object.assign(lbl(`⚠ ${warns.join(' · ')}`, F.sub, D.orange, true), { x: 2, y: y + 1, alpha }));
+      y += line(F.sub);
     }
   }
 
   else if (preview.type === 'capture') {
-    // 성공률 (색상 구간)
     const chanceColor = preview.chance >= 60 ? D.neon : preview.chance >= 30 ? D.yellow : D.red;
-    const chanceLbl = lbl(`교감 ${preview.chance}%`, 8, chanceColor, true);
-    chanceLbl.x = 10; chanceLbl.y = y; chanceLbl.alpha = alpha;
-    ct.addChild(chanceLbl);
-    y += 16;
+    ct.addChild(Object.assign(lbl(`교감 ${preview.chance}%`, F.hero + 2, chanceColor, true), { x: 0, y, alpha }));
+    y += line(F.hero + 2);
 
-    // 실패 시 도주 위험
-    const escLbl = lbl(`실패 시 도주 +${preview.escape}`, 5, D.red);
-    escLbl.x = 10; escLbl.y = y; escLbl.alpha = alpha;
-    ct.addChild(escLbl);
-    y += 12;
+    ct.addChild(Object.assign(lbl(`실패 시 도주 +${preview.escape}`, F.main, D.red), { x: 0, y, alpha }));
+    y += line(F.main);
   }
 
   else if (preview.type === 'defend') {
     if (preview.defense) {
-      const defLbl = lbl(`방어 +${preview.defense}`, 7, D.blue, true);
-      defLbl.x = 10; defLbl.y = y; defLbl.alpha = alpha;
-      ct.addChild(defLbl);
-      y += 15;
+      ct.addChild(Object.assign(lbl(`방어 +${preview.defense}`, F.hero, D.blue, true), { x: 0, y, alpha }));
+      y += line(F.hero);
     }
     if (preview.heal) {
-      const healLbl = lbl(`회복 +${preview.heal} HP`, 6, D.neon);
-      healLbl.x = 10; healLbl.y = y; healLbl.alpha = alpha;
-      ct.addChild(healLbl);
-      y += 13;
+      ct.addChild(Object.assign(lbl(`회복 +${preview.heal} HP`, F.main + 1, D.neon), { x: 0, y, alpha }));
+      y += line(F.main + 1);
     }
   }
 
@@ -249,30 +223,28 @@ function _renderLivePreview(ct, preview, action, cat, w, y, alpha) {
 
 // ---- 정적 스탯 (팀 화면용) ----
 function _renderStaticDesc(ct, action, cat, w, y, alpha) {
+  const line = (size) => size * S * LH;
+
   if (action.category === 'stimulate') {
-    const pwLbl = lbl(`위력 ${action.power}`, 6, D.text);
-    pwLbl.x = 10; pwLbl.y = y; pwLbl.alpha = alpha;
-    ct.addChild(pwLbl);
+    ct.addChild(Object.assign(lbl(`위력 ${action.power}`, F.main + 1, D.text), { x: 0, y, alpha }));
+    y += line(F.main + 1);
     if (action.escapeRisk) {
       const risk = action.escapeRisk > 0 ? `+${action.escapeRisk}` : String(action.escapeRisk);
-      const rLbl = lbl(`도주 ${risk}`, 5, action.escapeRisk > 0 ? D.red : D.neon);
-      rLbl.x = 65; rLbl.y = y + 1; rLbl.alpha = alpha;
-      ct.addChild(rLbl);
+      ct.addChild(Object.assign(lbl(`도주 ${risk}`, F.main, action.escapeRisk > 0 ? D.red : D.neon), { x: 0, y, alpha }));
+      y += line(F.main);
     }
-    y += 13;
   } else if (action.category === 'capture') {
-    const pwLbl = lbl(`교감 위력 ${action.power}`, 6, D.text);
-    pwLbl.x = 10; pwLbl.y = y; pwLbl.alpha = alpha;
-    ct.addChild(pwLbl);
-    y += 13;
+    ct.addChild(Object.assign(lbl(`교감 위력 ${action.power}`, F.main + 1, D.text), { x: 0, y, alpha }));
+    y += line(F.main + 1);
   } else if (action.category === 'defend') {
-    const parts = [];
-    if (action.defenseBoost) parts.push(`방어 ${action.defenseBoost}`);
-    if (action.healAmount) parts.push(`회복 ${action.healAmount}`);
-    const defLbl = lbl(parts.join(' · ') || '방어', 6, D.text);
-    defLbl.x = 10; defLbl.y = y; defLbl.alpha = alpha;
-    ct.addChild(defLbl);
-    y += 13;
+    if (action.defenseBoost) {
+      ct.addChild(Object.assign(lbl(`방어 ${action.defenseBoost}`, F.main + 1, D.text), { x: 0, y, alpha }));
+      y += line(F.main + 1);
+    }
+    if (action.healAmount) {
+      ct.addChild(Object.assign(lbl(`회복 ${action.healAmount}`, F.main + 1, D.neon), { x: 0, y, alpha }));
+      y += line(F.main + 1);
+    }
   }
   return y;
 }
