@@ -87,7 +87,7 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 7, xpAfter: 8, xpBase: 3, xpNeeded: 8,
             leveledUp: true, levelBefore: 2, levelAfter: 3,
-            levelUps: [{ from: 2, to: 3, statChanges: { hp: 3, gentleness: 2, empathy: 1, resilience: 0, agility: 1 }, newSkills: [] }],
+            levelUps: [{ from: 2, to: 3, statChanges: { hp: 3, affinity: 2, empathy: 1, endurance: 0, agility: 1 }, newSkills: [] }],
           }),
           mockAlly({ xpBefore: 1, xpAfter: 2, xpBase: 0, xpNeeded: 3 }),
           mockAlly({ xpBefore: 4, xpAfter: 5, xpBase: 3, xpNeeded: 8 }),
@@ -108,7 +108,7 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 7, xpAfter: 8, xpBase: 3, xpNeeded: 8,
             leveledUp: true, levelBefore: 2, levelAfter: 3,
-            levelUps: [{ from: 2, to: 3, statChanges: { hp: 2, gentleness: 3, empathy: 0, resilience: 1, agility: 0 }, newSkills: [skill] }],
+            levelUps: [{ from: 2, to: 3, statChanges: { hp: 2, affinity: 3, empathy: 0, endurance: 1, agility: 0 }, newSkills: [skill] }],
           }),
           mockAlly({ xpBefore: 2, xpAfter: 3, xpBase: 0, xpNeeded: 8 }),
           mockAlly({ xpBefore: 5, xpAfter: 6, xpBase: 3, xpNeeded: 15 }),
@@ -127,7 +127,7 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 99, xpAfter: 100, xpBase: 80, xpNeeded: 100,
             leveledUp: true, levelBefore: 9, levelAfter: 10,
-            levelUps: [{ from: 9, to: 10, statChanges: { hp: 2, gentleness: 1 }, newSkills: [] }],
+            levelUps: [{ from: 9, to: 10, statChanges: { hp: 2, affinity: 1 }, newSkills: [] }],
             enteredEgg: true,
           }),
           mockAlly({ xpBefore: 3, xpAfter: 4, xpBase: 0, xpNeeded: 8 }),
@@ -149,13 +149,13 @@ export function initDebug(getState) {
           mockAlly({
             xpBefore: 99, xpAfter: 100, xpBase: 80, xpNeeded: 100,
             leveledUp: true, levelBefore: 9, levelAfter: 10,
-            levelUps: [{ from: 9, to: 10, statChanges: { hp: 3, gentleness: 2, empathy: 1, resilience: 1, agility: 0 }, newSkills: [skill] }],
+            levelUps: [{ from: 9, to: 10, statChanges: { hp: 3, affinity: 2, empathy: 1, endurance: 1, agility: 0 }, newSkills: [skill] }],
             enteredEgg: true,
           }),
           mockAlly({
             xpBefore: 14, xpAfter: 15, xpBase: 8, xpNeeded: 15,
             leveledUp: true, levelBefore: 3, levelAfter: 4,
-            levelUps: [{ from: 3, to: 4, statChanges: { hp: 2, gentleness: 1, empathy: 1 }, newSkills: [] }],
+            levelUps: [{ from: 3, to: 4, statChanges: { hp: 2, affinity: 1, empathy: 1 }, newSkills: [] }],
           }),
           mockAlly({ xpBefore: 1, xpAfter: 2, xpBase: 0, xpNeeded: 3 }),
         ],
@@ -177,9 +177,9 @@ export function initDebug(getState) {
             xpBefore: 14, xpAfter: 15, xpBase: 0, xpNeeded: 24,
             leveledUp: true, levelBefore: 2, levelAfter: 5,
             levelUps: [
-              { from: 2, to: 3, statChanges: { hp: 2, gentleness: 2, empathy: 1 }, newSkills: [skill1] },
-              { from: 3, to: 4, statChanges: { hp: 3, gentleness: 1, resilience: 1, agility: 1 }, newSkills: [] },
-              { from: 4, to: 5, statChanges: { hp: 2, gentleness: 3, empathy: 1 }, newSkills: [skill2] },
+              { from: 2, to: 3, statChanges: { hp: 2, affinity: 2, empathy: 1 }, newSkills: [skill1] },
+              { from: 3, to: 4, statChanges: { hp: 3, affinity: 1, endurance: 1, agility: 1 }, newSkills: [] },
+              { from: 4, to: 5, statChanges: { hp: 2, affinity: 3, empathy: 1 }, newSkills: [skill2] },
             ],
           }),
           mockAlly({ xpBefore: 1, xpAfter: 2, xpBase: 0, xpNeeded: 3 }),

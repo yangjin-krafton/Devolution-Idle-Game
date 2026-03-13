@@ -17,8 +17,8 @@ const FEED_H = FEED_BOTTOM - FEED_TOP;
 const CARD_W = W - PAD * 2;
 const CARD_GAP = 12;
 
-const STAT_LABEL = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
-const STAT_COLOR = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
+const STAT_LABEL = { affinity: '친화', empathy: '공감', endurance: '인내', agility: '민첩', bond: '유대', instinct: '직감', hp: 'HP' };
+const STAT_COLOR = { affinity: D.neon, empathy: D.blue, endurance: 0xffaa60, agility: 0x88ddbb, bond: 0xeebb55, instinct: 0xcc88dd, hp: D.red };
 
 // ---- State ----
 let ct, feedContainer, feedMask, footerBtn;

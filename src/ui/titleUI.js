@@ -377,8 +377,8 @@ function renderPageInfo(pw, mon) {
     detailBody.addChild(descT);
 
     // --- 2) Stats table (HP included) ---
-    const STAT = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
-    const SCOL = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
+    const STAT = { affinity: '친화', empathy: '공감', endurance: '인내', agility: '민첩', bond: '유대', instinct: '직감' };
+    const SCOL = { affinity: D.neon, empathy: D.blue, endurance: 0xffaa60, agility: 0x88ddbb, bond: 0xeebb55, instinct: 0xcc88dd };
     const statKeys = Object.keys(mon.stats);
 
     const sHeaders = ['HP', ...statKeys.map(k => STAT[k])];
