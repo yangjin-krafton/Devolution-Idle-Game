@@ -1,9 +1,10 @@
 // ============================================================
 // Team Edit Screen — 전투 후 팀 편성 + 순화 몬스터 합류 결정
 // Layout: titleUI 스타일 (Dark/Neon)
-//   상단: 선택된 슬롯 상세 (스탯/스킬/족보)
-//   중단: 6슬롯 (주전3 + 대기3) — 탭으로 상세보기, 드래그로 교체
-//   하단: 포획 몬스터 카드 + 합류/내보내기/다음모험 버튼
+//   상단: 포획 몬스터 쇼케이스
+//   중단: 6슬롯 (주전3 + 대기3) — 탭으로 상세, 드래그로 교체
+//   하단: 선택 슬롯 상세 (titleUI renderPageInfo 동일 포맷)
+//   최하단: 고정 액션 바
 // ============================================================
 
 import { W, H, S, lbl, cuteBtn } from './theme.js';
@@ -11,32 +12,215 @@ import { D, darkCard, neonBadge, statBar } from './theme-dark.js';
 import { monster } from './sprites.js';
 import { buildSkillCard } from './skillCard.js';
 import { getAbility } from '../ability.js';
-import { STAT_DEFS, getStat } from '../statSystem.js';
+import { getStat } from '../statSystem.js';
+import { ALL_MONSTERS, AXIS_LABEL } from '../data/index.js';
 
 const PAD = 14;
-// Detail panel (top) — shows selected monster info
-const DETAIL_Y = 8, DETAIL_H = 200;
-// Slots area
+
+// ---- Layout (top-down) ----
+const CAPTURE_Y = 8, CAPTURE_H_FULL = 130, CAPTURE_H_EMPTY = 58;
 const SLOT_W = 128, SLOT_H = 105, SLOT_GAP = 16;
 const SLOT_LEFT = Math.round((W - (SLOT_W * 3 + SLOT_GAP * 2)) / 2);
-const SLOTS_Y = DETAIL_Y + DETAIL_H + 8;
-const ACTIVE_SLOTS_Y = SLOTS_Y + 22;
-const BENCH_LABEL_Y = ACTIVE_SLOTS_Y + SLOT_H + 6;
-const BENCH_SLOTS_Y = BENCH_LABEL_Y + 22;
-// Capture + buttons area (bottom)
-const BOTTOM_Y = BENCH_SLOTS_Y + SLOT_H + 10;
+const DETAIL_H = 280;
+const ACTION_BAR_H = 70;
+const ACTION_BAR_Y = H - ACTION_BAR_H;
+const DRAG_THRESHOLD = 8;
+
+// ---- Dynamic Y positions (recalculated when capture state changes) ----
+let GUIDE_Y, ACTIVE_HDR_Y, ACTIVE_SLOTS_Y, BENCH_HDR_Y, BENCH_SLOTS_Y, DETAIL_Y;
+
+function recalcLayout() {
+  const captureH = capturedEnemy ? CAPTURE_H_FULL : CAPTURE_H_EMPTY;
+  GUIDE_Y = CAPTURE_Y + captureH + 6;
+  ACTIVE_HDR_Y = GUIDE_Y + 22;
+  ACTIVE_SLOTS_Y = ACTIVE_HDR_Y + 20;
+  BENCH_HDR_Y = ACTIVE_SLOTS_Y + SLOT_H + 6;
+  BENCH_SLOTS_Y = BENCH_HDR_Y + 20;
+  DETAIL_Y = BENCH_SLOTS_Y + SLOT_H + 10;
+}
 
 // ---- State ----
-let ct, detailBody, slotGfx = [], captureArea, guideLabel;
-let recruitBtn, releaseBtn, nextBtn;
+let ct, detailBody, detailPanel, slotGfx = [], captureArea, guideLabel;
+let activeHdr, benchHdr;
+let actionBar, recruitBtn, releaseBtn, nextBtn;
 let activeCountLabel, benchCountLabel;
+let removeIndicator;
 let teamMgr = null, capturedEnemy = null;
-let selectedIdx = -1; // which slot is selected for detail view
+let selectedIdx = -1;
 let onRecruitCb = null, onSkipCb = null;
 
-// ---- Helpers ----
-// darkCard, statBar, neonBadge imported from theme-dark.js
+// Drag state (titleUI pattern)
+let mode = 'idle';       // 'idle' | 'slot-pending' | 'dragging'
+let pendingSlotIdx = -1;
+let startPos = { x: 0, y: 0 };
+let dragSprite = null;
 
+// ---- Slot hit testing (titleUI pattern) ----
+function slotPos(i) {
+  return {
+    x: SLOT_LEFT + (i % 3) * (SLOT_W + SLOT_GAP),
+    y: i < 3 ? ACTIVE_SLOTS_Y : BENCH_SLOTS_Y,
+  };
+}
+
+function hitSlot(px, py) {
+  const allies = teamMgr?.allies || [];
+  for (let i = 0; i < 6; i++) {
+    if (i >= allies.length && !allies[i]) {
+      // still check empty slots for drop target
+    }
+    const p = slotPos(i);
+    if (px >= p.x && px < p.x + SLOT_W && py >= p.y && py < p.y + SLOT_H) return i;
+  }
+  return -1;
+}
+
+// ---- Detail helpers (titleUI 동일 포맷) ----
+
+const ROLE_LABEL = { attacker: '공격', tank: '방어', support: '지원', speedster: '속도' };
+const ROLE_COLOR = { attacker: D.red, tank: D.blue, support: D.neon, speedster: 0x88ddbb };
+
+function drawTable(x, y, w, h, headers, dataRows, colColors) {
+  const cols = headers.length;
+  const colW = w / cols;
+  const rowCount = dataRows.length + 1;
+  const rowH = h / rowCount;
+
+  detailBody.addChild(new PIXI.Graphics()
+    .roundRect(x, y, w, h, 6).stroke({ color: D.sep, width: 1, alpha: 0.3 }));
+  detailBody.addChild(new PIXI.Graphics()
+    .roundRect(x, y, w, rowH, 6).fill({ color: D.sep, alpha: 0.15 }));
+  detailBody.addChild(new PIXI.Graphics()
+    .moveTo(x + 1, y + rowH).lineTo(x + w - 1, y + rowH)
+    .stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
+
+  for (let i = 1; i < cols; i++) {
+    detailBody.addChild(new PIXI.Graphics()
+      .moveTo(x + colW * i, y + 3).lineTo(x + colW * i, y + h - 3)
+      .stroke({ color: D.sep, width: 0.5, alpha: 0.2 }));
+  }
+
+  headers.forEach((txt, i) => {
+    const t = lbl(txt, 6, colColors?.[i] || D.dim, true);
+    t.anchor = { x: 0.5, y: 0.5 };
+    t.x = x + colW * i + colW / 2; t.y = y + rowH / 2;
+    detailBody.addChild(t);
+  });
+
+  dataRows.forEach((row, ri) => {
+    const ry = y + rowH * (ri + 1);
+    if (ri > 0) {
+      detailBody.addChild(new PIXI.Graphics()
+        .moveTo(x + 1, ry).lineTo(x + w - 1, ry)
+        .stroke({ color: D.sep, width: 0.5, alpha: 0.15 }));
+    }
+    row.forEach((cell, ci) => {
+      const t = lbl(cell.text, cell.size || 7, cell.color || D.text, cell.bold ?? false);
+      t.anchor = { x: 0.5, y: 0.5 };
+      t.x = x + colW * ci + colW / 2; t.y = ry + rowH / 2;
+      detailBody.addChild(t);
+    });
+  });
+}
+
+function drawSkillCards(x, y, w, h, actions) {
+  const cols = actions.length;
+  const cardGap = 6;
+  const cardW = (w - cardGap * (cols - 1)) / cols;
+  actions.forEach((action, i) => {
+    const card = buildSkillCard(action, cardW, h);
+    card.x = x + i * (cardW + cardGap);
+    card.y = y;
+    detailBody.addChild(card);
+  });
+}
+
+function findMonsterFamily(mon) {
+  for (const fam of ALL_MONSTERS) {
+    if (fam.wild.id === mon.id) return { family: fam, stage: 'wild', self: fam.wild };
+    const d1 = fam.devo1.find(d => d.id === mon.id);
+    if (d1) return { family: fam, stage: 'devo1', self: d1 };
+    const d2 = fam.devo2.find(d => d.id === mon.id);
+    if (d2) return { family: fam, stage: 'devo2', self: d2 };
+  }
+  return null;
+}
+
+function drawLineage(x, y, pw, h, mon) {
+  const info = findMonsterFamily(mon);
+  if (!info) return;
+  const { family, stage } = info;
+
+  detailBody.addChild(new PIXI.Graphics()
+    .moveTo(x, y).lineTo(x + pw, y).stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
+  const secLabel = lbl('퇴화 족보', 5, D.dim, true);
+  secLabel.x = x + 4; secLabel.y = y + 2;
+  detailBody.addChild(secLabel);
+
+  const rowY = y + 16;
+  const sprSize = 32;
+  const nodeW = 44;
+  const arrowW = 16;
+
+  let nodes = [];
+  if (stage === 'wild') {
+    nodes.push({ entry: family.wild, current: true, label: '야생' });
+    family.devo1.slice(0, 3).forEach(d => nodes.push({ entry: d, current: false, label: '1차' }));
+  } else if (stage === 'devo1') {
+    nodes.push({ entry: family.wild, current: false, label: '야생' });
+    nodes.push({ entry: info.self, current: true, label: '1차' });
+    const children = family.devo2.filter(d => d.parentDevo1 === mon.id);
+    children.slice(0, 2).forEach(d => nodes.push({ entry: d, current: false, label: '2차' }));
+  } else {
+    nodes.push({ entry: family.wild, current: false, label: '야생' });
+    const parent = family.devo1.find(d => d.id === info.self.parentDevo1);
+    if (parent) nodes.push({ entry: parent, current: false, label: '1차' });
+    nodes.push({ entry: info.self, current: true, label: '2차' });
+  }
+
+  const totalW = nodes.length * nodeW + (nodes.length - 1) * arrowW;
+  let nx = x + Math.max(0, (pw - totalW) / 2);
+
+  nodes.forEach((node, i) => {
+    const cx = nx + nodeW / 2;
+    const cy = rowY + (h - 16) / 2;
+
+    const bgAlpha = node.current ? 0.12 : 0.04;
+    const bgColor = node.current ? D.neon : D.dim;
+    detailBody.addChild(new PIXI.Graphics()
+      .roundRect(nx, rowY, nodeW, h - 18, 8)
+      .fill({ color: bgColor, alpha: bgAlpha })
+      .stroke({ color: node.current ? D.neon : D.sep, width: node.current ? 1.5 : 0.5, alpha: node.current ? 0.6 : 0.3 }));
+
+    const spr = monster(sprSize, node.entry.img);
+    spr.x = cx; spr.y = cy - 2;
+    detailBody.addChild(spr);
+
+    const nameT = lbl(node.entry.name, 4.5, node.current ? D.neon : D.text, node.current);
+    nameT.anchor = { x: 0.5, y: 0 }; nameT.x = cx; nameT.y = cy + sprSize / 2 + 1;
+    detailBody.addChild(nameT);
+
+    const stageT = lbl(node.label, 4, D.dimmer);
+    stageT.anchor = { x: 0.5, y: 0 }; stageT.x = cx; stageT.y = rowY + 1;
+    detailBody.addChild(stageT);
+
+    nx += nodeW;
+    if (i < nodes.length - 1) {
+      const arrowMid = nx + arrowW / 2;
+      const arrowY = cy;
+      detailBody.addChild(new PIXI.Graphics()
+        .moveTo(arrowMid - 5, arrowY).lineTo(arrowMid + 3, arrowY)
+        .stroke({ color: D.dim, width: 1, alpha: 0.4 }));
+      detailBody.addChild(new PIXI.Graphics()
+        .moveTo(arrowMid + 1, arrowY - 3).lineTo(arrowMid + 4, arrowY).lineTo(arrowMid + 1, arrowY + 3)
+        .stroke({ color: D.dim, width: 1, alpha: 0.4 }));
+      nx += arrowW;
+    }
+  });
+}
+
+// ============================================================
+// Build UI
 // ============================================================
 export function initTeamEdit() {
   ct = new PIXI.Container();
@@ -46,21 +230,19 @@ export function initTeamEdit() {
   // Background
   const bg = new PIXI.Graphics();
   bg.rect(0, 0, W, H).fill({ color: D.bg });
-  bg.roundRect(0, 0, W, 8, 0).fill({ color: D.neon, alpha: 0.3 });
   ct.addChild(bg);
 
-  // Detail panel
-  const detailPanel = new PIXI.Container(); detailPanel.y = DETAIL_Y;
-  detailPanel.addChild(darkCard(W - PAD * 2, DETAIL_H, 16, D.panel, D.sep, true));
-  detailPanel.children[0].x = PAD;
-  detailPanel.addChild(new PIXI.Graphics()
-    .moveTo(PAD, 0).lineTo(W - PAD, 0).stroke({ color: D.neon, width: 1.5, alpha: 0.3 }));
-  detailBody = new PIXI.Container(); detailBody.x = PAD;
-  detailPanel.addChild(detailBody);
-  ct.addChild(detailPanel);
+  // Capture area (top)
+  captureArea = new PIXI.Container(); captureArea.y = CAPTURE_Y;
+  ct.addChild(captureArea);
+
+  // Guide label
+  guideLabel = lbl('', 8, D.dim);
+  guideLabel.anchor = { x: 0.5, y: 0 }; guideLabel.x = W / 2;
+  ct.addChild(guideLabel);
 
   // Active team header
-  const activeHdr = new PIXI.Container(); activeHdr.y = SLOTS_Y;
+  activeHdr = new PIXI.Container();
   activeHdr.addChild(Object.assign(lbl('주전 팀', 9, D.neon, true), { x: SLOT_LEFT }));
   activeHdr.addChild(new PIXI.Graphics()
     .moveTo(SLOT_LEFT + 72, 10).lineTo(W - SLOT_LEFT, 10).stroke({ color: D.neon, width: 0.5, alpha: 0.3 }));
@@ -69,7 +251,7 @@ export function initTeamEdit() {
   ct.addChild(activeHdr);
 
   // Bench header
-  const benchHdr = new PIXI.Container(); benchHdr.y = BENCH_LABEL_Y;
+  benchHdr = new PIXI.Container();
   benchHdr.addChild(Object.assign(lbl('대기석', 9, D.dim, true), { x: SLOT_LEFT }));
   benchHdr.addChild(new PIXI.Graphics()
     .moveTo(SLOT_LEFT + 56, 10).lineTo(W - SLOT_LEFT, 10).stroke({ color: D.sep, width: 0.5, alpha: 0.3 }));
@@ -77,36 +259,46 @@ export function initTeamEdit() {
   benchHdr.addChild(benchCountLabel);
   ct.addChild(benchHdr);
 
-  // 6 slots
+  // 6 slots (containers — repositioned each refresh)
   slotGfx = [];
   for (let i = 0; i < 6; i++) {
     const c = new PIXI.Container();
-    c.x = SLOT_LEFT + (i % 3) * (SLOT_W + SLOT_GAP);
-    c.y = i < 3 ? ACTIVE_SLOTS_Y : BENCH_SLOTS_Y;
-    c.eventMode = 'static'; c.cursor = 'pointer';
-    c.on('pointerdown', () => onSlotTap(i));
     ct.addChild(c); slotGfx.push(c);
   }
 
-  // Bottom area: capture showcase + buttons
-  captureArea = new PIXI.Container(); captureArea.y = BOTTOM_Y;
-  ct.addChild(captureArea);
+  // Detail panel
+  detailPanel = new PIXI.Container();
+  detailBody = new PIXI.Container(); detailBody.x = PAD;
+  detailPanel.addChild(detailBody);
+  ct.addChild(detailPanel);
 
-  // Guide label
-  guideLabel = lbl('', 6, D.dim);
-  guideLabel.anchor = { x: 0.5, y: 0 }; guideLabel.x = W / 2; guideLabel.y = BOTTOM_Y + 70;
-  ct.addChild(guideLabel);
+  // Remove indicator (drag-to-remove zone — titleUI pattern)
+  removeIndicator = new PIXI.Container(); removeIndicator.visible = false;
+  const riY = 0; // will be positioned dynamically over detail area
+  ct.addChild(removeIndicator);
 
-  // Buttons row
-  const btnY = BOTTOM_Y + 86;
-  recruitBtn = cuteBtn(SLOT_LEFT, btnY, 90, 36, '▶ 합류', D.neon, D.bg);
-  ct.addChild(recruitBtn);
+  // Fixed action bar (bottom)
+  actionBar = new PIXI.Container(); actionBar.y = ACTION_BAR_Y;
+  const barBg = new PIXI.Graphics();
+  barBg.rect(0, 0, W, ACTION_BAR_H).fill({ color: D.bg });
+  barBg.moveTo(0, 0).lineTo(W, 0).stroke({ color: D.sep, width: 1, alpha: 0.5 });
+  actionBar.addChild(barBg);
 
-  releaseBtn = cuteBtn(SLOT_LEFT + 200, btnY, 90, 36, '✕ 내보내기', D.red, D.bg);
-  ct.addChild(releaseBtn);
+  const btnW = 120, btnH = 42;
+  const btnY = (ACTION_BAR_H - btnH) / 2;
+  releaseBtn = cuteBtn(PAD, btnY, btnW / S, btnH / S, '✕ 내보내기', D.red, D.bg);
+  actionBar.addChild(releaseBtn);
+  recruitBtn = cuteBtn(W / 2 - btnW / 2, btnY, btnW / S, btnH / S, '▶ 합류', D.neon, D.bg);
+  actionBar.addChild(recruitBtn);
+  nextBtn = cuteBtn(W - PAD - btnW, btnY, btnW / S, btnH / S, '다음 모험 ▷', D.dim, D.bg);
+  actionBar.addChild(nextBtn);
+  ct.addChild(actionBar);
 
-  nextBtn = cuteBtn(W / 2 - 90, btnY + 50, 90, 40, '▷ 다음 모험', D.dim, D.bg);
-  ct.addChild(nextBtn);
+  // Pointer events (titleUI drag pattern)
+  ct.on('pointerdown', onPointerDown);
+  ct.on('pointermove', onPointerMove);
+  ct.on('pointerup', onPointerUp);
+  ct.on('pointerupoutside', onPointerUp);
 
   return ct;
 }
@@ -118,121 +310,128 @@ export function renderTeamEdit(mgr, enemy, onRecruit, onSkip) {
   onRecruitCb = onRecruit;
   onSkipCb = onSkip;
   selectedIdx = -1;
+  mode = 'idle';
 
   refreshAll();
 }
 
 function refreshAll() {
-  refreshDetail();
-  refreshSlots();
+  recalcLayout();
+  repositionLayout();
   refreshCapture();
+  refreshGuide();
+  refreshSlots();
+  refreshDetail();
+  refreshRemoveIndicator();
   refreshButtons();
 }
 
+function repositionLayout() {
+  guideLabel.y = GUIDE_Y;
+  activeHdr.y = ACTIVE_HDR_Y;
+  benchHdr.y = BENCH_HDR_Y;
+  for (let i = 0; i < 6; i++) {
+    const p = slotPos(i);
+    slotGfx[i].x = p.x; slotGfx[i].y = p.y;
+  }
+  detailPanel.y = DETAIL_Y;
+}
+
 // ============================================================
-// Detail panel — shows selected slot's monster info
+// Capture showcase (top — hero position)
 // ============================================================
-function refreshDetail() {
-  detailBody.removeChildren();
+function refreshCapture() {
+  captureArea.removeChildren();
   const pw = W - PAD * 2;
 
-  if (selectedIdx < 0 || !teamMgr?.allies[selectedIdx]) {
-    const h = lbl('슬롯을 탭해서 상세 정보를 확인하세요', 8, D.dimmer);
-    h.anchor = { x: 0.5, y: 0.5 }; h.x = pw / 2; h.y = DETAIL_H / 2;
-    detailBody.addChild(h);
+  if (!capturedEnemy) {
+    captureArea.addChild(darkCard(pw, CAPTURE_H_EMPTY, 12, D.panel, D.sep, false));
+    captureArea.children[0].x = PAD;
+    const msg = lbl('포획한 몬스터 없음', 7, D.dimmer);
+    msg.anchor = { x: 0.5, y: 0.5 }; msg.x = W / 2; msg.y = CAPTURE_H_EMPTY / 2;
+    captureArea.addChild(msg);
     return;
   }
 
-  const ally = teamMgr.allies[selectedIdx];
-  const ROLE_LABEL = { attacker: '공격', tank: '방어', support: '지원', speedster: '속도' };
-  const ROLE_COLOR = { attacker: D.red, tank: D.blue, support: D.neon, speedster: 0x88ddbb };
+  const cardH = CAPTURE_H_FULL;
+  const card = new PIXI.Graphics();
+  card.roundRect(PAD, 0, pw, cardH, 16).fill({ color: D.panel });
+  card.roundRect(PAD, 0, pw, cardH, 16).stroke({ color: D.neon, width: 2, alpha: 0.6 });
+  card.roundRect(PAD - 2, -2, pw + 4, cardH + 4, 18).stroke({ color: D.neon, width: 3, alpha: 0.15 });
+  captureArea.addChild(card);
 
-  // Name + role
-  detailBody.addChild(Object.assign(lbl(ally.name, 10, D.text, true), { x: 2, y: 2 }));
-  if (ally.role) {
-    const badge = neonBadge(ROLE_LABEL[ally.role] || ally.role, ROLE_COLOR[ally.role] || D.dim);
-    const bw = (ROLE_LABEL[ally.role] || ally.role).length * 5 * S + 14;
-    badge.x = pw - bw - 4; badge.y = 4;
-    detailBody.addChild(badge);
+  captureArea.addChild(new PIXI.Graphics()
+    .moveTo(PAD, 0).lineTo(W - PAD, 0).stroke({ color: D.neon, width: 2, alpha: 0.6 }));
+
+  const badge = neonBadge('NEW', D.neon);
+  badge.x = PAD + 10; badge.y = 8;
+  captureArea.addChild(badge);
+
+  const sprCx = PAD + 66, sprCy = cardH / 2 + 4;
+  captureArea.addChild(new PIXI.Graphics().circle(sprCx, sprCy, 36).fill({ color: D.neon, alpha: 0.08 }));
+  captureArea.addChild(new PIXI.Graphics().circle(sprCx, sprCy, 36).stroke({ color: D.neon, width: 1, alpha: 0.2 }));
+  const spr = monster(72, capturedEnemy.img);
+  spr.x = sprCx; spr.y = sprCy;
+  captureArea.addChild(spr);
+
+  const infoX = PAD + 120;
+  captureArea.addChild(Object.assign(lbl(capturedEnemy.name, 12, D.text, true), { x: infoX, y: 12 }));
+
+  if (capturedEnemy.sensoryType) {
+    const AXIS = { sound: '🔊 소리', temperature: '🌡️ 온도', smell: '🌿 냄새', behavior: '👁️ 행동' };
+    const s = capturedEnemy.sensoryType.map(k => AXIS[k] || k).join(' / ');
+    captureArea.addChild(Object.assign(lbl(s, 6, D.dim), { x: infoX, y: 40 }));
   }
 
-  // HP + status
-  const hpR = (ally.hp ?? ally.maxHp) / ally.maxHp;
-  detailBody.addChild(Object.assign(lbl(`HP ${ally.hp ?? ally.maxHp}/${ally.maxHp}`, 6, hpR > 0.3 ? D.neon : D.red), { x: 2, y: 22 }));
-  detailBody.addChild(statBar(80, 24, 100, 5, hpR, hpR > 0.3 ? D.neon : D.red));
+  if (capturedEnemy.personality) {
+    const P = { aggressive: '공격적', timid: '겁많은', curious: '호기심', stubborn: '완고' };
+    const pBadge = neonBadge(P[capturedEnemy.personality] || capturedEnemy.personality, D.orange);
+    pBadge.x = infoX; pBadge.y = 58;
+    captureArea.addChild(pBadge);
+  }
 
-  // 6-Stat table (2행 3열)
-  if (ally.stats) {
-    const STAT_DISPLAY = [
-      { key: 'affinity',  name: '친화', color: D.neon },
-      { key: 'empathy',   name: '공감', color: D.blue },
+  if (capturedEnemy.stats) {
+    const PREVIEW_STATS = [
+      { key: 'affinity', name: '친화', color: D.neon },
+      { key: 'empathy', name: '공감', color: D.blue },
       { key: 'endurance', name: '인내', color: 0xffaa60 },
-      { key: 'agility',   name: '민첩', color: 0x88ddbb },
-      { key: 'bond',      name: '유대', color: 0xeebb55 },
-      { key: 'instinct',  name: '직감', color: 0xcc88dd },
     ];
-    const statColW = pw / 3;
-    STAT_DISPLAY.forEach((s, i) => {
-      const col = i % 3, row = Math.floor(i / 3);
-      const sx = 2 + col * statColW;
-      const sy = 36 + row * 18;
-      const val = getStat(ally.stats, s.key);
-      detailBody.addChild(Object.assign(lbl(s.name, 5, s.color, true), { x: sx, y: sy }));
-      detailBody.addChild(Object.assign(lbl(String(val), 6, D.text, true), { x: sx + 28, y: sy }));
-      // 스탯 바
-      detailBody.addChild(statBar(sx + 42, sy + 3, 50, 4, val / 15, s.color));
-      // 성장 진행도 (경험치 표시)
-      if (ally._statXP && ally._statXP[s.key] > 0) {
-        const threshold = 3 + Math.floor(val / 3);
-        const xpR = ally._statXP[s.key] / threshold;
-        const dot = new PIXI.Graphics();
-        dot.roundRect(sx + 95, sy + 2, 12, 5, 2).fill({ color: s.color, alpha: 0.15 });
-        if (xpR > 0) dot.roundRect(sx + 95, sy + 2, Math.max(3, 12 * xpR), 5, 2).fill({ color: s.color, alpha: 0.5 });
-        detailBody.addChild(dot);
-      }
+    PREVIEW_STATS.forEach((s, i) => {
+      const val = capturedEnemy.stats[s.key] || 0;
+      const sx = infoX + i * 100;
+      captureArea.addChild(Object.assign(lbl(s.name, 5, s.color, true), { x: sx, y: 80 }));
+      captureArea.addChild(Object.assign(lbl(String(val), 6, D.text), { x: sx + 28, y: 80 }));
+      captureArea.addChild(statBar(sx + 42, 83, 40, 4, val / 15, s.color));
     });
   }
 
-  // XP
-  const xpR = (ally.xp || 0) / (ally.xpThreshold || 5);
-  detailBody.addChild(Object.assign(lbl('XP', 5, D.yellow), { x: 2, y: 74 }));
-  detailBody.addChild(statBar(30, 76, 100, 4, xpR, D.yellow));
-
-  // 어빌리티 표시
-  if (ally.ability) {
-    const ab = getAbility(ally.ability);
-    if (ab) {
-      const abY = 74;
-      const abBadge = new PIXI.Graphics();
-      abBadge.roundRect(140, abY - 2, pw - 142, 14, 7).fill({ color: D.neon, alpha: 0.1 });
-      abBadge.roundRect(140, abY - 2, pw - 142, 14, 7).stroke({ color: D.neon, width: 0.5, alpha: 0.3 });
-      detailBody.addChild(abBadge);
-      detailBody.addChild(Object.assign(lbl(`✦ ${ab.name}`, 5, D.neon, true), { x: 146, y: abY }));
-      detailBody.addChild(Object.assign(lbl(ab.desc, 4.5, D.dim), { x: 146 + (ab.name.length + 2) * 5 * S + 4, y: abY + 1 }));
-    }
-  }
-
-  // Skills
-  if (ally.actions) {
-    const skillY = 92;
-    const gap = 6;
-    const cardW = (pw - gap * (ally.actions.length - 1)) / ally.actions.length;
-    const cardH = DETAIL_H - skillY - 4;
-    ally.actions.forEach((action, i) => {
-      const card = buildSkillCard(action, cardW, cardH);
-      card.x = i * (cardW + gap); card.y = skillY;
-      detailBody.addChild(card);
-    });
-  }
-
-  // Egg state
-  if (ally.inEgg) {
-    detailBody.addChild(Object.assign(lbl('퇴화 중... (알 상태)', 8, 0xffaa60, true), { x: 2, y: 85 }));
+  if (capturedEnemy.maxHp) {
+    captureArea.addChild(Object.assign(lbl(`HP ${capturedEnemy.maxHp}`, 6, D.neon), { x: infoX, y: 102 }));
+    captureArea.addChild(statBar(infoX + 50, 105, 80, 5, 1, D.neon));
   }
 }
 
 // ============================================================
-// 6 Slots (3x2 grid)
+// Guide text
+// ============================================================
+function refreshGuide() {
+  const canAdd = teamMgr?.canRecruit();
+  const hasCapture = !!capturedEnemy;
+
+  if (hasCapture && canAdd) {
+    guideLabel.text = '새로운 동료! 합류시키거나 다음 모험으로 진행하세요';
+    guideLabel.style.fill = '#00d4aa';
+  } else if (hasCapture && !canAdd) {
+    guideLabel.text = '⚠ 팀이 가득 찼습니다 — 내보내기로 자리를 확보하세요';
+    guideLabel.style.fill = '#ffaa60';
+  } else {
+    guideLabel.text = '팀을 확인하고 다음 모험을 진행하세요';
+    guideLabel.style.fill = '#8888aa';
+  }
+}
+
+// ============================================================
+// 6 Slots (3+3 grid)
 // ============================================================
 function refreshSlots() {
   let ac = 0, bc = 0;
@@ -240,27 +439,46 @@ function refreshSlots() {
 
   for (let i = 0; i < 6; i++) {
     const c = slotGfx[i]; c.removeChildren();
+    const p = slotPos(i);
+    c.x = p.x; c.y = p.y;
+    c.alpha = 1; c.scale.set(1);
+
     const ally = allies[i];
     const isActive = i < 3;
     const isSel = i === selectedIdx;
     if (ally) { if (isActive) ac++; else bc++; }
 
     if (!ally) {
+      const hasCapture = !!capturedEnemy && teamMgr?.canRecruit();
       c.addChild(new PIXI.Graphics()
         .roundRect(0, 0, SLOT_W, SLOT_H, 14).fill({ color: D.bgAlt })
-        .stroke({ color: D.sep, width: 1, alpha: 0.3 }));
-      const plus = lbl('+', 14, D.dimmer);
-      plus.anchor = { x: 0.5, y: 0.5 }; plus.x = SLOT_W / 2; plus.y = SLOT_H / 2 - 4;
-      c.addChild(plus);
-      c.addChild(Object.assign(lbl('빈 슬롯', 5, D.dimmer), { x: SLOT_W / 2 - 16, y: SLOT_H / 2 + 12 }));
+        .stroke({ color: hasCapture ? D.neon : D.sep, width: hasCapture ? 1.5 : 1, alpha: hasCapture ? 0.5 : 0.3 }));
+      if (hasCapture) {
+        const hint = lbl('+ 합류 가능', 6, D.neon);
+        hint.anchor = { x: 0.5, y: 0.5 }; hint.x = SLOT_W / 2; hint.y = SLOT_H / 2;
+        c.addChild(hint);
+      } else {
+        const plus = lbl('+', 14, D.dimmer);
+        plus.anchor = { x: 0.5, y: 0.5 }; plus.x = SLOT_W / 2; plus.y = SLOT_H / 2 - 4;
+        c.addChild(plus);
+        c.addChild(Object.assign(lbl('빈 슬롯', 5, D.dimmer), { x: SLOT_W / 2 - 16, y: SLOT_H / 2 + 12 }));
+      }
       continue;
     }
 
+    // Card background
     const borderCol = isSel ? D.neon : (isActive ? D.neonDim : D.sep);
     c.addChild(darkCard(SLOT_W, SLOT_H, 14, isSel ? D.cardHi : (isActive ? D.card : D.bgAlt), borderCol, true));
     if (isSel) {
       c.addChild(new PIXI.Graphics()
-        .roundRect(-2, -2, SLOT_W + 4, SLOT_H + 4, 16).stroke({ color: D.neon, width: 2, alpha: 0.4 }));
+        .roundRect(-2, -2, SLOT_W + 4, SLOT_H + 4, 16)
+        .stroke({ color: D.neon, width: 2, alpha: 0.3 }));
+    }
+
+    // Faint overlay
+    if (!ally.inEgg && ally.hp <= 0) {
+      c.addChild(new PIXI.Graphics()
+        .roundRect(0, 0, SLOT_W, SLOT_H, 14).fill({ color: D.red, alpha: 0.12 }));
     }
 
     // HP bar
@@ -269,18 +487,38 @@ function refreshSlots() {
       c.addChild(statBar(SLOT_W / 2 - 30, 6, 60, 5, hpR, hpR > 0.3 ? D.neon : D.red));
     }
 
-    // Sprite
+    // Sprite area
     c.addChild(new PIXI.Graphics().circle(SLOT_W / 2, 47, 22).fill({ color: D.neon, alpha: 0.06 }));
+
     if (ally.inEgg) {
       const et = lbl('🥚', 16, D.dimmer); et.anchor = { x: 0.5, y: 0.5 }; et.x = SLOT_W / 2; et.y = 47;
       c.addChild(et);
+      const eggProgress = teamMgr?.getEggProgress?.(ally.id);
+      if (eggProgress != null) {
+        const ring = new PIXI.Graphics();
+        const cx = SLOT_W / 2, cy = 47, radius = 24;
+        ring.circle(cx, cy, radius).stroke({ color: D.sep, width: 2, alpha: 0.3 });
+        if (eggProgress > 0) {
+          const startAngle = -Math.PI / 2;
+          const endAngle = startAngle + (Math.PI * 2) * (eggProgress / 100);
+          ring.arc(cx, cy, radius, startAngle, endAngle).stroke({ color: 0xffaa60, width: 2.5 });
+        }
+        c.addChild(ring);
+        const pctLabel = lbl(`${eggProgress}%`, 5, 0xffaa60, true);
+        pctLabel.anchor = { x: 0.5, y: 0 }; pctLabel.x = SLOT_W / 2; pctLabel.y = 70;
+        c.addChild(pctLabel);
+      }
+      const eggBadge = neonBadge('퇴화중', 0xffaa60);
+      eggBadge.x = SLOT_W / 2 - 22; eggBadge.y = SLOT_H - 36;
+      c.addChild(eggBadge);
     } else {
       const spr = monster(48, ally.img); spr.x = SLOT_W / 2; spr.y = 47;
       if (ally.hp <= 0) spr.alpha = 0.3;
       c.addChild(spr);
       if (ally.hp <= 0) {
-        const z = lbl('zzz', 8, D.dimmer, true); z.anchor = { x: 0.5, y: 0.5 }; z.x = SLOT_W / 2; z.y = 47;
-        c.addChild(z);
+        const faintBadge = neonBadge('탈진', D.red);
+        faintBadge.x = SLOT_W / 2 - 16; faintBadge.y = 28;
+        c.addChild(faintBadge);
       }
     }
 
@@ -289,9 +527,20 @@ function refreshSlots() {
     nm.anchor = { x: 0.5, y: 0 }; nm.x = SLOT_W / 2; nm.y = SLOT_H - 24;
     c.addChild(nm);
 
+    // Grip handle (⋮⋮) — drag affordance (titleUI pattern)
+    const grip = new PIXI.Graphics();
+    const gx = SLOT_W - 14, gy = SLOT_H / 2 - 10;
+    for (let row = 0; row < 3; row++) {
+      grip.circle(gx, gy + row * 7, 1.5).fill({ color: D.dim, alpha: 0.5 });
+      grip.circle(gx + 6, gy + row * 7, 1.5).fill({ color: D.dim, alpha: 0.5 });
+    }
+    c.addChild(grip);
+
     // XP bar
-    const xpR = (ally.xp || 0) / (ally.xpThreshold || 5);
-    c.addChild(statBar(SLOT_W / 2 - 24, SLOT_H - 10, 48, 3, xpR, D.yellow));
+    if (!ally.inEgg) {
+      const xpR = (ally.xp || 0) / (ally.xpThreshold || 5);
+      c.addChild(statBar(SLOT_W / 2 - 24, SLOT_H - 10, 48, 3, xpR, 0xeebb55));
+    }
   }
 
   if (activeCountLabel) activeCountLabel.text = `${ac}/3`;
@@ -299,54 +548,152 @@ function refreshSlots() {
 }
 
 // ============================================================
-// Capture showcase (bottom compact bar)
+// Remove indicator (titleUI pattern — drag-to-remove zone over detail area)
 // ============================================================
-function refreshCapture() {
-  captureArea.removeChildren();
+function refreshRemoveIndicator() {
+  removeIndicator.removeChildren();
+  const riY = DETAIL_Y;
+  const riH = ACTION_BAR_Y - DETAIL_Y;
+
+  // Dark overlay
+  const riBg = new PIXI.Graphics();
+  riBg.rect(0, riY, W, riH).fill({ color: D.bg, alpha: 0.85 });
+  riBg.rect(0, riY, W, riH).fill({ color: D.red, alpha: 0.12 });
+  riBg.moveTo(0, riY).lineTo(W, riY).stroke({ color: D.red, width: 2, alpha: 0.6 });
+  removeIndicator.addChild(riBg);
+
+  // Center box
+  const riCy = riY + riH / 2;
+  removeIndicator.addChild(new PIXI.Graphics()
+    .roundRect(W / 2 - 120, riCy - 36, 240, 72, 16)
+    .fill({ color: D.red, alpha: 0.12 }).stroke({ color: D.red, width: 1.5, alpha: 0.5 }));
+  const riIcon = lbl('✕', 16, D.red, true);
+  riIcon.anchor = { x: 0.5, y: 0.5 }; riIcon.x = W / 2; riIcon.y = riCy - 10;
+  removeIndicator.addChild(riIcon);
+  const riTxt = lbl('팀에서 제거', 9, D.red, true);
+  riTxt.anchor = { x: 0.5, y: 0.5 }; riTxt.x = W / 2; riTxt.y = riCy + 16;
+  removeIndicator.addChild(riTxt);
+}
+
+// ============================================================
+// Detail panel — titleUI renderPageInfo 동일 포맷
+// ============================================================
+function refreshDetail() {
+  // Rebuild detail panel card
+  while (detailPanel.children.length > 1) detailPanel.removeChildAt(0);
+  detailBody.removeChildren();
   const pw = W - PAD * 2;
 
-  if (!capturedEnemy) {
-    captureArea.addChild(darkCard(pw, 58, 12, D.panel, D.sep, false));
-    captureArea.children[0].x = PAD;
-    const msg = lbl('포획한 몬스터 없음', 7, D.dimmer);
-    msg.anchor = { x: 0.5, y: 0.5 }; msg.x = W / 2; msg.y = 29;
-    captureArea.addChild(msg);
+  if (selectedIdx < 0 || !teamMgr?.allies[selectedIdx]) {
+    detailPanel.addChildAt(darkCard(pw, DETAIL_H, 16, D.panel, D.sep, true), 0);
+    detailPanel.children[0].x = PAD;
+    // Neon accent line
+    const accent = new PIXI.Graphics()
+      .moveTo(PAD, 0).lineTo(W - PAD, 0).stroke({ color: D.neon, width: 1.5, alpha: 0.3 });
+    detailPanel.addChildAt(accent, 1);
+    const h = lbl('슬롯을 탭해서 상세 정보를 확인하세요', 10, D.dimmer);
+    h.anchor = { x: 0.5, y: 0.5 }; h.x = pw / 2; h.y = DETAIL_H / 2;
+    detailBody.addChild(h);
     return;
   }
 
-  // Compact capture card
-  captureArea.addChild(darkCard(pw, 58, 12, D.panel, D.neon, false));
-  captureArea.children[0].x = PAD;
+  // Panel with neon border
+  detailPanel.addChildAt(darkCard(pw, DETAIL_H, 16, D.panel, D.neon, true), 0);
+  detailPanel.children[0].x = PAD;
+  const accent = new PIXI.Graphics()
+    .moveTo(PAD, 0).lineTo(W - PAD, 0).stroke({ color: D.neon, width: 1.5, alpha: 0.3 });
+  detailPanel.addChildAt(accent, 1);
 
-  // Neon accent
-  captureArea.addChild(new PIXI.Graphics()
-    .moveTo(PAD, 0).lineTo(W - PAD, 0).stroke({ color: D.neon, width: 1, alpha: 0.4 }));
+  const ally = teamMgr.allies[selectedIdx];
 
-  // Badge
-  const badge = neonBadge('NEW', D.neon);
-  badge.x = PAD + 6; badge.y = 6;
-  captureArea.addChild(badge);
-
-  // Sprite
-  const spr = monster(44, capturedEnemy.img);
-  spr.x = PAD + 56; spr.y = 30;
-  captureArea.addChild(spr);
-
-  // Name + sensory
-  captureArea.addChild(Object.assign(lbl(capturedEnemy.name, 8, D.text, true), { x: PAD + 86, y: 10 }));
-  if (capturedEnemy.sensoryType) {
-    const AXIS = { sound: '소리', temperature: '온도', smell: '냄새', behavior: '행동' };
-    const s = capturedEnemy.sensoryType.map(k => AXIS[k] || k).join('/');
-    captureArea.addChild(Object.assign(lbl(s, 5, D.dim), { x: PAD + 86, y: 30 }));
+  // ══ Egg state — simplified view ══
+  if (ally.inEgg) {
+    const eggProgress = teamMgr?.getEggProgress?.(ally.id);
+    detailBody.addChild(Object.assign(lbl(ally.name, 10, D.text, true), { x: 2, y: 2 }));
+    detailBody.addChild(Object.assign(lbl('퇴화 중... (알 상태)', 9, 0xffaa60, true), { x: 2, y: 30 }));
+    if (eggProgress != null) {
+      detailBody.addChild(Object.assign(lbl(`${eggProgress}%`, 12, 0xffaa60, true), { x: pw / 2 - 20, y: 60 }));
+      detailBody.addChild(statBar(2, 90, pw - 4, 8, eggProgress / 100, 0xffaa60));
+    }
+    // Lineage still visible
+    drawLineage(0, 110, pw, 68, ally);
+    return;
   }
-  if (capturedEnemy.personality) {
-    const P = { aggressive: '공격적', timid: '겁많은', curious: '호기심', stubborn: '완고' };
-    captureArea.addChild(Object.assign(lbl(P[capturedEnemy.personality] || '', 5, D.dim), { x: PAD + 86, y: 42 }));
+
+  // ══ Normal ally — titleUI renderPageInfo 포맷 ══
+  const gap = 4;
+  const LINEAGE_H = 68;
+
+  // --- 1) Name bar ---
+  const levelText = ally.level ? ` Lv.${ally.level}` : '';
+  detailBody.addChild(Object.assign(lbl(ally.name + levelText, 10, D.text, true), { x: 2, y: 2 }));
+
+  if (ally.role) {
+    const badge = neonBadge(ROLE_LABEL[ally.role] || ally.role, ROLE_COLOR[ally.role] || D.dim);
+    const bw = (ROLE_LABEL[ally.role] || ally.role).length * 5 * S + 14;
+    badge.x = pw - bw - 4; badge.y = 4;
+    detailBody.addChild(badge);
+  }
+
+  const descText = ally.desc || '';
+  if (descText) {
+    detailBody.addChild(Object.assign(lbl(descText, 5, D.dimmer), { x: 2, y: 22 }));
+  }
+
+  // 어빌리티 표시
+  if (ally.ability) {
+    const ab = getAbility(ally.ability);
+    if (ab) {
+      const abY = descText ? 34 : 22;
+      const abBadge = new PIXI.Graphics();
+      abBadge.roundRect(0, abY - 2, pw, 14, 7).fill({ color: D.neon, alpha: 0.1 });
+      abBadge.roundRect(0, abY - 2, pw, 14, 7).stroke({ color: D.neon, width: 0.5, alpha: 0.3 });
+      detailBody.addChild(abBadge);
+      detailBody.addChild(Object.assign(lbl(`✦ ${ab.name}`, 5, D.neon, true), { x: 6, y: abY }));
+      detailBody.addChild(Object.assign(lbl(ab.desc, 4.5, D.dim), { x: 6 + (ab.name.length + 2) * 5 * S + 4, y: abY + 1 }));
+    }
+  }
+
+  // --- 2) Stats table (HP + 6stats — titleUI drawTable format) ---
+  const STAT = { affinity: '친화', empathy: '공감', endurance: '인내', agility: '민첩', bond: '유대', instinct: '직감' };
+  const SCOL = { affinity: D.neon, empathy: D.blue, endurance: 0xffaa60, agility: 0x88ddbb, bond: 0xeebb55, instinct: 0xcc88dd };
+  const statKeys = ally.stats ? Object.keys(ally.stats) : [];
+
+  const sHeaders = ['HP', ...statKeys.map(k => STAT[k] || k)];
+  const sColors = [D.red, ...statKeys.map(k => SCOL[k] || D.dim)];
+  const hpR = (ally.hp ?? ally.maxHp) / ally.maxHp;
+  const hpColor = hpR > 0.3 ? D.text : D.red;
+  const sRow = [[
+    { text: `${ally.hp ?? ally.maxHp}/${ally.maxHp}`, size: 7, color: hpColor, bold: true },
+    ...statKeys.map(k => ({ text: String(getStat(ally.stats, k)), size: 8, color: D.text, bold: true })),
+  ]];
+
+  const statY = 50;
+  const statH = 42;
+  drawTable(0, statY, pw, statH, sHeaders, sRow, sColors);
+
+  // XP bar below stats
+  const xpY = statY + statH + 4;
+  const xpR = (ally.xp || 0) / (ally.xpThreshold || 5);
+  detailBody.addChild(Object.assign(lbl('XP', 5, 0xeebb55, true), { x: 2, y: xpY }));
+  detailBody.addChild(statBar(26, xpY + 2, 100, 4, xpR, 0xeebb55));
+  const xpText = `${ally.xp || 0}/${ally.xpThreshold || 5}`;
+  detailBody.addChild(Object.assign(lbl(xpText, 4.5, D.dim), { x: 130, y: xpY }));
+
+  // --- 3) Lineage ---
+  const lineY = xpY + 16 + gap;
+  drawLineage(0, lineY, pw, LINEAGE_H, ally);
+
+  // --- 4) Skill cards ---
+  if (ally.actions) {
+    const skillY = lineY + LINEAGE_H + gap;
+    const skillH = DETAIL_H - skillY;
+    drawSkillCards(0, skillY, pw, skillH, ally.actions);
   }
 }
 
 // ============================================================
-// Buttons + guide
+// Buttons
 // ============================================================
 function refreshButtons() {
   const canAdd = teamMgr?.canRecruit();
@@ -354,23 +701,10 @@ function refreshButtons() {
   const hasSel = selectedIdx >= 0 && !!teamMgr?.allies[selectedIdx];
   const allyCount = teamMgr?.allies.length || 0;
 
-  // Guide text
-  if (hasCapture && canAdd) {
-    guideLabel.text = '포획 몬스터를 합류시키거나 다음 모험으로';
-  } else if (hasCapture && !canAdd) {
-    guideLabel.text = '팀 가득 (6/6) — 슬롯 선택 후 내보내기로 자리 확보';
-  } else {
-    guideLabel.text = '다음 모험을 진행하세요';
-  }
-
-  // Recruit
   recruitBtn.visible = hasCapture && canAdd;
   recruitBtn.removeAllListeners();
-  recruitBtn.on('pointerdown', () => {
-    if (onRecruitCb) onRecruitCb();
-  });
+  recruitBtn.on('pointerdown', () => { if (onRecruitCb) onRecruitCb(); });
 
-  // Release (only when a slot is selected and team > 3)
   releaseBtn.visible = hasSel && allyCount > 3;
   releaseBtn.removeAllListeners();
   releaseBtn.on('pointerdown', () => {
@@ -378,24 +712,110 @@ function refreshButtons() {
     teamMgr.removeFromRoster(selectedIdx);
     selectedIdx = -1;
     refreshAll();
-    // After release, maybe can recruit now
   });
 
-  // Next battle
   nextBtn.removeAllListeners();
-  nextBtn.on('pointerdown', () => {
-    if (onSkipCb) onSkipCb();
-  });
+  nextBtn.on('pointerdown', () => { if (onSkipCb) onSkipCb(); });
 }
 
 // ============================================================
-// Slot tap → select for detail view
+// Pointer interaction (titleUI drag & drop pattern)
 // ============================================================
-function onSlotTap(idx) {
-  if (selectedIdx === idx) {
-    selectedIdx = -1; // deselect
-  } else {
-    selectedIdx = idx;
+function onPointerDown(e) {
+  const pos = e.getLocalPosition(ct);
+  startPos = { x: pos.x, y: pos.y };
+
+  const si = hitSlot(pos.x, pos.y);
+  const allies = teamMgr?.allies || [];
+  if (si >= 0 && allies[si]) {
+    mode = 'slot-pending';
+    pendingSlotIdx = si;
+    return;
   }
-  refreshAll();
+  mode = 'idle';
+}
+
+function onPointerMove(e) {
+  const pos = e.getLocalPosition(ct);
+  const dx = pos.x - startPos.x, dy = pos.y - startPos.y;
+
+  if (mode === 'slot-pending' && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
+    mode = 'dragging';
+    const ally = teamMgr.allies[pendingSlotIdx];
+    dragSprite = monster(55, ally.img);
+    dragSprite.alpha = 0.75;
+    ct.addChild(dragSprite);
+    slotGfx[pendingSlotIdx].alpha = 0.3;
+    // Show remove indicator only if team > 3
+    if (teamMgr.allies.length > 3) {
+      removeIndicator.visible = true;
+    }
+  }
+
+  if (mode === 'dragging' && dragSprite) {
+    dragSprite.x = pos.x; dragSprite.y = pos.y;
+    // Highlight remove zone when hovering over detail area
+    if (removeIndicator.visible) {
+      removeIndicator.alpha = pos.y > DETAIL_Y ? 1.0 : 0.25;
+    }
+  }
+}
+
+function onPointerUp(e) {
+  const pos = e.getLocalPosition(ct);
+
+  if (mode === 'slot-pending') {
+    // Tap — select for detail view
+    if (selectedIdx === pendingSlotIdx) {
+      selectedIdx = -1; // deselect on re-tap
+    } else {
+      selectedIdx = pendingSlotIdx;
+    }
+    refreshAll();
+  }
+
+  if (mode === 'dragging') {
+    if (dragSprite) { ct.removeChild(dragSprite); dragSprite = null; }
+    slotGfx[pendingSlotIdx].alpha = 1;
+    removeIndicator.visible = false;
+
+    // Drop on detail area (remove zone) — remove from roster
+    if (pos.y > DETAIL_Y && teamMgr.allies.length > 3) {
+      teamMgr.removeFromRoster(pendingSlotIdx);
+      selectedIdx = -1;
+    } else {
+      // Drop on another slot — swap
+      const target = hitSlot(pos.x, pos.y);
+      if (target >= 0 && target !== pendingSlotIdx) {
+        teamMgr.swapSlots(pendingSlotIdx, target);
+        selectedIdx = target;
+        // Pulse animation on swapped slot
+        pulseSlot(target);
+      }
+    }
+    refreshAll();
+  }
+
+  mode = 'idle';
+  pendingSlotIdx = -1;
+}
+
+function pulseSlot(idx) {
+  const c = slotGfx[idx];
+  if (!c) return;
+  const p = slotPos(idx);
+  const dur = 300;
+  const start = performance.now();
+  const originY = p.y;
+  function tick() {
+    const t = Math.min(1, (performance.now() - start) / dur);
+    const ease = t < 0.5
+      ? 1 - Math.pow(1 - t * 2, 3)
+      : 1 - Math.abs(Math.sin((t - 0.5) * Math.PI * 2)) * (1 - t);
+    c.y = originY - (1 - t) * 8 * (1 - ease);
+    c.scale.set(1 + (1 - t) * 0.04);
+    if (t < 1) requestAnimationFrame(tick);
+    else { c.y = originY; c.scale.set(1); }
+  }
+  requestAnimationFrame(tick);
 }
