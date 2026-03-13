@@ -2,19 +2,19 @@ import { defineSkill } from '../../core/schema.js';
 
 const AXIS_META = {
   sound: {
-    prefix: 'Resonant',
+    prefix: '공명',
     effect: 'calm',
   },
   temperature: {
-    prefix: 'Thermal',
+    prefix: '열기',
     effect: 'curious',
   },
   smell: {
-    prefix: 'Aromatic',
+    prefix: '향기',
     effect: 'trust',
   },
   behavior: {
-    prefix: 'Instinctive',
+    prefix: '본능',
     effect: 'calm',
   },
 };
@@ -22,7 +22,7 @@ const AXIS_META = {
 const TEMPLATES = [
   {
     suffix: 'ward',
-    label: 'Ward',
+    label: '보호막',
     role: 'guard',
     targetType: 'ally_team',
     priority: 2,
@@ -32,11 +32,12 @@ const TEMPLATES = [
     healAmount: 3,
     defenseBoost: 5,
     effects: meta => [{ type: meta.effect, chance: 0.18 }],
+    logFn: meta => `${meta.prefix} 보호막으로 아군을 지킨다.`,
     summary: meta => `heal 3 / def 5, ${meta.effect} 18%`,
   },
   {
     suffix: 'shelter',
-    label: 'Shelter',
+    label: '은신처',
     role: 'stabilize',
     targetType: 'ally_team',
     priority: 1,
@@ -46,11 +47,12 @@ const TEMPLATES = [
     healAmount: 4,
     defenseBoost: 4,
     effects: () => [{ type: 'calm', chance: 0.22 }],
+    logFn: meta => `${meta.prefix} 은신처를 만들어 숨을 고른다.`,
     summary: () => 'heal 4 / def 4, calm 22%',
   },
   {
     suffix: 'mend',
-    label: 'Mend',
+    label: '치유',
     role: 'heal',
     targetType: 'self',
     power: 4,
@@ -59,11 +61,12 @@ const TEMPLATES = [
     healAmount: 8,
     defenseBoost: 2,
     effects: () => [{ type: 'trust', chance: 0.1 }],
+    logFn: meta => `${meta.prefix}으로 상처를 치유한다.`,
     summary: () => 'heal 8 / def 2',
   },
   {
     suffix: 'pivot',
-    label: 'Pivot',
+    label: '전환 방어',
     role: 'swap_guard',
     targetType: 'ally_team',
     priority: 2,
@@ -73,11 +76,12 @@ const TEMPLATES = [
     healAmount: 4,
     defenseBoost: 5,
     swapSynergy: { onSwapIn: { defenseBonus: 3, tamingBonus: 2 } },
+    logFn: meta => `${meta.prefix}으로 전열을 재정비한다.`,
     summary: () => 'heal 4 / def 5, swap in bonus',
   },
   {
     suffix: 'reserve',
-    label: 'Reserve',
+    label: '비축',
     role: 'stabilize',
     targetType: 'ally_team',
     priority: 1,
@@ -87,6 +91,7 @@ const TEMPLATES = [
     healAmount: 2,
     defenseBoost: 6,
     effects: meta => [{ type: meta.effect, chance: 0.14 }],
+    logFn: meta => `${meta.prefix}을 비축해 방어를 굳힌다.`,
     summary: meta => `heal 2 / def 6, ${meta.effect} 14%`,
   },
 ];
@@ -115,8 +120,8 @@ const hybridSkills = Object.fromEntries(
           defenseBoost: template.defenseBoost,
           effects: resolveValue(template.effects, meta),
           swapSynergy: resolveValue(template.swapSynergy, meta),
-          log: `${meta.prefix} ${template.label} reinforces the party.`,
-          desc: `${meta.prefix} ${template.label} defensive combo.`,
+          log: template.logFn(meta),
+          desc: template.logFn(meta),
           tags: [axis, 'defend', 'hybrid', template.role],
         }),
       ];

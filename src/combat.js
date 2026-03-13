@@ -473,9 +473,15 @@ export class CombatSystem {
   }
 
   previewAction(ally, action) {
+    const allyIdx = this.team.indexOf(ally);
+    const actionIdx = ally.actions.indexOf(action);
     return buildPreviewAction(ally, action, this.enemy, this.tamingGauge, this.emotionState, {
       turn: this.turn,
       conditionMet: this._meetsCondition(action),
+      team: this.team,
+      axisUsage: this.axisUsage,
+      lastActionIdx: this.lastActions[allyIdx] ?? null,
+      currentActionIdx: actionIdx,
     });
   }
 

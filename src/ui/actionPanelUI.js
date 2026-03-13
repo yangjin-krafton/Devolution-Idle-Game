@@ -125,13 +125,23 @@ export function renderActions(team, cr) {
         let effMarker = '';
         const catLabel = { stimulate: '자극', capture: '포획', defend: '수비' }[action.category] || action.category;
         if (preview.type === 'stimulate') {
-          pwText = `${cat.icon} ${catLabel} ${preview.taming}`;
+          const escSign = preview.escape > 0 ? `+${preview.escape}` : String(preview.escape);
+          pwText = `${cat.icon} +${preview.taming} 💨${escSign}`;
           if (preview.effective === 'good') effMarker = ' ▲';
           else if (preview.effective === 'bad') effMarker = ' ▼';
+          if (preview.saturated) effMarker += ' 둔감';
+          if (preview.repeated) effMarker += ' 반복↓';
         }
-        else if (preview.type === 'capture') pwText = `${cat.icon} ${catLabel} ${preview.chance}%`;
-        else if (preview.type === 'defend') pwText = `${cat.icon} ${catLabel} +${preview.heal}`;
-        const effColor = effMarker === ' ▲' ? 0x00ff88 : effMarker === ' ▼' ? 0xff4444 : cat.c;
+        else if (preview.type === 'capture') {
+          pwText = `${cat.icon} ${catLabel} ${preview.chance}% 💨+${preview.escape}`;
+        }
+        else if (preview.type === 'defend') {
+          const parts = [];
+          if (preview.defense) parts.push(`🛡${preview.defense}`);
+          if (preview.heal) parts.push(`+${preview.heal}HP`);
+          pwText = `${cat.icon} ${parts.join(' ')}`;
+        }
+        const effColor = effMarker.includes('▲') ? 0x00ff88 : effMarker.includes('▼') ? 0xff4444 : cat.c;
         previewOpt = { text: (pwText + effMarker), effColor };
       }
 
