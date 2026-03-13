@@ -178,8 +178,11 @@ export class CombatSystem {
   confirmTurn() {
     if (this.state !== 'active') return null;
     if (this.getPendingSlots().length > 0) return null;
+    this.turnSteps = [];
     this._executeTurn();
-    return this.getResult();
+    const result = this.getResult();
+    result.turnSteps = this.turnSteps;
+    return result;
   }
 
   _executeTurn() {
@@ -197,7 +200,17 @@ export class CombatSystem {
       if (this.state !== 'active') break;
 
       if (entry.type === 'enemy') {
-        this._enemyEnvironmentAction();
+        const skills = this.enemy.environmentSkills || [];
+        const skill = skills.length > 0 ? skills[Math.floor(Math.random() * skills.length)] : null;
+        if (skill) {
+          this.log(skill.log);
+          this._changeEnvironment(skill.axis, skill.delta);
+          this.turnSteps.push({
+            actor: 'enemy', name: this.enemy.name, img: this.enemy.img,
+            skillName: skill.name || '교란', category: 'attack',
+            log: skill.log, axis: skill.axis, delta: skill.delta,
+          });
+        }
         enemyActed = true;
         continue;
       }
@@ -226,10 +239,25 @@ export class CombatSystem {
 
       this._handleEnvironmentAction(ally, action);
 
+      this.turnSteps.push({
+        actor: 'ally', allyIdx, name: ally.name, img: ally.img,
+        skillName: action.name, category: action.category,
+        log: action.log, axis: action.axis,
+      });
     }
 
     if (this.state === 'active' && !enemyActed) {
-      this._enemyEnvironmentAction();
+      const skills = this.enemy.environmentSkills || [];
+      const skill = skills.length > 0 ? skills[Math.floor(Math.random() * skills.length)] : null;
+      if (skill) {
+        this.log(skill.log);
+        this._changeEnvironment(skill.axis, skill.delta);
+        this.turnSteps.push({
+          actor: 'enemy', name: this.enemy.name, img: this.enemy.img,
+          skillName: skill.name || '교란', category: 'attack',
+          log: skill.log, axis: skill.axis, delta: skill.delta,
+        });
+      }
     }
 
     if (this.state === 'active') {

@@ -8,6 +8,8 @@ import {
   playTamingEffect, playAttackEffect,
   playBondingAttempt, playBondingSuccess, playBondingFail,
   playEscapeEffect, playFaintEffect,
+  motionDash, motionPulse, motionGuard, motionScan,
+  motionEnemyLunge, motionEnemyRoar,
 } from '../effects.js';
 import { ENVIRONMENT_AXES, ENV_AXIS_LABEL, ENV_AXIS_ICON, ENV_VALUE_LABEL } from '../data/index.js';
 
@@ -597,6 +599,129 @@ function _tickEnemyMood(tick) {
   }
 }
 
+// ---- Turn Sequence Animation Engine ----
+
+let _sequencePlaying = false;
+export function isSequencePlaying() { return _sequencePlaying; }
+
+/**
+ * Play turn steps sequentially with per-action motion + VFX.
+ * @param {Array} steps - from combat.turnSteps
+ * @param {Function} onComplete - called after all steps finish
+ */
+export function playTurnSequence(steps, onComplete) {
+  if (!steps || steps.length === 0) { onComplete?.(); return; }
+  _sequencePlaying = true;
+
+  let idx = 0;
+  function next() {
+    if (idx >= steps.length) {
+      _sequencePlaying = false;
+      onComplete?.();
+      return;
+    }
+    const step = steps[idx++];
+    playStep(step, () => {
+      // Gap between steps
+      setTimeout(next, 180);
+    });
+  }
+  next();
+}
+
+function playStep(step, onDone) {
+  const MOTION_DUR = 400;
+
+  // ── Skill name label (brief cut-in) ──
+  showSkillLabel(step.name, step.skillName, step.actor === 'enemy');
+
+  if (step.actor === 'enemy') {
+    playEnemyStep(step, MOTION_DUR, onDone);
+  } else {
+    playAllyStep(step, MOTION_DUR, onDone);
+  }
+}
+
+function playEnemyStep(step, dur, onDone) {
+  const sprite = refs.enemySprite;
+  if (!sprite) { onDone?.(); return; }
+
+  // Random: lunge or roar
+  if (Math.random() > 0.5) {
+    motionEnemyLunge(sprite, dur, () => {
+      playTamingEffect(step.axis || 'behavior', false);
+      onDone?.();
+    });
+  } else {
+    motionEnemyRoar(sprite, dur, () => {
+      playTamingEffect(step.axis || 'behavior', false);
+      onDone?.();
+    });
+  }
+}
+
+function playAllyStep(step, dur, onDone) {
+  const slot = refs.allySlots?.[step.allyIdx];
+  const sprite = slot?.container;
+  if (!sprite) { onDone?.(); return; }
+
+  const enemyX = refs.enemySprite?.x ?? W * 0.5;
+  const enemyY = refs.enemySprite?.y ?? 130;
+  const dx = (enemyX - sprite.x) * 0.35;
+  const dy = (enemyY - sprite.y) * 0.35;
+
+  switch (step.category) {
+    case 'stimulate':
+      motionDash(sprite, dx, dy, dur, () => {
+        playTamingEffect(step.axis || 'behavior', true);
+        onDone?.();
+      });
+      break;
+    case 'capture':
+      motionPulse(sprite, 1.2, dur, () => {
+        playTamingEffect('behavior', true);
+        onDone?.();
+      });
+      break;
+    case 'defend':
+      motionGuard(sprite, 25, dur, () => {
+        onDone?.();
+      });
+      break;
+    case 'survey':
+      motionScan(sprite, dur, () => {
+        onDone?.();
+      });
+      break;
+    default:
+      motionDash(sprite, dx, dy, dur, onDone);
+  }
+}
+
+function showSkillLabel(actorName, skillName, isEnemy) {
+  if (!container) return;
+  const color = isEnemy ? 0xff6644 : 0x00d4aa;
+  const label = lbl(`${actorName} — ${skillName}`, 8, color, true);
+  label.anchor = { x: 0.5, y: 0.5 };
+  label.x = W / 2;
+  label.y = isEnemy ? 60 : 260;
+  label.alpha = 0;
+  container.addChild(label);
+
+  const start = performance.now();
+  const dur = 600;
+  function tick() {
+    const elapsed = performance.now() - start;
+    if (elapsed >= dur) { container.removeChild(label); label.destroy(); return; }
+    const t = elapsed / dur;
+    if (t < 0.15) label.alpha = t / 0.15;
+    else if (t < 0.7) label.alpha = 1;
+    else label.alpha = 1 - (t - 0.7) / 0.3;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 // ---- VFX Wrappers ----
 
 export function shakeEnemy() {
@@ -624,30 +749,33 @@ export function tickBattleField(tick) {
   processLogQueue();
   _tickEnemyMood(tick);
   const bounce = Math.sin(tick * 3);
-  if (refs.enemySprite && refs.enemyBaseY != null) {
-    refs.enemySprite.y = refs.enemyBaseY + bounce * 4;
-    refs.enemySprite.scale.set(1 + Math.sin(tick * 3) * 0.02, 1 - Math.sin(tick * 3) * 0.02);
-    // Shadow follows sprite X-scale breathing + slight Y shift
-    if (refs.enemyShadow) {
-      const breathScale = 1 + Math.sin(tick * 3) * 0.02;
-      refs.enemyShadow.scale.x = breathScale;
-      refs.enemyShadow.y = refs.enemyShadowBaseY + bounce * 1.5;
-    }
-  }
-  if (refs.allySlots) {
-    refs.allySlots.forEach((slot, i) => {
-      const phase = tick * 3 + i * 0.7;
-      slot.container.y = slot.baseY - Math.sin(phase) * 3;
-      slot.container.scale.set(1 - Math.sin(phase) * 0.015, 1 + Math.sin(phase) * 0.015);
-      // Shadow follows ally idle motion
-      const sBreath = 1 - Math.sin(phase) * 0.015;
-      slot.shadow.scale.x = sBreath;
-      slot.shadow.y = slot.shadowBaseY - Math.sin(phase) * 1.2;
-      // Bounce the aggro arrow (offset from base position)
-      if (slot._arrow && slot._arrow._baseY != null) {
-        slot._arrow.y = slot._arrow._baseY + Math.sin(tick * 5) * 3;
+  // Skip idle animations during turn sequence playback
+  if (!_sequencePlaying) {
+    if (refs.enemySprite && refs.enemyBaseY != null) {
+      refs.enemySprite.y = refs.enemyBaseY + bounce * 4;
+      refs.enemySprite.scale.set(1 + Math.sin(tick * 3) * 0.02, 1 - Math.sin(tick * 3) * 0.02);
+      // Shadow follows sprite X-scale breathing + slight Y shift
+      if (refs.enemyShadow) {
+        const breathScale = 1 + Math.sin(tick * 3) * 0.02;
+        refs.enemyShadow.scale.x = breathScale;
+        refs.enemyShadow.y = refs.enemyShadowBaseY + bounce * 1.5;
       }
-    });
+    }
+    if (refs.allySlots) {
+      refs.allySlots.forEach((slot, i) => {
+        const phase = tick * 3 + i * 0.7;
+        slot.container.y = slot.baseY - Math.sin(phase) * 3;
+        slot.container.scale.set(1 - Math.sin(phase) * 0.015, 1 + Math.sin(phase) * 0.015);
+        // Shadow follows ally idle motion
+        const sBreath = 1 - Math.sin(phase) * 0.015;
+        slot.shadow.scale.x = sBreath;
+        slot.shadow.y = slot.shadowBaseY - Math.sin(phase) * 1.2;
+        // Bounce the aggro arrow (offset from base position)
+        if (slot._arrow && slot._arrow._baseY != null) {
+          slot._arrow.y = slot._arrow._baseY + Math.sin(tick * 5) * 3;
+        }
+      });
+    }
   }
   sparkles.forEach(s => {
     s.g.alpha = 0.1 + Math.sin(tick * s.speed * 5 + s.phase) * 0.15;

@@ -13,6 +13,7 @@ import {
   triggerBondingAttemptVFX, triggerBondingSuccessVFX,
   triggerBondingFailVFX, triggerEscapeVFX, triggerFaintVFX,
   tickCombat, resetDanmaku,
+  playTurnSequence,
 } from './ui/combatUI.js';
 import { randomEnvironment, environmentToBackground } from './backgrounds.js';
 import { initTitle, resetTitle } from './ui/titleUI.js';
@@ -216,24 +217,34 @@ function refreshCombatUI() {
 // 카드 선택 / 해제 (턴 실행 안 함)
 function handleAction(allyIndex, actionIndex) {
   if (!combat || combat.state !== 'active') return;
+  if (_turnAnimating) return; // 연출 중 입력 차단
   combat.selectAction(allyIndex, actionIndex);
   refreshCombatUI();
 }
 
-// [확인] 버튼 → 턴 실행
+// [확인] 버튼 → 턴 실행 (연출 큐 기반)
+let _turnAnimating = false;
+
 function handleConfirm() {
   if (!combat || combat.state !== 'active') return;
+  if (_turnAnimating) return; // 연출 중 중복 방지
 
-  combat.confirmTurn();
+  const result = combat.confirmTurn();
+  const steps = result?.turnSteps || [];
 
-  // VFX — 환경 조율 시스템
-  shakeEnemy();
-  triggerTamingVFX('behavior', true);
-  if (combat.state === 'victory') setTimeout(() => triggerBondingSuccessVFX(), 200);
-  if (combat.state === 'escaped') triggerEscapeVFX();
+  _turnAnimating = true;
 
-  refreshCombatUI();
-  if (combat.state !== 'active') setTimeout(endBattle, 800);
+  // 연출 큐 재생
+  playTurnSequence(steps, () => {
+    // 연출 완료 후 결과 반영
+    if (combat.state === 'victory') triggerBondingSuccessVFX();
+    if (combat.state === 'escaped') triggerEscapeVFX();
+
+    refreshCombatUI();
+    _turnAnimating = false;
+
+    if (combat.state !== 'active') setTimeout(endBattle, 600);
+  });
 }
 
 // ============================================================

@@ -107,3 +107,130 @@ export function playDevolutionEffect() {
   screenFlash(0xfff8c0, 300, 0.4);
   screenShake(2, 300);
 }
+
+// ============================================================
+// Turn Sequence Motion Primitives
+// ============================================================
+
+/**
+ * Dash forward toward target then return.
+ * @param {PIXI.Container} sprite - the actor sprite container
+ * @param {number} dx - horizontal distance to dash (negative = left)
+ * @param {number} dy - vertical distance to dash (negative = up)
+ * @param {number} duration - total ms (forward + hold + return)
+ * @param {Function} onDone - callback when complete
+ */
+export function motionDash(sprite, dx, dy, duration, onDone) {
+  if (!sprite) { onDone?.(); return; }
+  const ox = sprite.x, oy = sprite.y;
+  const fwd = duration * 0.3, hold = duration * 0.15, ret = duration * 0.55;
+  const start = performance.now();
+  function tick() {
+    const elapsed = performance.now() - start;
+    if (elapsed < fwd) {
+      const t = elapsed / fwd;
+      const ease = t * t * (3 - 2 * t); // smoothstep
+      sprite.x = ox + dx * ease;
+      sprite.y = oy + dy * ease;
+    } else if (elapsed < fwd + hold) {
+      sprite.x = ox + dx;
+      sprite.y = oy + dy;
+    } else if (elapsed < fwd + hold + ret) {
+      const t = (elapsed - fwd - hold) / ret;
+      const ease = t * t * (3 - 2 * t);
+      sprite.x = ox + dx * (1 - ease);
+      sprite.y = oy + dy * (1 - ease);
+    } else {
+      sprite.x = ox; sprite.y = oy;
+      onDone?.(); return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/**
+ * Pulse (scale up then back) in place — for capture/bonding.
+ */
+export function motionPulse(sprite, scale, duration, onDone) {
+  if (!sprite) { onDone?.(); return; }
+  const start = performance.now();
+  function tick() {
+    const elapsed = performance.now() - start;
+    if (elapsed >= duration) { sprite.scale.set(1); onDone?.(); return; }
+    const t = elapsed / duration;
+    const s = 1 + Math.sin(t * Math.PI) * (scale - 1);
+    sprite.scale.set(s);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/**
+ * Guard motion — step back slightly then return + brief flash.
+ */
+export function motionGuard(sprite, distance, duration, onDone) {
+  if (!sprite) { onDone?.(); return; }
+  const ox = sprite.y;
+  const osx = sprite.scale.x, osy = sprite.scale.y;
+  const back = duration * 0.25, hold = duration * 0.35, ret = duration * 0.4;
+  const start = performance.now();
+  screenFlash(0x88ccff, 200, 0.22);
+  function tick() {
+    const elapsed = performance.now() - start;
+    if (elapsed < back) {
+      const t = elapsed / back;
+      sprite.y = ox + distance * t;
+      sprite.scale.set(osx * (1 + t * 0.12), osy * (1 + t * 0.12));
+    } else if (elapsed < back + hold) {
+      sprite.y = ox + distance;
+      sprite.scale.set(osx * 1.12, osy * 1.12);
+    } else if (elapsed < back + hold + ret) {
+      const t = (elapsed - back - hold) / ret;
+      sprite.y = ox + distance * (1 - t);
+      const s = 1.12 - t * 0.12;
+      sprite.scale.set(osx * s, osy * s);
+    } else {
+      sprite.y = ox;
+      sprite.scale.set(osx, osy);
+      onDone?.(); return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/**
+ * Scan motion — brief "eye flash" scale pulse on Y axis.
+ */
+export function motionScan(sprite, duration, onDone) {
+  if (!sprite) { onDone?.(); return; }
+  const start = performance.now();
+  screenFlash(0xffff88, 150, 0.18);
+  function tick() {
+    const elapsed = performance.now() - start;
+    if (elapsed >= duration) { sprite.scale.set(1); onDone?.(); return; }
+    const t = elapsed / duration;
+    const sy = 1 + Math.sin(t * Math.PI * 2) * 0.15;
+    const sx = 1 - Math.sin(t * Math.PI * 2) * 0.08;
+    sprite.scale.set(sx, sy);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/**
+ * Enemy lunge — dash toward allies (downward) then return.
+ */
+export function motionEnemyLunge(sprite, duration, onDone) {
+  motionDash(sprite, 0, 30, duration, onDone);
+}
+
+/**
+ * Enemy roar — scale up with shake.
+ */
+export function motionEnemyRoar(sprite, duration, onDone) {
+  if (!sprite) { onDone?.(); return; }
+  screenShake(3, Math.min(200, duration * 0.6));
+  motionPulse(sprite, 1.15, duration, onDone);
+}

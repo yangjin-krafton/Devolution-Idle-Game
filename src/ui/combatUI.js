@@ -11,6 +11,7 @@ import {
   triggerBondingAttemptVFX, triggerBondingSuccessVFX,
   triggerBondingFailVFX, triggerEscapeVFX, triggerFaintVFX,
   tickBattleField,
+  playTurnSequence, isSequencePlaying,
 } from './battleFieldUI.js';
 
 import {
@@ -44,6 +45,7 @@ export {
   shakeEnemy, triggerTamingVFX, triggerAttackVFX,
   triggerBondingAttemptVFX, triggerBondingSuccessVFX,
   triggerBondingFailVFX, triggerEscapeVFX, triggerFaintVFX,
+  playTurnSequence, isSequencePlaying,
 };
 
 // ---- Re-exports from actionPanelUI ----
