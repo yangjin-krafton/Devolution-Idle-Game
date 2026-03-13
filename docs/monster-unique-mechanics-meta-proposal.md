@@ -174,13 +174,13 @@ wildMechanic: {
 
 ```js
 {
-  id: 'skill_shuffle',
-  icon: '🃏',
-  category: 'skill_remap',
-  nameKr: '스킬 셔플',
-  summaryKr: '전투 시작 시 출전 몬스터 {a}마리의 장착 스킬이 무작위로 섞이고, 각 몬스터는 최대 {b}개까지 다른 스킬을 가져간다.',
-  difficultyParams: [[2, 1], [3, 1], [3, 2]],
-  counterRuleKr: '전투 시작 후 스킬 배치를 다시 읽어야 한다.',
+  id: 'last_skill_echo',
+  icon: '🔁',
+  category: 'skill_copy',
+  nameKr: '기억 반향',
+  summaryKr: '직전에 사용한 스킬 {a}개가 다음 턴 다른 몬스터 슬롯에 복제되고, 복제 효과는 {b}턴 지속된다.',
+  difficultyParams: [[1, 1], [1, 2], [2, 2]],
+  counterRuleKr: '거울 카멜레온전은 마지막에 무엇을 남기느냐와 다음 턴 반향을 어떻게 이용하느냐가 중요하다.',
 }
 ```
 
@@ -222,7 +222,7 @@ wildMechanic: {
   nameKr: '준비 후 폭발',
   summaryKr: '앞 {a}턴은 준비 단계라 직접 포획 효율이 낮고, 이후 {b}턴 동안 준비한 값이 한꺼번에 폭발한다.',
   difficultyParams: [[2, 1], [3, 1], [3, 2]],
-  counterRuleKr: '포자 여우전은 초반 준비를 참고 모은 뒤, 중후반에 한 번에 터뜨리는 식으로 풀어야 한다.',
+  counterRuleKr: '포자 여우전은 냄새와 습도를 초반에 천천히 쌓아 두고, 중후반에 포자 확산처럼 한 번에 터뜨리는 식으로 풀어야 한다.',
 }
 ```
 
@@ -244,13 +244,13 @@ wildMechanic: {
 
 ```js
 {
-  id: 'lead_lock',
-  icon: '🎯',
-  category: 'formation',
-  nameKr: '선봉 고정',
-  summaryKr: '전투 시작 후 선봉 몬스터 {a}마리는 교체나 역할 변경이 막히고, 대신 행동 우선권이 {b}단계 상승한다.',
-  difficultyParams: [[1, 1], [1, 2], [2, 2]],
-  counterRuleKr: '선봉 운영을 중심으로 턴을 짠다.',
+  id: 'opening_lock',
+  icon: '🔒',
+  category: 'turn_phase',
+  nameKr: '초반 봉인',
+  summaryKr: '전투 시작 후 {a}턴 동안 특정 계열 행동이 봉인되고, 이후 {b}턴부터 해제된다.',
+  difficultyParams: [[2, 3], [3, 4], [4, 5]],
+  counterRuleKr: '바위 거북전은 어둡고 조용한 환경을 먼저 굳히고, 껍질이 열리는 중반 이후에 핵심 행동을 터뜨리는 흐름이 잘 맞는다.',
 }
 ```
 
@@ -286,13 +286,13 @@ wildMechanic: {
 
 ```js
 {
-  id: 'lineage_resonance',
-  icon: '🧬',
-  category: 'tribe',
-  nameKr: '혈통 공명',
-  summaryKr: '같은 종족 계열 몬스터가 아군에 {a}마리 이상 있으면 공명이 발동하고, 특정 행동이 {b}% 강화된다.',
-  difficultyParams: [[2, 20], [2, 35], [3, 50]],
-  counterRuleKr: '폭풍 매전은 같은 혈통 파티를 꾸렸을 때 체감이 크게 달라지는 대표 전투로 설계한다.',
+  id: 'checkpoint_turn',
+  icon: '🚩',
+  category: 'turn_phase',
+  nameKr: '체크포인트',
+  summaryKr: '{a}턴마다 체크포인트가 오며, 그 순간 조건을 만족하면 보너스, 실패하면 {b}단계 페널티가 붙는다.',
+  difficultyParams: [[3, 1], [2, 1], [2, 2]],
+  counterRuleKr: '폭풍 매전은 상승기류가 열리는 타이밍에 맞춰 핵심 축을 정리하는 운영이 중요하다.',
 }
 ```
 
@@ -370,13 +370,13 @@ wildMechanic: {
 
 ```js
 {
-  id: 'devolution_sync',
-  icon: '🪺',
-  category: 'tribe',
-  nameKr: '퇴화 단계 동기화',
-  summaryKr: '같은 종족의 퇴1/퇴2가 함께 있으면 단계 차이 {a}마다 보너스가 쌓이고, {b}단계 이상 차이나면 특수 효과가 열린다.',
-  difficultyParams: [[1, 2], [1, 3], [2, 3]],
-  counterRuleKr: '연기 족제비전은 같은 종족 안에서도 서로 다른 퇴화 단계를 어떻게 섞어 데려오느냐가 핵심이 된다.',
+  id: 'prep_then_burst',
+  icon: '🕰️',
+  category: 'turn_phase',
+  nameKr: '준비 후 폭발',
+  summaryKr: '앞 {a}턴은 준비 단계라 직접 포획 효율이 낮고, 이후 {b}턴 동안 준비한 값이 한꺼번에 폭발한다.',
+  difficultyParams: [[2, 1], [3, 1], [3, 2]],
+  counterRuleKr: '연기 족제비전은 초반에 연막을 깔고, 중후반에 한 번에 몰아치는 식으로 풀어야 한다.',
 }
 ```
 
@@ -384,12 +384,12 @@ wildMechanic: {
 
 ```js
 {
-  id: 'solo_focus',
-  icon: '👤',
-  category: 'formation',
-  nameKr: '단독 출전',
-  summaryKr: '이번 전투는 출전 몬스터를 1마리만 사용하지만, 그 몬스터는 턴마다 {a}번 행동할 수 있고 효과는 {b}% 증폭된다.',
-  difficultyParams: [[2, 125], [2, 150], [3, 150]],
-  counterRuleKr: '한 마리 집중 운용과 연속 행동 설계가 핵심이다.',
+  id: 'checkpoint_turn',
+  icon: '🚩',
+  category: 'turn_phase',
+  nameKr: '체크포인트',
+  summaryKr: '{a}턴마다 체크포인트가 오며, 그 순간 조건을 만족하면 보너스, 실패하면 {b}단계 페널티가 붙는다.',
+  difficultyParams: [[3, 1], [2, 1], [2, 2]],
+  counterRuleKr: '이끼 골렘전은 냄새와 습도, 정적 상태를 체크포인트마다 유지하고 있느냐가 핵심인 늪지 유지형 전투로 보는 편이 맞다.',
 }
 ```
