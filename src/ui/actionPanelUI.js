@@ -40,7 +40,13 @@ export function renderActions(team, cr) {
   const pending = cr?.pendingSlots || [];
   const sel = cr?.selectedActions || {};
   const order = cr?.turnOrder || {};
+  const enemyOrd = cr?.enemyOrder ?? -1;
   const allChosen = pending.length === 0 && Object.keys(sel).length > 0;
+
+  // 턴 순서 프리뷰 바 (모든 행동 선택 완료 시 표시)
+  if (allChosen && enemyOrd > 0) {
+    _renderTurnOrderBar(refs.actionContainer, team, sel, order, enemyOrd, colW, startX);
+  }
 
   for (let c = 0; c < cols; c++) {
     const ally = team[c];
@@ -148,5 +154,83 @@ export function renderActions(team, cr) {
 
       refs.actionContainer.addChild(ct);
     });
+  }
+}
+
+// 턴 순서 프리뷰 바: 수비 → 적 → 자극 → 포획 순서를 시각화
+function _renderTurnOrderBar(parent, team, sel, order, enemyOrd, colW, startX) {
+  const barY = -18;
+  const barH = 16;
+
+  // 엔트리 수집: 아군 + 적
+  const entries = [];
+  for (const [i, _ai] of Object.entries(sel)) {
+    const idx = Number(i);
+    const ally = team[idx];
+    if (!ally) continue;
+    const action = ally.actions[_ai];
+    entries.push({
+      order: order[idx] || 99,
+      label: ally.name.slice(0, 3),
+      category: action?.category || 'stimulate',
+      isEnemy: false,
+    });
+  }
+  entries.push({
+    order: enemyOrd,
+    label: '적',
+    category: 'enemy',
+    isEnemy: true,
+  });
+  entries.sort((a, b) => a.order - b.order);
+
+  // 배경 바
+  const barW = W - startX * 2;
+  const bg = new PIXI.Graphics();
+  bg.roundRect(startX, barY, barW, barH, 4).fill({ color: 0x15152a, alpha: 0.8 });
+  parent.addChild(bg);
+
+  // 칸 렌더
+  const catColors = {
+    defend: 0x4dabf7,
+    stimulate: 0x00d4aa,
+    capture: 0xff6b6b,
+    enemy: 0xff8844,
+  };
+  const catIcons = {
+    defend: '🛡️',
+    stimulate: '💫',
+    capture: '🤝',
+    enemy: '⚔️',
+  };
+
+  const cellW = barW / entries.length;
+  entries.forEach((e, i) => {
+    const cx = startX + i * cellW;
+    const color = catColors[e.isEnemy ? 'enemy' : e.category] || 0x888888;
+
+    // 칸 배경
+    const cell = new PIXI.Graphics();
+    cell.roundRect(cx + 1, barY + 1, cellW - 2, barH - 2, 3)
+      .fill({ color, alpha: e.isEnemy ? 0.3 : 0.15 });
+    parent.addChild(cell);
+
+    // 순서번호 + 아이콘 + 이름
+    const icon = catIcons[e.isEnemy ? 'enemy' : e.category] || '';
+    const text = `${e.order} ${icon}${e.label}`;
+    const t = lbl(text, 4.5, color, true);
+    t.anchor = { x: 0.5, y: 0.5 };
+    t.x = cx + cellW / 2;
+    t.y = barY + barH / 2;
+    parent.addChild(t);
+  });
+
+  // 화살표 연결
+  for (let i = 0; i < entries.length - 1; i++) {
+    const ax = startX + (i + 1) * cellW;
+    const arrow = lbl('›', 5, 0x555577, true);
+    arrow.anchor = { x: 0.5, y: 0.5 };
+    arrow.x = ax; arrow.y = barY + barH / 2;
+    parent.addChild(arrow);
   }
 }

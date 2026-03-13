@@ -10,6 +10,8 @@ import { W, H, S, lbl, cuteBtn } from './theme.js';
 import { D, darkCard, neonBadge, statBar } from './theme-dark.js';
 import { monster } from './sprites.js';
 import { buildSkillCard } from './skillCard.js';
+import { getAbility } from '../ability.js';
+import { STAT_DEFS, getStat } from '../statSystem.js';
 
 const PAD = 14;
 // Detail panel (top) — shows selected monster info
@@ -159,27 +161,60 @@ function refreshDetail() {
   detailBody.addChild(Object.assign(lbl(`HP ${ally.hp ?? ally.maxHp}/${ally.maxHp}`, 6, hpR > 0.3 ? D.neon : D.red), { x: 2, y: 22 }));
   detailBody.addChild(statBar(80, 24, 100, 5, hpR, hpR > 0.3 ? D.neon : D.red));
 
-  // Stats table
+  // 6-Stat table (2행 3열)
   if (ally.stats) {
-    const STAT = { gentleness: '온화', empathy: '공감', resilience: '인내', agility: '민첩' };
-    const SCOL = { gentleness: D.neon, empathy: D.blue, resilience: 0xffaa60, agility: 0x88ddbb };
-    const keys = Object.keys(ally.stats);
-    let sx = 2;
-    keys.forEach(k => {
-      detailBody.addChild(Object.assign(lbl(STAT[k], 5, SCOL[k], true), { x: sx, y: 38 }));
-      detailBody.addChild(Object.assign(lbl(String(ally.stats[k]), 7, D.text, true), { x: sx + 4, y: 50 }));
-      sx += (pw / keys.length);
+    const STAT_DISPLAY = [
+      { key: 'affinity',  name: '친화', color: D.neon },
+      { key: 'empathy',   name: '공감', color: D.blue },
+      { key: 'endurance', name: '인내', color: 0xffaa60 },
+      { key: 'agility',   name: '민첩', color: 0x88ddbb },
+      { key: 'bond',      name: '유대', color: 0xeebb55 },
+      { key: 'instinct',  name: '직감', color: 0xcc88dd },
+    ];
+    const statColW = pw / 3;
+    STAT_DISPLAY.forEach((s, i) => {
+      const col = i % 3, row = Math.floor(i / 3);
+      const sx = 2 + col * statColW;
+      const sy = 36 + row * 18;
+      const val = getStat(ally.stats, s.key);
+      detailBody.addChild(Object.assign(lbl(s.name, 5, s.color, true), { x: sx, y: sy }));
+      detailBody.addChild(Object.assign(lbl(String(val), 6, D.text, true), { x: sx + 28, y: sy }));
+      // 스탯 바
+      detailBody.addChild(statBar(sx + 42, sy + 3, 50, 4, val / 15, s.color));
+      // 성장 진행도 (경험치 표시)
+      if (ally._statXP && ally._statXP[s.key] > 0) {
+        const threshold = 3 + Math.floor(val / 3);
+        const xpR = ally._statXP[s.key] / threshold;
+        const dot = new PIXI.Graphics();
+        dot.roundRect(sx + 95, sy + 2, 12, 5, 2).fill({ color: s.color, alpha: 0.15 });
+        if (xpR > 0) dot.roundRect(sx + 95, sy + 2, Math.max(3, 12 * xpR), 5, 2).fill({ color: s.color, alpha: 0.5 });
+        detailBody.addChild(dot);
+      }
     });
   }
 
   // XP
   const xpR = (ally.xp || 0) / (ally.xpThreshold || 5);
-  detailBody.addChild(Object.assign(lbl('XP', 5, D.yellow), { x: 2, y: 68 }));
-  detailBody.addChild(statBar(30, 70, 100, 4, xpR, D.yellow));
+  detailBody.addChild(Object.assign(lbl('XP', 5, D.yellow), { x: 2, y: 74 }));
+  detailBody.addChild(statBar(30, 76, 100, 4, xpR, D.yellow));
+
+  // 어빌리티 표시
+  if (ally.ability) {
+    const ab = getAbility(ally.ability);
+    if (ab) {
+      const abY = 74;
+      const abBadge = new PIXI.Graphics();
+      abBadge.roundRect(140, abY - 2, pw - 142, 14, 7).fill({ color: D.neon, alpha: 0.1 });
+      abBadge.roundRect(140, abY - 2, pw - 142, 14, 7).stroke({ color: D.neon, width: 0.5, alpha: 0.3 });
+      detailBody.addChild(abBadge);
+      detailBody.addChild(Object.assign(lbl(`✦ ${ab.name}`, 5, D.neon, true), { x: 146, y: abY }));
+      detailBody.addChild(Object.assign(lbl(ab.desc, 4.5, D.dim), { x: 146 + (ab.name.length + 2) * 5 * S + 4, y: abY + 1 }));
+    }
+  }
 
   // Skills
   if (ally.actions) {
-    const skillY = 85;
+    const skillY = 92;
     const gap = 6;
     const cardW = (pw - gap * (ally.actions.length - 1)) / ally.actions.length;
     const cardH = DETAIL_H - skillY - 4;

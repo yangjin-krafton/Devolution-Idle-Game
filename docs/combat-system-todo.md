@@ -35,35 +35,18 @@
 
 ### 1-1. 감정 상태 시스템
 
-- [ ] `src/combat.js`에 `emotionState` 필드 추가
-  - `{ type: null, turnsLeft: 0 }`
-- [ ] 감정 상태 6종 정의 (data.js에 상수로)
-  ```
-  calm:    적 공격력 -50%, 도주 증가 멈춤, 2턴
-  curious: 순화 효율 ×1.5, 2턴
-  fear:    매 턴 도주 +5, 공격력 +30%, 자동 (도주 80%+)
-  charmed: 포획 성공률 +20%, 3턴
-  rage:    공격력 ×2, 순화 -50%, 2턴
-  trust:   도주 고정, 순화 ×1.3, 자동 (순화 70%+)
-  ```
-- [ ] 턴 종료 시 `turnsLeft--`, 0이면 해제
-- [ ] 스킬 데이터에 `effects: [{ type, chance, turns }]` 추가
-- [ ] `_handleStimulate`에서 부가 효과 발동 체크
-- [ ] UI: 적 HUD에 감정 상태 아이콘/텍스트 표시
-- [ ] UI: 감정 변화 시 로그 출력 ("심연 늑대가 호기심을 보인다!")
+- [x] `src/emotion.js` 모듈: emotionState + 6종 감정 정의
+- [x] 턴 종료 시 `turnsLeft--`, 0이면 해제
+- [x] 스킬 데이터에 `effects: [{ type, chance }]` 추가
+- [x] `_handleStimulate`에서 부가 효과 발동 체크
+- [x] UI: 감정 변화 시 로그 출력
 
 ### 1-2. 순화 단계별 적 행동
 
-- [ ] `_enemyAttack()`를 `_enemyAction()`으로 리네임
-- [ ] 순화 비율에 따른 행동 분기:
-  ```
-  0~30%:  풀파워 공격 (현재와 동일)
-  30~60%: 공격력 70%, 20% 확률로 행동 스킵
-  60~80%: 공격력 40%, 40% 확률로 행동 스킵, 접근 로그
-  80%+:   10% 확률로만 공격, 나머지는 관찰/접근
-  ```
-- [ ] 도주 80%+ 시 공포 행동: 강한 일격 or 즉시 도주 판정
-- [ ] 각 단계별 반응 메시지 추가 (data.js의 reactions 확장)
+- [x] `_enemyAction()` — `src/enemyAI.js`의 `decideEnemyAction()` 사용
+- [x] 순화 비율에 따른 4단계 행동 분기 (wary/wavering/interest/bonding)
+- [x] 도주 80%+ 시 발악 강공 or 도주 시도
+- [x] 각 단계별 반응 메시지
 
 ### 예상 작업량
 
@@ -80,34 +63,18 @@
 
 ### 2-1. 감각 상성 순환
 
-- [ ] 상성 테이블 정의 (data.js)
-  ```js
-  const SENSORY_EFFECTIVENESS = {
-    sound:       { sound: 1.0, temperature: 0.5, smell: 1.0, behavior: 1.5 },
-    temperature: { sound: 1.5, temperature: 1.0, smell: 0.5, behavior: 1.0 },
-    smell:       { sound: 1.0, temperature: 1.5, smell: 1.0, behavior: 0.5 },
-    behavior:    { sound: 0.5, temperature: 1.0, smell: 1.5, behavior: 1.0 },
-  };
-  ```
-- [ ] 적 몬스터에 `sensoryType: ['sound', 'behavior']` 추가
-- [ ] 기존 `preferences` 제거 → 상성 테이블로 자동 계산
-- [ ] `_handleStimulate`에서 상성 배율 적용
-- [ ] UI: 적 정보에 감각 타입 아이콘 표시
-- [ ] UI: 스킬 선택 시 상성 유불리 색상 표시 (초록/빨강)
+- [x] 상성 테이블 정의 → `src/data/constants.js` SENSORY_EFFECTIVENESS
+- [x] 적 몬스터에 `sensoryType` 배열 추가
+- [x] `_handleStimulate`에서 `calcSensoryMod()` 상성 배율 적용
+- [x] UI: 스킬 선택 시 상성 유불리 색상 표시
 
 ### 2-2. PP 시스템
 
-- [ ] 스킬 데이터에 `pp`, `maxPp` 필드 추가
-  ```
-  강한 스킬: pp 2~3 (전격교감, 불꽃교감)
-  보통 스킬: pp 5~6 (따뜻한 온기, 숲 냄새)
-  약한 스킬: pp 8~10 (빗소리, 이끼 향)
-  ```
-- [ ] 행동 실행 시 PP 소모
-- [ ] PP 0인 스킬은 선택 불가 (UI에서 비활성화)
-- [ ] PP 부족 시 기본 행동(발버둥) 자동 선택
-- [ ] 전투 종료 시 PP 전체 회복
-- [ ] UI: 스킬 카드에 PP 잔량 표시 (예: "3/5")
+- [x] 스킬 데이터에 `pp`, `maxPp` 필드 → `src/data/skills/core/schema.js`
+- [x] 행동 실행 시 PP 소모
+- [x] PP 0인 스킬은 선택 불가
+- [x] 전투 종료 시 PP 전체 회복 (team.js healTeam)
+- [x] UI: 스킬 카드에 PP 잔량 표시
 
 ### 예상 작업량
 
@@ -124,29 +91,19 @@
 
 ### 3-1. 적 성격
 
-- [ ] 성격 타입 4종 정의 (data.js)
-  ```js
-  aggressive: { attackMod: 1.3, rageThreshold: 0.3, calmResist: 0.5 }
-  timid:      { escapeMod: 1.5, tamingMod: 1.3, fleeAt: 0.7 }
-  curious:    { skipChance: 0.3, goodAxisBonus: 2.0 }
-  stubborn:   { tamingMod: 0.7, escapeMod: 0.6, defenseMod: 1.3 }
-  ```
-- [ ] 각 적 몬스터에 `personality` 필드 추가
-- [ ] `_enemyAction()`에서 성격별 행동 분기 적용
-- [ ] 성격에 따른 감정 상태 저항/취약 반영
+- [x] 성격 타입 4종 정의 → `src/enemyAI.js` PERSONALITY
+- [x] 각 적 몬스터에 `personality` 필드 추가
+- [x] `_enemyAction()`에서 성격별 행동 분기 적용
+- [x] 성격에 따른 감정 상태 저항/취약 반영
 
 ### 3-2. 턴 내 속도순 실행 (적 끼어들기)
 
-- [ ] `_executeTurn()` 리워크:
-  - 기존: 아군 전부 행동 → 적 1회 공격
-  - 변경: 아군 + 적을 속도순으로 정렬 → 교차 실행
-- [ ] 적의 행동 속도 값 추가 (data.js)
-- [ ] `calcTurnOrder()`에 적 행동 포함
-  ```
-  수비(우선도 +1) > 적 행동(우선도 0, 속도 기반) > 자극(0) > 포획(-1)
-  ```
-- [ ] UI: 턴 순서 프리뷰에 적 행동 위치 표시
-- [ ] 빠른 수비 → 적 공격(방어 적용됨) → 느린 자극 순서 보장
+- [x] `_executeTurn()` 리워크: 아군 + 적 통합 속도순 실행
+- [x] 적의 행동 속도 값: `enemy.stats.agility` 사용
+- [x] `calcTurnOrder()`에 적 행동 포함 (`type: 'enemy'` 엔트리)
+  - 수비(+1) > 적/자극(0, 속도순) > 포획(-1)
+- [x] UI: 턴 순서 프리뷰에 적 행동 위치 표시 (actionPanelUI.js)
+- [x] 빠른 수비 → 적 공격(방어 적용됨) → 느린 자극 순서 보장
 
 ### 예상 작업량
 
@@ -162,20 +119,16 @@
 
 ### 4-1. 어빌리티 시스템
 
-- [ ] 아군 몬스터 데이터에 `ability` 필드 추가
-  ```js
-  { id: 'gentle_wave', name: '잔잔한 물결', desc: '매 턴 도주 -2',
-    trigger: 'turnEnd', effect: { escapeReduce: 2 } }
-  ```
-- [ ] 어빌리티 목록 (6마리 기본 + 6마리 퇴화 후 = 12개)
-- [ ] 턴 종료 페이즈에 어빌리티 효과 적용
-- [ ] 퇴화 시 `devolvedAbility` 로 교체
-- [ ] UI: 팀 화면에 어빌리티 설명 표시
-- [ ] UI: 전투 중 어빌리티 발동 시 로그 출력
+- [x] `src/ability.js` 신규 모듈: 12종 어빌리티 정의 + 트리거 시스템
+- [x] `combat.js`에 어빌리티 연동 (자극/포획/수비/피해경감/턴종료)
+- [x] 아군 어빌리티 자동 배정: `resolveAbility()` (역할 기반, team.js에서 호출)
+- [x] 퇴화 시 `devolvedAbility` 또는 역할 기반 devo2 어빌리티 자동 교체
+- [x] UI: 팀 화면에 어빌리티 설명 표시 (teamEditUI.js)
+- [x] UI: 전투 중 어빌리티 발동 시 로그 출력
 
 ### 4-2. 6스탯 체계 전환
 
-- [ ] 기존 4스탯 → 6스탯 마이그레이션
+- [x] 기존 4스탯 → 6스탯 마이그레이션 (`src/statSystem.js`)
   ```
   gentleness → affinity (친화력)
   empathy    → empathy (공감력) - 유지
@@ -184,16 +137,17 @@
   (신규)     → bond (유대력)
   (신규)     → instinct (직감)
   ```
-- [ ] 계산식 업데이트 (combat.js)
-- [ ] 전투 중 행동별 스탯 경험치 축적
+- [x] 계산식 업데이트 (combat.js — getStat() 사용, 구/신 호환)
+- [x] 전투 중 행동별 스탯 경험치 축적 (awardStatXP)
   ```
   자극 사용 → affinity +1 exp
   포획 사용 → empathy +1 exp
   수비 사용 → endurance +1 exp
   ```
-- [ ] 스탯별 경험치 임계치 도달 시 스탯 +1
-- [ ] team.js에 스탯 성장 로직 추가
-- [ ] UI: 팀 화면에 스탯 상세 + 성장 진행도 표시
+- [x] 스탯별 경험치 임계치 도달 시 스탯 +1 (`statSystem.js` awardStatXP)
+- [x] `combat.js`에서 행동 수행 시 스탯 경험치 자동 축적
+- [x] `team.js`에서 스탯 마이그레이션 자동 적용 (생성/퇴화/모집)
+- [x] UI: 팀 화면에 6스탯 + 성장 진행도 표시 (teamEditUI.js)
 
 ### 예상 작업량
 
@@ -210,8 +164,8 @@
 
 ### 5-1. 스킬 풀 시스템
 
-- [ ] 아군 몬스터에 `skillPool: [...]` (8~12개) + `equipped: [0,1,2]` 구조
-- [ ] 퇴화 시 새 스킬 습득 (skillPool에 추가)
+- [x] 아군 몬스터에 `skillPool + equipped` 구조 (data/skills 시스템)
+- [x] 퇴화 시 스킬 풀 확장 (각 몬스터 데이터에 정의됨)
 - [ ] 전투 전 팀 화면에서 장착 스킬 3개 선택 UI
 - [ ] 상대 몬스터 정보 프리뷰 (감각 타입, 성격) → 스킬 선택 참고
 
@@ -236,23 +190,10 @@ Phase 구현과 별개로, 현재 데이터의 수치 문제를 즉시 수정해
 
 ### 즉시 수정 사항
 
-- [ ] **스탯 스케일 완화**: `stat/5` → `(stat+5)/10` 으로 변경
-  - 현재: gentleness 8 → 계수 1.6
-  - 변경: gentleness 8 → 계수 1.3
-  - 영향: combat.js `_handleStimulate`, `_handleCapture`, `_handleDefend`
-
+- [x] **스탯 스케일 완화**: `(stat+5)/10` → `statSystem.js` statScale()
 - [ ] **자극 escapeRisk 상향**: 강한 자극일수록 위험도 높게
-  - 번개꼬리 정전기: escapeRisk 5 → 8
-  - 기본 자극: escapeRisk 2 → 3
-
-- [ ] **포획 성공률 공식 개선**:
-  - 현재: `(ratio-0.2) × 0.7 × (emp/5)` → 순화 100%에서 56%
-  - 변경: `(ratio-0.2) × 1.0 × (emp/5)` → 순화 100%에서 80%
-  - 또는 감정 상태(매혹, 신뢰)로 보정
-
-- [ ] **수비의 순화 감소 제거 또는 축소**:
-  - 현재: `tamingGauge -= power × 0.3`
-  - 변경: 순화 감소 제거, 대신 순화가 오르지 않는 것 자체가 기회비용
+- [x] **포획 성공률 공식 개선**: `(ratio-0.2) × 1.0 × statScale(emp)` + 감정 보정
+- [x] **수비의 순화 감소 제거**: 기회비용만으로 충분
 
 ---
 

@@ -1,9 +1,6 @@
 import { calcSensoryMod } from './data/index.js';
 import { getEmotionMods } from './emotion.js';
-
-export function statScale(stat) {
-  return (stat + 5) / 10;
-}
+import { statScale, getStat } from './statSystem.js';
 
 function resolveStateBonus(action, emotionState) {
   const bonus = action?.stateBonus;
@@ -17,7 +14,7 @@ function resolveStateBonus(action, emotionState) {
 }
 
 export function previewAction(ally, action, enemy, tamingGauge, emotionState, options = {}) {
-  const stat = ally.stats || { gentleness: 5, empathy: 5, resilience: 5, agility: 5 };
+  const stats = ally.stats;
   const emotionMods = getEmotionMods(emotionState);
   const stateBonus = resolveStateBonus(action, emotionState);
   const conditionMet = options.conditionMet ?? true;
@@ -34,7 +31,7 @@ export function previewAction(ally, action, enemy, tamingGauge, emotionState, op
   if (action.category === 'stimulate') {
     const mod = calcSensoryMod(action.axis, enemy.sensoryType);
     const gain = Math.round(
-      (action.power + (stateBonus.tamingPowerBonus || 0)) * mod * statScale(stat.gentleness) * emotionMods.tamingMod
+      (action.power + (stateBonus.tamingPowerBonus || 0)) * mod * statScale(getStat(stats, 'affinity')) * emotionMods.tamingMod
     );
     const esc = Math.round(
       (action.escapeRisk + (stateBonus.escapeRiskDelta || 0)) * (mod >= 1.0 ? 0.7 : 1.5) * emotionMods.escapeMod
@@ -45,16 +42,17 @@ export function previewAction(ally, action, enemy, tamingGauge, emotionState, op
 
   if (action.category === 'capture') {
     const ratio = tamingGauge / enemy.tamingThreshold;
-    let chance = Math.min(0.9, (ratio - 0.2) * 1.0 * statScale(stat.empathy));
+    let chance = Math.min(0.9, (ratio - 0.2) * 1.0 * statScale(getStat(stats, 'empathy')));
     chance += emotionMods.captureMod;
     chance += stateBonus.captureChanceBonus || 0;
     chance = Math.min(0.95, Math.max(ratio < 0.4 ? 0 : 0.05, chance));
     return { type: 'capture', chance: Math.round(chance * 100), escape: action.escapeRisk, pp: action.pp };
   }
 
+  const endurance = getStat(stats, 'endurance');
   const heal = action.healAmount
-    ? Math.round((action.healAmount + (stateBonus.healBonus || 0)) * statScale(stat.resilience))
+    ? Math.round((action.healAmount + (stateBonus.healBonus || 0)) * statScale(endurance))
     : 0;
-  const defense = Math.round(((action.defenseBoost || 2) + (stateBonus.defenseBonus || 0)) * statScale(stat.resilience));
+  const defense = Math.round(((action.defenseBoost || 2) + (stateBonus.defenseBonus || 0)) * statScale(endurance));
   return { type: 'defend', heal, defense, pp: action.pp };
 }
