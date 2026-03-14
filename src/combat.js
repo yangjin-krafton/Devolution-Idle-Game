@@ -289,25 +289,78 @@ export class CombatSystem {
   }
 
   _handleStimulateAsEnv(ally, action) {
-    // CSV 스킬 델타가 있으면 모든 축에 적용
-    if (action.deltas) {
-      for (const axis of ENVIRONMENT_AXES) {
-        const d = action.deltas[axis];
-        if (d && d !== 0) {
+    const et = action.effectType || 'axis_change';
+
+    // ── axis_change: 직접 축 조절 (raise/lower) ──
+    if (et === 'axis_change') {
+      if (action.deltas) {
+        for (const axis of ENVIRONMENT_AXES) {
+          const d = action.deltas[axis];
+          if (d && d !== 0) {
+            this._changeEnvironment(axis, d);
+            this.log(`${ENV_AXIS_LABEL[axis]}이(가) ${d > 0 ? '높아졌다' : '낮아졌다'}. (${this.environment[axis]})`);
+          }
+        }
+        return;
+      }
+      // 기존 호환: 단일축
+      const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
+      const mag = action.power > 5 ? 2 : 1;
+      const delta = (action.escapeRisk < 0) ? -mag : mag;
+      this._changeEnvironment(envAxis, delta);
+      this.log(`${ENV_AXIS_LABEL[envAxis]}이(가) ${delta > 0 ? '높아졌다' : '낮아졌다'}. (${this.environment[envAxis]})`);
+      return;
+    }
+
+    // ── axis_convert: 축 간 변환 (한 축↓ → 다른 축↑) ──
+    if (et === 'axis_convert') {
+      if (action.deltas) {
+        const down = [], up = [];
+        for (const axis of ENVIRONMENT_AXES) {
+          const d = action.deltas[axis];
+          if (d && d < 0) down.push({ axis, d });
+          if (d && d > 0) up.push({ axis, d });
+        }
+        for (const { axis, d } of down) {
           this._changeEnvironment(axis, d);
-          const dirLabel = d > 0 ? '높아졌다' : '낮아졌다';
-          this.log(`${ENV_AXIS_LABEL[axis]}이(가) ${dirLabel}. (${this.environment[axis]})`);
+          this.log(`${ENV_AXIS_LABEL[axis]} ${d} (변환 소모)`);
+        }
+        for (const { axis, d } of up) {
+          this._changeEnvironment(axis, d);
+          this.log(`→ ${ENV_AXIS_LABEL[axis]} +${d} (변환 획득)`);
         }
       }
       return;
     }
-    // 기존 호환: 단일축 delta 계산
-    const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
-    const magnitude = action.power > 5 ? 2 : 1;
-    const delta = (action.escapeRisk < 0) ? -magnitude : magnitude;
-    this._changeEnvironment(envAxis, delta);
-    const dirLabel = delta > 0 ? '높아졌다' : '낮아졌다';
-    this.log(`${ENV_AXIS_LABEL[envAxis]}이(가) ${dirLabel}. (${this.environment[envAxis]})`);
+
+    // ── mechanic_check: 메커닉 대응/검사 + 부가 축 효과 ──
+    if (et === 'mechanic_check') {
+      const mechName = action.mechanicLink || '메커닉';
+      // 축 변화 적용 (부가 효과)
+      if (action.deltas) {
+        for (const axis of ENVIRONMENT_AXES) {
+          const d = action.deltas[axis];
+          if (d && d !== 0) {
+            this._changeEnvironment(axis, d);
+            this.log(`${ENV_AXIS_LABEL[axis]} ${d > 0 ? '+' : ''}${d}`);
+          }
+        }
+      }
+      // 메커닉 카운터 효과
+      this.log(`${mechName} 대응 효과 발동!`);
+      return;
+    }
+
+    // ── axis_lock: 축 고정 (N턴 잠금) ──
+    if (et === 'axis_lock') {
+      const lockAxis = action.axisPrimary || action.axis;
+      if (lockAxis) {
+        const turns = (action.mechanicParams && action.mechanicParams[0]) || 1;
+        this.environmentLocks[lockAxis] = (this.environmentLocks[lockAxis] || 0) + turns;
+        this.log(`${ENV_AXIS_LABEL[lockAxis]}이(가) ${turns}턴 동안 고정된다!`);
+      }
+      return;
+    }
   }
 
   _handleDefendAsEnv(ally, action) {

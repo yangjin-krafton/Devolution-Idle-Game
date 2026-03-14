@@ -143,6 +143,14 @@ export function getFormSkills(formId) {
 function csvSkillToAction(sk, formName) {
   const category = _mapCategory(sk.category);
   const pp = sk.pp || _defaultPP(category);
+
+  // effectType: 스킬 효과 분류
+  // raise/lower → axis_change (직접 축 조절)
+  // convert     → axis_convert (축 간 변환)
+  // check       → mechanic_check (메커닉 대응/검사)
+  // stabilize   → axis_lock (축 고정)
+  const effectType = _mapEffectType(sk.deltaPattern);
+
   return {
     id: sk.skillId, key: sk.skillId, name: sk.nameKr,
     category, axis: sk.axisPrimary,
@@ -155,11 +163,30 @@ function csvSkillToAction(sk, formName) {
     log: `${formName}이(가) ${sk.nameKr}을(를) 사용했다!`,
     desc: sk.designNote || sk.nameKr,
     rarity: 'common', tags: [], aliases: [],
-    deltas: sk.deltas, deltaPattern: sk.deltaPattern,
-    mechanicLink: sk.mechanicLink, mechanicParams: sk.mechanicParams,
-    routeFunction: sk.routeFunction, purityLevel: sk.purityLevel,
+    // 효과 데이터
+    effectType,
+    deltas: sk.deltas,
+    deltaPattern: sk.deltaPattern,
+    // 메커닉 연동
+    mechanicLink: sk.mechanicLink,
+    mechanicParams: sk.mechanicParams,
+    // 메타
+    routeFunction: sk.routeFunction,
+    purityLevel: sk.purityLevel,
     affectedAxisCount: sk.affectedAxisCount,
+    axisPrimary: sk.axisPrimary,
+    axisSecondary: sk.axisSecondary,
   };
+}
+
+function _mapEffectType(deltaPattern) {
+  switch (deltaPattern) {
+    case 'raise': case 'lower': return 'axis_change';
+    case 'convert': return 'axis_convert';
+    case 'check': return 'mechanic_check';
+    case 'stabilize': return 'axis_lock';
+    default: return 'axis_change';
+  }
 }
 
 function _mapCategory(csvCat) {
