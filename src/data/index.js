@@ -1,55 +1,33 @@
 // ============================================================
-// Data Index — aggregates all monster data + re-exports constants
+// Data Index — CSV 기반 몬스터 데이터 + 상수 re-export
 // ============================================================
 
-export { SENSORY_AXES, SENSORY_EFFECTIVENESS, calcSensoryMod, SKILL_CATEGORY, AXIS_LABEL, GENERIC_LOGS, ENVIRONMENT_AXES, ENV_AXIS_LABEL, ENV_AXIS_ICON, ENV_VALUE_LABEL } from './constants.js';
-export { makeSkill, makeActions } from './skills.js';
+export { SENSORY_AXES, SENSORY_EFFECTIVENESS, calcSensoryMod, SKILL_CATEGORY, AXIS_LABEL, GENERIC_LOGS, ENVIRONMENT_AXES, ENV_AXIS_LABEL, ENV_AXIS_ICON, ENV_VALUE_LABEL, ENV_RANGE } from './constants.js';
+// skills.js — 이전 카탈로그 stub (하위 호환)
 export { REACTIONS } from './reactions.js';
+export { initMonsterData, getEnvironmentPreference, getWildMechanic, getAxisMeta, getFormSkills } from './monsterDataLoader.js';
 
-// ---- Import all 24 monster modules ----
-import m01 from './monsters/01_howl_wolf.js';
-import m02 from './monsters/02_ember_salamander.js';
-import m03 from './monsters/03_rot_toad.js';
-import m04 from './monsters/04_stalker_mantis.js';
-import m05 from './monsters/05_echo_bat.js';
-import m06 from './monsters/06_frost_moth.js';
-import m07 from './monsters/07_mist_jellyfish.js';
-import m08 from './monsters/08_vine_spider.js';
-import m09 from './monsters/09_mirror_chameleon.js';
-import m10 from './monsters/10_crystal_stag.js';
-import m11 from './monsters/11_lava_crab.js';
-import m12 from './monsters/12_spore_fox.js';
-import m13 from './monsters/13_iron_boar.js';
-import m14 from './monsters/14_stone_tortoise.js';
-import m15 from './monsters/15_rumble_bear.js';
-import m16 from './monsters/16_thorn_hedgehog.js';
-import m17 from './monsters/17_storm_hawk.js';
-import m18 from './monsters/18_shadow_cat.js';
-import m19 from './monsters/19_coral_seahorse.js';
-import m20 from './monsters/20_wind_serpent.js';
-import m21 from './monsters/21_swamp_leech.js';
-import m22 from './monsters/22_thunder_eel.js';
-import m23 from './monsters/23_smoke_weasel.js';
-import m24 from './monsters/24_moss_golem.js';
+// ---- 몬스터 데이터 (CSV 로드 후 채워짐) ----
+export const ALL_MONSTERS = [];
+export const ENEMY_MONSTERS = [];
+export const ALLY_MONSTERS = [];
+export const ALL_CODEX_ENTRIES = [];
 
-export const ALL_MONSTERS = [m01,m02,m03,m04,m05,m06,m07,m08,m09,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22,m23,m24];
+export function rebuildDerivedArrays() {
+  ENEMY_MONSTERS.length = 0;
+  ALLY_MONSTERS.length = 0;
+  ALL_CODEX_ENTRIES.length = 0;
 
-// ---- Derived arrays for backward compatibility ----
+  for (const m of ALL_MONSTERS) {
+    ENEMY_MONSTERS.push(m.wild);
+    if (m.devo1.length > 0) ALLY_MONSTERS.push(m.devo1[0]);
 
-// ENEMY_MONSTERS: 24 wild forms (for combat encounters)
-export const ENEMY_MONSTERS = ALL_MONSTERS.map(m => m.wild);
-
-// ALLY_MONSTERS: first devo1 of each monster (for team selection)
-export const ALLY_MONSTERS = ALL_MONSTERS.map(m => m.devo1[0]);
-
-// ALL_CODEX_ENTRIES: wild + all devo1 + all devo2 (for full codex)
-export const ALL_CODEX_ENTRIES = ALL_MONSTERS.flatMap(m => [
-  { ...m.wild, type: 'wild', sourceId: m.id },
-  ...m.devo1.map(d => ({ ...d, type: 'devo1', sourceId: m.id })),
-  ...m.devo2.map(d => ({ ...d, type: 'devo2', sourceId: m.id })),
-]);
+    m.wild.type = 'wild'; m.wild.sourceId = m.id;
+    ALL_CODEX_ENTRIES.push(m.wild);
+    m.devo1.forEach(d => { d.type = 'devo1'; d.sourceId = m.id; ALL_CODEX_ENTRIES.push(d); });
+    m.devo2.forEach(d => { d.type = 'devo2'; d.sourceId = m.id; ALL_CODEX_ENTRIES.push(d); });
+  }
+}
 
 // Starter monsters: 3 unlocked at game start (attacker + tank + support)
-// Covers 3 sensory axes: sound / smell / temperature
-// howl_wolf (#01) attacker, rot_toad (#03) tank, frost_moth (#06) support
 export const STARTER_IDS = ['howl_wolf_d1_0', 'rot_toad_d1_0', 'frost_moth_d1_0'];

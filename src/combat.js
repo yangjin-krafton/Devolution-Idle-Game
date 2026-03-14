@@ -1,4 +1,4 @@
-import { GENERIC_LOGS, ENVIRONMENT_AXES, ENV_AXIS_LABEL } from './data/index.js';
+import { GENERIC_LOGS, ENVIRONMENT_AXES, ENV_AXIS_LABEL, ENV_RANGE } from './data/index.js';
 import {
   createEmotionState,
   tickEmotion,
@@ -112,7 +112,7 @@ export class CombatSystem {
       this.log(`${ENV_AXIS_LABEL[axis]}이(가) 잠겨 있어 변하지 않는다!`);
       return;
     }
-    this.environment[axis] = Math.max(-2, Math.min(2, this.environment[axis] + delta));
+    this.environment[axis] = Math.max(ENV_RANGE.min, Math.min(ENV_RANGE.max, this.environment[axis] + delta));
   }
 
   // ---- 적 교란 ----
@@ -289,6 +289,19 @@ export class CombatSystem {
   }
 
   _handleStimulateAsEnv(ally, action) {
+    // CSV 스킬 델타가 있으면 모든 축에 적용
+    if (action.deltas) {
+      for (const axis of ENVIRONMENT_AXES) {
+        const d = action.deltas[axis];
+        if (d && d !== 0) {
+          this._changeEnvironment(axis, d);
+          const dirLabel = d > 0 ? '높아졌다' : '낮아졌다';
+          this.log(`${ENV_AXIS_LABEL[axis]}이(가) ${dirLabel}. (${this.environment[axis]})`);
+        }
+      }
+      return;
+    }
+    // 기존 호환: 단일축 delta 계산
     const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
     const magnitude = action.power > 5 ? 2 : 1;
     const delta = (action.escapeRisk < 0) ? -magnitude : magnitude;
@@ -416,11 +429,32 @@ export class CombatSystem {
 
   previewAction(ally, action) {
     if (action.category === 'stimulate') {
+      // CSV 스킬 델타가 있으면 다축 프리뷰
+      if (action.deltas) {
+        const axisChanges = {};
+        for (const axis of ENVIRONMENT_AXES) {
+          const d = action.deltas[axis];
+          if (d && d !== 0) {
+            const cur = this.environment[axis];
+            axisChanges[axis] = {
+              current: cur, delta: d,
+              newVal: Math.max(ENV_RANGE.min, Math.min(ENV_RANGE.max, cur + d)),
+              hint: this._getAxisHint(axis),
+              revealed: this.revealedAxes.has(axis),
+              label: ENV_AXIS_LABEL[axis],
+            };
+          }
+        }
+        return {
+          type: 'stimulate', multiAxis: true, axisChanges,
+          pp: action.pp, conditionMet: this._meetsCondition(action),
+        };
+      }
       const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
       const current = this.environment[envAxis];
       const magnitude = action.power > 5 ? 2 : 1;
       const delta = (action.escapeRisk < 0) ? -magnitude : magnitude;
-      const newVal = Math.max(-2, Math.min(2, current + delta));
+      const newVal = Math.max(ENV_RANGE.min, Math.min(ENV_RANGE.max, current + delta));
       const hint = this._getAxisHint(envAxis);
       const revealed = this.revealedAxes.has(envAxis);
       const pref = this.enemy.environmentPreference?.[envAxis];

@@ -7,6 +7,9 @@ export const SENSORY_AXES = ['sound', 'temperature', 'smell', 'behavior'];
 // ---- 환경 5축 조율 시스템 ----
 export const ENVIRONMENT_AXES = ['temperature', 'brightness', 'smell', 'humidity', 'sound'];
 
+// 환경축 값 범위 (CSV 5axis 기준 -9 ~ 9)
+export const ENV_RANGE = { min: -9, max: 9 };
+
 export const ENV_AXIS_LABEL = {
   temperature: '온도', brightness: '밝기', smell: '냄새', humidity: '습도', sound: '소리',
 };

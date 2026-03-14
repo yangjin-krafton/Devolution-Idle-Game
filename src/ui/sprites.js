@@ -3,23 +3,23 @@
 // ============================================================
 
 import { C } from './theme.js';
-import { ALLY_MONSTERS, ENEMY_MONSTERS } from '../data/index.js';
+import { ALL_CODEX_ENTRIES } from '../data/index.js';
 
 const textures = {};
 
-// Preload all monster textures
+// Preload all monster textures (전체 코덱스 엔트리)
 export async function loadMonsterTextures() {
   const paths = new Set();
-  for (const a of ALLY_MONSTERS) {
-    if (a.img) paths.add(a.img);
-    if (a.devolvedImg) paths.add(a.devolvedImg);
+  for (const m of ALL_CODEX_ENTRIES) {
+    if (m.img) paths.add(m.img);
+    if (m.devolvedImg) paths.add(m.devolvedImg);
   }
-  for (const e of ENEMY_MONSTERS) {
-    if (e.img) paths.add(e.img);
-  }
-  for (const p of paths) {
-    textures[p] = await PIXI.Assets.load(p);
-  }
+  const results = await Promise.allSettled(
+    [...paths].map(async p => {
+      try { textures[p] = await PIXI.Assets.load(p); }
+      catch { /* 이미지 없으면 무시 */ }
+    })
+  );
 }
 
 // Create a monster sprite sized to fit within `size` px
@@ -36,16 +36,16 @@ export function monster(size, img) {
   return c;
 }
 
-// Helper: get ally img path from id
+// Helper: get monster img path from id
 export function allyImg(id) {
-  const ally = ALLY_MONSTERS.find(a => a.id === id);
-  return ally ? ally.img : null;
+  const m = ALL_CODEX_ENTRIES.find(a => a.id === id);
+  return m ? m.img : null;
 }
 
-// Helper: get ally devolved img path from id
+// Helper: get devolved img path from id
 export function allyDevolvedImg(id) {
-  const ally = ALLY_MONSTERS.find(a => a.id === id);
-  return ally ? ally.devolvedImg : null;
+  const m = ALL_CODEX_ENTRIES.find(a => a.id === id);
+  return m ? m.devolvedImg : null;
 }
 
 // Map ally id to color (still used for egg color)

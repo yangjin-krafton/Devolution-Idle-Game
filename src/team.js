@@ -1,27 +1,22 @@
 // ============================================================
-// Team Management — 6마리 팀 + 퇴화 + 스탯 시스템
+// Team Management — 팀 + 퇴화 (CSV 기반, XP/레벨 제거)
 // ============================================================
 
 import { ALLY_MONSTERS, ENEMY_MONSTERS, ALL_MONSTERS, GENERIC_LOGS } from './data/index.js';
-import { normalizeSkillLoadout, getSkill } from './data/skills.js';
 
 export class TeamManager {
   constructor(orderedIds) {
     const source = orderedIds
       ? orderedIds.map(id => ALLY_MONSTERS.find(a => a.id === id)).filter(Boolean)
       : ALLY_MONSTERS;
-    this.allies = source.map(a => {
-      const loadout = normalizeSkillLoadout(a);
-      return {
-        ...a,
-        skillPool: loadout.skillPool,
-        equipped: [...loadout.equipped],
-        actions: loadout.actions,
-      };
-    });
+    this.allies = source.map(a => ({
+      ...a,
+      actions: (a.actions || []).map(act => ({ ...act })),
+      inEgg: false,
+      devolved: false,
+    }));
     this.collection = [];
     this.eggTimers = new Map();
-    // First 3 are active, last 3 are bench
     this.activeSlots = [0, 1, 2];
   }
 
@@ -31,9 +26,7 @@ export class TeamManager {
       .filter(a => a && !a.inEgg);
   }
 
-  getBattleTeam() {
-    return this.getActiveTeam();
-  }
+  getBattleTeam() { return this.getActiveTeam(); }
 
   getBenchTeam() {
     return this.allies.filter((a, i) => !this.activeSlots.includes(i));
@@ -44,123 +37,23 @@ export class TeamManager {
     return { ...ENEMY_MONSTERS[idx] };
   }
 
-  awardXP(actedAllyIds) {
-    const logs = [];
-    for (const id of actedAllyIds) {
-      const ally = this.allies.find(a => a.id === id);
-      if (!ally || ally.inEgg || ally.devolved) continue;
-      ally.xp += 1;
-      logs.push(GENERIC_LOGS.xpGain(ally.name, `${ally.xp}/${ally.xpThreshold}`));
-    }
-    return logs;
-  }
-
-  // Structured battle rewards — xpCurve-based level-up, skillUnlocks
-  computeBattleRewards(actedAllyIds) {
-    const allyResults = [];
-    for (const id of actedAllyIds) {
-      const ally = this.allies.find(a => a.id === id);
-      if (!ally || ally.inEgg || ally.devolved) continue;
-
-      const xpBefore = ally.xp;
-      const levelBefore = ally.level || 1;
-      const xpGain = 1;
-      ally.xp += xpGain;
-
-      let levelAfter = ally.level || 1;
-      const levelUps = []; // per-level: { from, to, statChanges, newSkills }
-      let enteredEgg = false;
-
-      // xpCurve-based level-up (may level multiple times)
-      const curve = ally.xpCurve;
-      if (curve) {
-        while (levelAfter < (ally.maxLevel || curve.length) && ally.xp >= curve[levelAfter]) {
-          const lvFrom = levelAfter;
-          levelAfter++;
-          const sc = {};
-          const sk = [];
-
-          // Skill unlocks
-          if (ally.skillUnlocks && ally.skillUnlocks[levelAfter]) {
-            const unlockKeys = ally.skillUnlocks[levelAfter];
-            const keys = Array.isArray(unlockKeys) ? unlockKeys : [unlockKeys];
-            for (const key of keys) {
-              const skill = getSkill(key);
-              if (skill && !ally.skillPool.some(s => s.key === key || s === key)) {
-                ally.skillPool.push(skill);
-                sk.push(skill);
-              }
-            }
-          }
-
-          levelUps.push({ from: lvFrom, to: levelAfter, statChanges: sc, newSkills: sk });
-        }
-      } else {
-        // Fallback: old threshold system
-        const threshold = ally.xpThreshold || 5;
-        if (ally.xp >= threshold) {
-          levelAfter = levelBefore + 1;
-          levelUps.push({ from: levelBefore, to: levelAfter, statChanges: {}, newSkills: [] });
-        }
-      }
-
-      ally.level = levelAfter;
-
-      // Devolution check: maxLevel reached
-      const maxLvl = ally.maxLevel || (curve ? curve.length : 10);
-      if (levelAfter >= maxLvl && !ally.inEgg) {
-        ally.inEgg = true;
-        enteredEgg = true;
-        this.eggTimers.set(ally.id, {
-          startTime: Date.now(),
-          duration: 15000,
-        });
-      }
-
-      // xpNeeded for current level's bar display
-      const xpNeeded = curve ? (curve[levelAfter] || curve[curve.length - 1]) : (ally.xpThreshold || 5);
-      const xpBase = curve ? (curve[levelAfter - 1] || 0) : 0;
-
-      allyResults.push({
-        id: ally.id,
-        name: ally.name,
-        img: ally.img,
-        xpBefore, xpAfter: ally.xp, xpGain,
-        xpBase, xpNeeded,
-        leveledUp: levelUps.length > 0,
-        levelBefore, levelAfter,
-        levelUps,
-        enteredEgg,
-      });
-    }
-    return allyResults;
-  }
-
-  // Swap equipped skill: replace equipped[slotIdx] with newSkillKey, rebuild actions
-  swapEquippedSkill(allyId, slotIdx, newSkillKey) {
-    const ally = this.allies.find(a => a.id === allyId);
-    if (!ally || slotIdx < 0 || slotIdx >= ally.equipped.length) return false;
-    const newSkill = ally.skillPool.find(s => (s.key || s.id) === newSkillKey);
-    if (!newSkill) return false;
-    ally.equipped[slotIdx] = newSkillKey;
-    ally.actions[slotIdx] = { ...newSkill, pp: newSkill.maxPp || newSkill.pp };
-    return true;
-  }
-
-  checkDevolution() {
-    const logs = [];
+  healTeam() {
     for (const ally of this.allies) {
-      if (ally.inEgg || ally.devolved) continue;
-      if (ally.xp >= ally.xpThreshold) {
-        ally.inEgg = true;
-        this.eggTimers.set(ally.id, {
-          startTime: Date.now(),
-          duration: 15000,
-        });
-        logs.push(GENERIC_LOGS.eggEnter(ally.name));
+      if (!ally.inEgg) {
+        for (const action of (ally.actions || [])) {
+          if (action.maxPp != null) action.pp = action.maxPp;
+        }
       }
     }
-    return logs;
+  }
+
+  // 퇴화: 알 상태 진입 (외부에서 트리거)
+  enterEgg(allyId) {
+    const ally = this.allies.find(a => a.id === allyId);
+    if (!ally || ally.inEgg || ally.devolved) return null;
+    ally.inEgg = true;
+    this.eggTimers.set(ally.id, { startTime: Date.now(), duration: 15000 });
+    return GENERIC_LOGS.eggEnter(ally.name);
   }
 
   checkEggHatch() {
@@ -174,14 +67,9 @@ export class TeamManager {
           ally._oldImg = ally.img;
           ally.inEgg = false;
           ally.devolved = true;
-          ally.name = ally.devolvedName;
-          ally.desc = ally.devolvedDesc;
+          ally.name = ally.devolvedName || ally.name;
+          ally.desc = ally.devolvedDesc || ally.desc;
           ally.img = ally.devolvedImg || ally.img;
-          ally.xp = 0;
-          // Boost first action power
-          if (ally.actions[0]) {
-            ally.actions[0].power += 3;
-          }
           this.eggTimers.delete(allyId);
           logs.push(GENERIC_LOGS.eggHatch(oldName, ally.name));
         }
@@ -197,39 +85,20 @@ export class TeamManager {
     return Math.min(100, Math.round((elapsed / timer.duration) * 100));
   }
 
-  healTeam() {
-    for (const ally of this.allies) {
-      if (!ally.inEgg) {
-        // PP 전체 회복
-        for (const action of ally.actions) {
-          if (action.maxPp != null) action.pp = action.maxPp;
-        }
-      }
-    }
-  }
-
   addCaptured(enemy) {
-    this.collection.push({
-      id: enemy.id,
-      name: enemy.name,
-      desc: enemy.desc,
-      captured: true,
-    });
+    this.collection.push({ id: enemy.id, name: enemy.name, desc: enemy.desc, captured: true });
   }
 
-  // Convert wild enemy to ally and add to roster (returns ally entry or null if full)
   recruitMonster(enemyId) {
     if (this.allies.length >= 6) return null;
-    // Find the monster family and get devo1[0] as the ally form
     const family = ALL_MONSTERS.find(m => m.wild.id === enemyId);
     if (!family || !family.devo1[0]) return null;
     const template = family.devo1[0];
-    const loadout = normalizeSkillLoadout(template);
     const ally = {
       ...template,
-      skillPool: loadout.skillPool,
-      equipped: [...loadout.equipped],
-      actions: loadout.actions,
+      actions: (template.actions || []).map(act => ({ ...act })),
+      inEgg: false,
+      devolved: false,
     };
     this.allies.push(ally);
     return ally;
@@ -245,7 +114,6 @@ export class TeamManager {
   removeFromRoster(idx) {
     if (idx < 0 || idx >= this.allies.length || this.allies.length <= 3) return false;
     this.allies.splice(idx, 1);
-    // Fix activeSlots references
     this.activeSlots = this.activeSlots
       .map(s => s > idx ? s - 1 : s)
       .filter(s => s < this.allies.length);

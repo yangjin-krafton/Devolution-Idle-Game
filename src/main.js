@@ -32,6 +32,7 @@ import { ENCOUNTER_DIALOGS } from './data/dialogs/encounters/index.js';
 import { JOIN_DIALOGS } from './data/dialogs/join/index.js';
 import { CombatSystem } from './combat.js';
 import { TeamManager } from './team.js';
+import { initMonsterData, ALL_MONSTERS } from './data/index.js';
 
 // ============================================================
 // Game Version — 구 세이브 자동 삭제
@@ -71,6 +72,8 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', resi
 // ============================================================
 // Init all modules
 // ============================================================
+// CSV 데이터 로드 → 몬스터 데이터 enrichment
+await initMonsterData(ALL_MONSTERS);
 await loadMonsterTextures();
 initScreens(app);
 initEffects(app);
@@ -258,13 +261,10 @@ function endBattle() {
     teamManager.addCaptured(combat.enemy);
   }
 
-  // Compute structured rewards (XP, level-up, stat growth, skill unlocks, devolution)
-  console.log('[endBattle] state:', result.state, '| actedAllies:', result.actedAllies,
-    '| team:', teamManager.allies.map(a => a.name + (a.inEgg ? '(egg)' : '') + (a.devolved ? '(devo)' : '')).join(', '));
+  // 전투 결과 (XP/레벨 시스템 제거됨)
   const allyRewards = result.state !== 'defeat'
-    ? teamManager.computeBattleRewards(result.actedAllies)
+    ? teamManager.getActiveTeam().map(a => ({ id: a.id, name: a.name, img: a.img }))
     : [];
-  console.log('[endBattle] allyRewards:', allyRewards.length, allyRewards.map(a => a.name + ' xp:' + a.xpBefore + '→' + a.xpAfter).join(', '));
 
   const rewards = {
     state: result.state,
@@ -273,9 +273,6 @@ function endBattle() {
   };
 
   _showScreenTracked('result');
-  const onSkillSwap = (allyId, slotIdx, newKey) => {
-    teamManager.swapEquippedSkill(allyId, slotIdx, newKey);
-  };
   renderResult(rewards, () => {
     if (result.state === 'defeat') { showGameOverScreen(); return; }
 
@@ -295,7 +292,7 @@ function endBattle() {
       // Escaped — go to team edit without captured monster
       showTeamEditScreen(null);
     }
-  }, onSkillSwap);
+  });
 }
 
 function showTeamEditScreen(capturedEnemy) {
@@ -438,10 +435,7 @@ initDebug(() => ({
     renderResult(rewards, onDone || (() => {
       _showScreenTracked('title');
       console.log('[DEBUG] 결과창 닫힘 → 타이틀로 복귀');
-    }), (allyId, slotIdx, newKey) => {
-      console.log('[DEBUG] swapSkill:', allyId, slotIdx, newKey);
-      if (teamManager) teamManager.swapEquippedSkill(allyId, slotIdx, newKey);
-    });
+    }));
   },
   teamManager,
 }));

@@ -40,9 +40,8 @@ let codexFilter = 'all'; // 'all' | 'wild' | 'devo1' | 'devo2' | family sourceId
 let codexSort = 'default'; // 'default' | 'name' | 'family'
 let filteredList = [];     // cached for hit testing
 
-// Family name lookup (24 families)
+// Family name lookup (CSV 로드 후 resetState에서 채워짐)
 const FAMILY_NAMES = {};
-ALL_MONSTERS.forEach(m => { FAMILY_NAMES[m.id] = m.wild.name; });
 
 // ---- UI refs ----
 let ct, detailBody, slotGfx = [], codexContent, codexMask;
@@ -105,7 +104,9 @@ function resetState() {
   selectedMonster = null; scrollOffset = 0; mode = 'idle';
   codexFilter = 'all'; codexSort = 'default'; filteredList = [];
   codexEntries = {};
-  // All 232 monsters unlocked
+  // Family names 재빌드 (CSV 로드 후 ALL_MONSTERS가 채워진 뒤)
+  ALL_MONSTERS.forEach(m => { if (m.wild) FAMILY_NAMES[m.id] = m.wild.name; });
+  // All monsters unlocked
   ALL_CODEX_ENTRIES.forEach(m => { codexEntries[m.id] = 'unlocked'; });
 }
 
@@ -360,61 +361,30 @@ function renderPageInfo(pw, mon) {
   const contentH = DETAIL_H;
   const gap = 4;
   const LINEAGE_H = 90;
+  let curY = 0;
 
-  // ══ ALLY MONSTER ══
-  if (mon.actions) {
-    // --- 1) Name bar ---
-    const nameT = lbl(mon.name, 11, D.text, true); nameT.x = 2; nameT.y = 2;
-    detailBody.addChild(nameT);
+  // ── 1) 이름 + 설명 ──
+  const nameT = lbl(mon.name, 11, D.text, true); nameT.x = 2; nameT.y = curY + 2;
+  detailBody.addChild(nameT);
+  const descT = lbl(mon.desc || '', 7, D.dim); descT.x = 2; descT.y = curY + 28;
+  detailBody.addChild(descT);
+  curY = 46 + gap;
 
-    const descT = lbl(mon.desc || '', 7, D.dim);
-    descT.x = 2; descT.y = 28;
-    detailBody.addChild(descT);
+  // ── 2) 퇴화 족보 ──
+  drawLineage(0, curY, pw, LINEAGE_H, mon);
+  curY += LINEAGE_H + gap;
 
-    // --- 2) Lineage ---
-    const lineY = 46 + gap;
-    drawLineage(0, lineY, pw, LINEAGE_H, mon);
-
-    // --- 3) Skill cards ---
-    const skillY = lineY + LINEAGE_H + gap;
-    const skillH = contentH - skillY;
-    drawSkillCards(0, skillY, pw, skillH, mon.actions);
-
-  } else if (!mon.actions) {
-    drawLineage(0, 0, pw, LINEAGE_H, mon);
-    drawSkillCards(0, LINEAGE_H + gap, pw, contentH - LINEAGE_H - gap, mon.actions);
-  }
-
-  // ══ Enemy: no skills → show enemy info + lineage ══
-  if (!mon.actions) {
-    // Name + desc
-    const nameT = lbl(mon.name, 11, D.text, true); nameT.x = 2; nameT.y = 2;
-    detailBody.addChild(nameT);
-
-    const descT = lbl(mon.desc || '', 7, D.dim);
-    descT.x = 2; descT.y = 28;
-    detailBody.addChild(descT);
-
-    // Enemy info table
-    const sensory = (mon.sensoryType || []).map(s => AXIS_LABEL[s] || s).join(', ');
-    const pers = PERSONALITY_LABEL[mon.personality] || mon.personality || '';
-
-    const headers = ['감각', '성격', '순화', '도주'];
-    const colors = [D.dimmer, D.dimmer, D.neon, D.red];
-    const row = [[
-      { text: sensory, size: 7, color: D.text, bold: true },
-      { text: pers, size: 7, color: D.text, bold: true },
-      { text: String(mon.tamingThreshold || '-'), size: 9, color: D.neon, bold: true },
-      { text: String(mon.escapeThreshold || '-'), size: 9, color: D.red, bold: true },
-    ]];
-
-    const tableY = 46;
-    const tableH = 42;
-    drawTable(0, tableY, pw, tableH, headers, row, colors);
-
-    // Lineage (middle)
-    const lineY = tableY + tableH + gap;
-    drawLineage(0, lineY, pw, LINEAGE_H, mon);
+  // ── 3) 스킬 카드 (actions 또는 csvSkills) ──
+  const skills = mon.actions || (mon.csvSkills ? mon.csvSkills.map(sk => ({
+    id: sk.skillId, name: sk.nameKr, category: 'stimulate',
+    axis: sk.axisPrimary, power: sk.basePower,
+    pp: sk.pp, maxPp: sk.pp,
+    deltas: sk.deltas, deltaPattern: sk.deltaPattern,
+    defenseBoost: 0, healAmount: 0,
+  })) : null);
+  if (skills && skills.length > 0) {
+    const skillH = contentH - curY;
+    drawSkillCards(0, curY, pw, skillH, skills);
   }
 }
 
@@ -525,6 +495,7 @@ function buildCodexPanel() {
   ct.addChild(codexMask);
   codexContent = new PIXI.Container();
   codexContent.y = CODEX_GRID_Y;
+  codexContent.sortableChildren = true;
   codexContent.mask = codexMask;
   ct.addChild(codexContent);
   refreshCodex();
@@ -754,6 +725,7 @@ function refreshCodex() {
     const state = codexEntries[mon.id] || 'locked';
     const inTeam = teamIds.has(mon.id);
     const isSel = selectedMonster && selectedMonster.id === mon.id;
+    card.zIndex = isSel ? 10 : 0;
 
     if (state === 'locked') {
       card.addChild(new PIXI.Graphics()
@@ -800,6 +772,23 @@ function refreshCodex() {
         const b = neonBadge('배치중', D.neon);
         b.x = (CODEX_CARD_W - (b.width || 42)) / 2; b.y = 3;
         card.addChild(b);
+      }
+
+      // 선택된 몬스터 아래에 "배치" 버튼
+      if (isSel && !inTeam && mon.actions && mon.actions.length > 0 && teamSlots.some(s => s === null)) {
+        const btnW = CODEX_CARD_W, btnH = 22;
+        const btn = new PIXI.Container();
+        btn.y = CODEX_CARD_H + 2;
+        btn.addChild(new PIXI.Graphics()
+          .roundRect(0, 0, btnW, btnH, 6)
+          .fill({ color: D.neon, alpha: 0.3 })
+          .stroke({ color: D.neon, width: 1, alpha: 0.8 }));
+        const t = lbl('▶ 배치', 6.5, D.neon, true);
+        t.anchor = { x: 0.5, y: 0.5 }; t.x = btnW / 2; t.y = btnH / 2;
+        btn.addChild(t);
+        btn.eventMode = 'static'; btn.cursor = 'pointer';
+        btn.on('pointerdown', (e) => { e.stopPropagation(); assignToTeam(mon); });
+        card.addChild(btn);
       }
     }
     codexContent.addChild(card);
@@ -947,20 +936,18 @@ function pulseSlot(idx) {
 }
 
 function onCodexClick(mon) {
-  selectedMonster = mon; refreshDetail();
-  const state = codexEntries[mon.id];
-  if (state !== 'unlocked' || !mon.actions || teamSlots.some(m => m && m.id === mon.id)) {
-    refreshSlots(); refreshCodex(); return;
-  }
+  selectedMonster = mon;
+  refreshDetail(); refreshSlots(); refreshCodex();
+}
+
+function assignToTeam(mon) {
+  if (!mon || !mon.actions) return;
+  if (teamSlots.some(m => m && m.id === mon.id)) return;
   const empty = teamSlots.findIndex(s => s === null);
-  if (empty >= 0) {
-    teamSlots[empty] = { ...mon, actions: mon.actions.map(a => ({ ...a })) };
-    refreshSlots(); refreshCodex();
-    // Pulse bounce on newly placed slot
-    pulseSlot(empty);
-  } else {
-    refreshSlots(); refreshCodex();
-  }
+  if (empty < 0) return;
+  teamSlots[empty] = { ...mon, actions: mon.actions.map(a => ({ ...a })) };
+  refreshDetail(); refreshSlots(); refreshCodex();
+  pulseSlot(empty);
 }
 
 // ============================================================

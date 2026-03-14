@@ -108,8 +108,43 @@ function _renderPreview(ct, preview, action, cat, w, cy, ch, alpha) {
   const midY = cy + ch * 0.4;
 
   if (preview.type === 'stimulate') {
-    // 환경 축 아이콘 (크게)
-    const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
+    // CSV 다축 프리뷰
+    if (preview.multiAxis && preview.axisChanges) {
+      const entries = Object.entries(preview.axisChanges);
+      const startY = cy + 2;
+      const rowH = Math.min(16, (ch - 4) / Math.max(entries.length, 1));
+      entries.forEach(([axis, info], i) => {
+        const icon = ENV_AXIS_ICON[axis] || '·';
+        const sign = info.delta > 0 ? '+' : '';
+        const col = info.delta > 0 ? D.neon : D.orange;
+        const hintMap = { low: '▲', high: '▼', ok: '●' };
+        const hintCol = info.hint === 'ok' ? D.neon : info.hint === 'low' ? 0xff8866 : 0x66aaff;
+        const rowY = startY + i * rowH;
+
+        const iL = lbl(icon, 8, cat.c, true);
+        iL.x = 6; iL.y = rowY; iL.alpha = alpha;
+        ct.addChild(iL);
+
+        const nL = lbl(`${info.current}→${info.newVal}`, 6, D.text, true);
+        nL.x = 22; nL.y = rowY + 2; nL.alpha = alpha;
+        ct.addChild(nL);
+
+        const dL = lbl(`${sign}${info.delta}`, 8, col, true);
+        dL.anchor = { x: 1, y: 0 };
+        dL.x = w - 20; dL.y = rowY; dL.alpha = alpha;
+        ct.addChild(dL);
+
+        if (info.hint !== 'ok') {
+          const hL = lbl(hintMap[info.hint] || '', 7, hintCol, true);
+          hL.anchor = { x: 1, y: 0 };
+          hL.x = w - 6; hL.y = rowY; hL.alpha = alpha;
+          ct.addChild(hL);
+        }
+      });
+      return;
+    }
+    // 기존 단축 프리뷰
+    const envAxis = AXIS_TO_ENV[action.axis] || action.axis || 'sound';
     const envIcon = ENV_AXIS_ICON[envAxis] || '💫';
     const envName = ENV_AXIS_LABEL[envAxis] || '';
 
@@ -118,7 +153,6 @@ function _renderPreview(ct, preview, action, cat, w, cy, ch, alpha) {
     iconL.x = midX - 20; iconL.y = midY; iconL.alpha = alpha;
     ct.addChild(iconL);
 
-    // 변화량 (크게)
     const delta = preview.delta || 0;
     const deltaText = delta > 0 ? `+${delta}` : String(delta);
     const deltaL = lbl(deltaText, 14, D.text, true);
@@ -126,7 +160,6 @@ function _renderPreview(ct, preview, action, cat, w, cy, ch, alpha) {
     deltaL.x = midX + 20; deltaL.y = midY; deltaL.alpha = alpha;
     ct.addChild(deltaL);
 
-    // 힌트 (아래)
     const hintY = midY + 22;
     const hintMap = { low: '▲ 올려야', high: '▼ 내려야', ok: '● 적절' };
     const hintColor = preview.hint === 'ok' ? D.neon : preview.hint === 'low' ? 0xff8866 : 0x66aaff;
@@ -136,7 +169,6 @@ function _renderPreview(ct, preview, action, cat, w, cy, ch, alpha) {
     hintL.x = midX; hintL.y = hintY; hintL.alpha = alpha;
     ct.addChild(hintL);
 
-    // 공개된 축이면 목표값
     if (preview.revealed && preview.idealVal != null) {
       const iSign = preview.idealVal > 0 ? '+' : '';
       const tolText = preview.tolerance > 0 ? `±${preview.tolerance}` : '';
@@ -218,7 +250,36 @@ function _renderStatic(ct, action, cat, w, cy, ch, alpha) {
   const midY = cy + ch * 0.4;
 
   if (action.category === 'stimulate') {
-    const envAxis = AXIS_TO_ENV[action.axis] || 'sound';
+    // CSV 다축 델타가 있으면 축별 리스트로 표시
+    if (action.deltas) {
+      const axes = Object.entries(action.deltas).filter(([, v]) => v && v !== 0);
+      if (axes.length > 0) {
+        const startY = cy + 4;
+        const rowH = Math.min(16, (ch - 8) / Math.max(axes.length, 1));
+        axes.forEach(([axis, delta], i) => {
+          const icon = ENV_AXIS_ICON[axis] || '·';
+          const sign = delta > 0 ? '+' : '';
+          const col = delta > 0 ? D.neon : D.orange;
+          const rowY = startY + i * rowH;
+
+          const iL = lbl(icon, 8, cat.c, true);
+          iL.x = 8; iL.y = rowY; iL.alpha = alpha;
+          ct.addChild(iL);
+
+          const nL = lbl(ENV_AXIS_LABEL[axis] || axis, 6, D.dim);
+          nL.x = 24; nL.y = rowY + 2; nL.alpha = alpha;
+          ct.addChild(nL);
+
+          const dL = lbl(`${sign}${delta}`, 8, col, true);
+          dL.anchor = { x: 1, y: 0 };
+          dL.x = w - 8; dL.y = rowY; dL.alpha = alpha;
+          ct.addChild(dL);
+        });
+        return;
+      }
+    }
+    // 기존 호환: 단일축
+    const envAxis = AXIS_TO_ENV[action.axis] || action.axis || 'sound';
     const envIcon = ENV_AXIS_ICON[envAxis] || '💫';
 
     const iconL = lbl(envIcon, 12, cat.c, true);
@@ -232,7 +293,6 @@ function _renderStatic(ct, action, cat, w, cy, ch, alpha) {
     magL.x = midX + 18; magL.y = midY; magL.alpha = alpha;
     ct.addChild(magL);
 
-    // axis 이름
     const nameL = lbl(ENV_AXIS_LABEL[envAxis] || '', 6, D.dim);
     nameL.anchor = { x: 0.5, y: 0 };
     nameL.x = midX; nameL.y = midY + 18; nameL.alpha = alpha;
