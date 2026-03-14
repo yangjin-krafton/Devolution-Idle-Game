@@ -34,6 +34,11 @@ let startPos = { x: 0, y: 0 };
 let dragSprite = null;
 const DRAG_THRESHOLD = 8;
 let scrollOffset = 0, maxScroll = 0, scrollStartOffset = 0;
+let slotPulseAnim = null;
+// Long-press drag state
+let longPressTimer = null, codexDragMon = null, codexDragSprite = null;
+let slotHighlights = [];
+const LONG_PRESS_MS = 200;
 
 // ---- Codex filter/sort state ----
 let codexFilter = 'all'; // 'all' | 'wild' | 'devo1' | 'devo2' | family sourceId
@@ -50,6 +55,51 @@ let slotsHeaderLabel, filterBarContainer;
 let dropdownOverlay = null; // active dropdown container (null = closed)
 
 // ---- Helpers ----
+
+function drawDashedRoundRect(g, x, y, w, h, r, dashLen, gapLen, style) {
+  // 라운드 렉트의 둘레를 따라 점선을 그리는 헬퍼
+  // 직선 구간 + 모서리 호를 점으로 근사
+  const pts = [];
+  const steps = 6; // 모서리 호 분할 수
+  // Top-right corner
+  for (let s = 0; s <= steps; s++) {
+    const a = -Math.PI / 2 + (Math.PI / 2) * (s / steps);
+    pts.push({ x: x + w - r + Math.cos(a) * r, y: y + r + Math.sin(a) * r });
+  }
+  // Right side + Bottom-right corner
+  for (let s = 0; s <= steps; s++) {
+    const a = 0 + (Math.PI / 2) * (s / steps);
+    pts.push({ x: x + w - r + Math.cos(a) * r, y: y + h - r + Math.sin(a) * r });
+  }
+  // Bottom side + Bottom-left corner
+  for (let s = 0; s <= steps; s++) {
+    const a = Math.PI / 2 + (Math.PI / 2) * (s / steps);
+    pts.push({ x: x + r + Math.cos(a) * r, y: y + h - r + Math.sin(a) * r });
+  }
+  // Left side + Top-left corner
+  for (let s = 0; s <= steps; s++) {
+    const a = Math.PI + (Math.PI / 2) * (s / steps);
+    pts.push({ x: x + r + Math.cos(a) * r, y: y + r + Math.sin(a) * r });
+  }
+
+  // 점선 그리기
+  let drawing = true, segLeft = dashLen;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y;
+    let len = Math.sqrt(dx * dx + dy * dy), consumed = 0;
+    while (consumed < len) {
+      const step = Math.min(segLeft, len - consumed);
+      const sx = pts[i - 1].x + dx * (consumed / len);
+      const sy = pts[i - 1].y + dy * (consumed / len);
+      const ex = pts[i - 1].x + dx * ((consumed + step) / len);
+      const ey = pts[i - 1].y + dy * ((consumed + step) / len);
+      if (drawing) g.moveTo(sx, sy).lineTo(ex, ey);
+      consumed += step; segLeft -= step;
+      if (segLeft <= 0) { drawing = !drawing; segLeft = drawing ? dashLen : gapLen; }
+    }
+  }
+  g.stroke(style);
+}
 
 function slotNum(num, color) {
   const c = new PIXI.Container();
@@ -102,6 +152,8 @@ function getFilteredMonsters() {
 function resetState() {
   teamSlots = [null, null, null];
   selectedMonster = null; scrollOffset = 0; mode = 'idle';
+  if (slotPulseAnim) { cancelAnimationFrame(slotPulseAnim); slotPulseAnim = null; }
+  cancelLongPress(); endCodexDrag();
   codexFilter = 'all'; codexSort = 'default'; filteredList = [];
   codexEntries = {};
   // Family names 재빌드 (CSV 로드 후 ALL_MONSTERS가 채워진 뒤)
@@ -413,6 +465,7 @@ function buildTeamSlots() {
   refreshSlots();
 }
 
+
 function refreshSlots() {
   let count = 0;
   for (let i = 0; i < 3; i++) {
@@ -422,16 +475,53 @@ function refreshSlots() {
     if (mon) count++;
 
     if (!mon) {
-      // Empty slot
-      c.addChild(new PIXI.Graphics()
-        .roundRect(0, 0, SLOT_W, SLOT_H, 14).fill({ color: D.bgAlt })
-        .stroke({ color: D.sep, width: 1, alpha: 0.3 }));
-      const plus = lbl('+', 14, D.dimmer);
-      plus.anchor = { x: 0.5, y: 0.5 }; plus.x = SLOT_W / 2; plus.y = SLOT_H / 2 - 4;
-      c.addChild(plus);
-      const hint = lbl('빈 슬롯', 5, D.dimmer);
-      hint.anchor = { x: 0.5, y: 0 }; hint.x = SLOT_W / 2; hint.y = SLOT_H / 2 + 12;
-      c.addChild(hint);
+      // 배치 가능 여부
+      const canPlace = selectedMonster
+        && !teamSlots.some(m => m && m.id === selectedMonster.id)
+        && selectedMonster.actions?.length > 0
+        && codexEntries[selectedMonster.id] === 'unlocked';
+
+      // ── 점선 보더 드롭존 ──
+      const accentCol = canPlace ? D.neon : D.dim;
+      const bg = new PIXI.Graphics()
+        .roundRect(0, 0, SLOT_W, SLOT_H, 14)
+        .fill({ color: canPlace ? D.neon : D.bgAlt, alpha: canPlace ? 0.04 : 0.5 });
+      c.addChild(bg);
+      // 점선 보더 (dash pattern)
+      const dash = new PIXI.Graphics();
+      const r = 14, dashLen = 8, gapLen = 6;
+      drawDashedRoundRect(dash, 0, 0, SLOT_W, SLOT_H, r, dashLen, gapLen,
+        { color: accentCol, width: canPlace ? 2 : 1.5, alpha: canPlace ? 0.6 : 0.25 });
+      c.addChild(dash);
+
+      if (canPlace) {
+        // 실루엣 미리보기
+        const sil = monster(56, selectedMonster.img);
+        sil.x = SLOT_W / 2; sil.y = 40; sil.alpha = 0.18;
+        if (sil.children[0]) sil.children[0].tint = D.neon;
+        c.addChild(sil);
+        // + 뱃지
+        const plusBg = new PIXI.Graphics()
+          .circle(SLOT_W / 2, SLOT_H / 2, 14)
+          .fill({ color: D.neon, alpha: 0.15 })
+          .stroke({ color: D.neon, width: 1.5, alpha: 0.5 });
+        c.addChild(plusBg);
+        const plus = lbl('+', 10, D.neon, true);
+        plus.anchor = { x: 0.5, y: 0.5 }; plus.x = SLOT_W / 2; plus.y = SLOT_H / 2;
+        c.addChild(plus);
+        c._pulseTarget = dash;
+      } else {
+        // 기본 빈 슬롯: 드롭존 아이콘
+        const icon = lbl('+', 12, D.dimmer);
+        icon.anchor = { x: 0.5, y: 0.5 }; icon.x = SLOT_W / 2; icon.y = SLOT_H / 2 - 6;
+        icon.alpha = 0.4;
+        c.addChild(icon);
+        const hint = lbl('끌어서 배치', 5, D.dimmer);
+        hint.anchor = { x: 0.5, y: 0 }; hint.x = SLOT_W / 2; hint.y = SLOT_H / 2 + 10;
+        hint.alpha = 0.35;
+        c.addChild(hint);
+        c._pulseTarget = null;
+      }
       continue;
     }
 
@@ -464,6 +554,20 @@ function refreshSlots() {
 
   if (slotsHeaderLabel) slotsHeaderLabel.text = `${count}/3`;
   refreshStartBtn();
+
+  // 펄스 애니메이션: 빈 배치 가능 슬롯
+  if (slotPulseAnim) cancelAnimationFrame(slotPulseAnim);
+  const hasPulse = slotGfx.some(c => c._pulseTarget);
+  if (hasPulse) {
+    function tickPulse() {
+      const t = (Math.sin(performance.now() / 400) + 1) / 2; // 0~1 oscillation
+      slotGfx.forEach(c => {
+        if (c._pulseTarget) c._pulseTarget.alpha = 0.4 + t * 0.6;
+      });
+      slotPulseAnim = requestAnimationFrame(tickPulse);
+    }
+    slotPulseAnim = requestAnimationFrame(tickPulse);
+  }
 }
 
 // ---- Codex ----
@@ -774,22 +878,6 @@ function refreshCodex() {
         card.addChild(b);
       }
 
-      // 선택된 몬스터 아래에 "배치" 버튼
-      if (isSel && !inTeam && mon.actions && mon.actions.length > 0 && teamSlots.some(s => s === null)) {
-        const btnW = CODEX_CARD_W, btnH = 22;
-        const btn = new PIXI.Container();
-        btn.y = CODEX_CARD_H + 2;
-        btn.addChild(new PIXI.Graphics()
-          .roundRect(0, 0, btnW, btnH, 6)
-          .fill({ color: D.neon, alpha: 0.3 })
-          .stroke({ color: D.neon, width: 1, alpha: 0.8 }));
-        const t = lbl('▶ 배치', 6.5, D.neon, true);
-        t.anchor = { x: 0.5, y: 0.5 }; t.x = btnW / 2; t.y = btnH / 2;
-        btn.addChild(t);
-        btn.eventMode = 'static'; btn.cursor = 'pointer';
-        btn.on('pointerdown', (e) => { e.stopPropagation(); assignToTeam(mon); });
-        card.addChild(btn);
-      }
     }
     codexContent.addChild(card);
   });
@@ -861,15 +949,82 @@ function onPointerDown(e) {
     if (pos.x >= bx && pos.x < bx + bw && pos.y >= by && pos.y < by + bh) return;
   }
   const si = hitSlot(pos.x, pos.y);
-  if (si >= 0 && teamSlots[si]) { mode = 'slot-pending'; pendingSlotIdx = si; return; }
-  if (pos.y >= CODEX_GRID_Y && pos.y <= H && !startOverlay.visible) {
-    mode = 'codex-pending'; scrollStartOffset = scrollOffset; return;
+  if (si >= 0) {
+    if (teamSlots[si]) {
+      // 채워진 슬롯: 드래그 제거 대기
+      mode = 'slot-pending'; pendingSlotIdx = si; return;
+    }
+    // 빈 슬롯 탭: 선택 몬스터 배치
+    const canPlace = selectedMonster
+      && !teamSlots.some(m => m && m.id === selectedMonster.id)
+      && selectedMonster.actions?.length > 0;
+    if (canPlace) {
+      teamSlots[si] = { ...selectedMonster, actions: selectedMonster.actions.map(a => ({ ...a })) };
+      refreshDetail(); refreshSlots(); refreshCodex();
+      pulseSlot(si);
+    }
+    return;
   }
+  if (pos.y >= CODEX_GRID_Y && pos.y <= H && !startOverlay.visible) {
+    mode = 'codex-pending'; scrollStartOffset = scrollOffset;
+    // 롱프레스 타이머: 배치 가능한 몬스터 위에서만
+    const candidate = hitCodexCard(pos.x, pos.y);
+    const teamIds = new Set(teamSlots.filter(Boolean).map(m => m.id));
+    const canDrag = candidate
+      && codexEntries[candidate.id] === 'unlocked'
+      && !teamIds.has(candidate.id)
+      && candidate.actions?.length > 0
+      && teamSlots.some(s => s === null);
+    if (canDrag) {
+      codexDragMon = candidate;
+      longPressTimer = setTimeout(() => {
+        if (mode !== 'codex-pending') return; // 이미 스크롤 전환됨
+        mode = 'codex-dragging';
+        codexDragSprite = monster(55, codexDragMon.img);
+        codexDragSprite.alpha = 0.8; codexDragSprite.x = startPos.x; codexDragSprite.y = startPos.y;
+        ct.addChild(codexDragSprite);
+        showSlotHighlights(true);
+      }, LONG_PRESS_MS);
+    } else {
+      codexDragMon = null;
+    }
+    return;
+  }
+}
+
+function showSlotHighlights(show) {
+  slotHighlights.forEach(h => h.parent?.removeChild(h));
+  slotHighlights = [];
+  if (!show) return;
+  for (let i = 0; i < 3; i++) {
+    if (teamSlots[i]) continue; // 빈 슬롯만 하이라이트
+    const p = slotPos(i);
+    const h = new PIXI.Graphics()
+      .roundRect(p.x - 3, p.y - 3, SLOT_W + 6, SLOT_H + 6, 16)
+      .fill({ color: D.neon, alpha: 0.08 })
+      .stroke({ color: D.neon, width: 2, alpha: 0.5 });
+    h.zIndex = 999;
+    h._slotIdx = i;
+    ct.addChild(h);
+    slotHighlights.push(h);
+  }
+}
+
+function cancelLongPress() {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}
+
+function endCodexDrag() {
+  if (codexDragSprite) { ct.removeChild(codexDragSprite); codexDragSprite = null; }
+  showSlotHighlights(false);
+  codexDragMon = null;
 }
 
 function onPointerMove(e) {
   const pos = e.getLocalPosition(ct);
   const dx = pos.x - startPos.x, dy = pos.y - startPos.y;
+
+  // ── 슬롯 드래그 (제거/재배치) ──
   if (mode === 'slot-pending' && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
     mode = 'dragging';
     dragSprite = monster(55, teamSlots[pendingSlotIdx].img);
@@ -879,15 +1034,31 @@ function onPointerMove(e) {
   }
   if (mode === 'dragging' && dragSprite) {
     dragSprite.x = pos.x; dragSprite.y = pos.y;
-    // Full opacity when hovering over codex area, dim when above
     removeIndicator.alpha = pos.y > CODEX_Y ? 1.0 : 0.25;
   }
-  if (mode === 'codex-pending' && Math.abs(dy) > 5) mode = 'scrolling';
+
+  // ── 도감: 롱프레스 전에 움직이면 스크롤로 전환 ──
+  if (mode === 'codex-pending' && Math.abs(dy) > 5) {
+    cancelLongPress();
+    mode = 'scrolling';
+  }
+
+  // ── 도감 드래그 (롱프레스 후) ──
+  if (mode === 'codex-dragging' && codexDragSprite) {
+    codexDragSprite.x = pos.x; codexDragSprite.y = pos.y;
+    const hoverIdx = hitSlot(pos.x, pos.y);
+    slotHighlights.forEach(h => {
+      h.alpha = (h._slotIdx === hoverIdx) ? 1.0 : 0.5;
+    });
+  }
+
   if (mode === 'scrolling') { scrollOffset = scrollStartOffset - dy; applyScroll(); }
 }
 
 function onPointerUp(e) {
   const pos = e.getLocalPosition(ct);
+  cancelLongPress();
+
   if (mode === 'slot-pending') {
     selectedMonster = teamSlots[pendingSlotIdx];
     refreshDetail(); refreshSlots(); refreshCodex();
@@ -905,6 +1076,16 @@ function onPointerUp(e) {
         teamSlots[pendingSlotIdx] = tmp;
       }
     }
+    refreshDetail(); refreshSlots(); refreshCodex();
+  }
+  if (mode === 'codex-dragging') {
+    const target = hitSlot(pos.x, pos.y);
+    if (target >= 0 && !teamSlots[target] && codexDragMon) {
+      teamSlots[target] = { ...codexDragMon, actions: codexDragMon.actions.map(a => ({ ...a })) };
+      selectedMonster = codexDragMon;
+      pulseSlot(target);
+    }
+    endCodexDrag();
     refreshDetail(); refreshSlots(); refreshCodex();
   }
   if (mode === 'codex-pending') {
@@ -940,15 +1121,6 @@ function onCodexClick(mon) {
   refreshDetail(); refreshSlots(); refreshCodex();
 }
 
-function assignToTeam(mon) {
-  if (!mon || !mon.actions) return;
-  if (teamSlots.some(m => m && m.id === mon.id)) return;
-  const empty = teamSlots.findIndex(s => s === null);
-  if (empty < 0) return;
-  teamSlots[empty] = { ...mon, actions: mon.actions.map(a => ({ ...a })) };
-  refreshDetail(); refreshSlots(); refreshCodex();
-  pulseSlot(empty);
-}
 
 // ============================================================
 // Public API
