@@ -18,7 +18,7 @@ const SLOT_LEFT = Math.round((W - (SLOT_W * 3 + SLOT_GAP * 2)) / 2);
 const MAIN_SLOTS_Y = SLOTS_Y + 24;
 const CODEX_Y = MAIN_SLOTS_Y + SLOT_H + 8;
 const CODEX_HEADER_H = 30;
-const CODEX_FILTER_H = 46;
+const CODEX_FILTER_H = 32;
 const CODEX_GRID_Y = CODEX_Y + CODEX_HEADER_H + CODEX_FILTER_H;
 const CODEX_VISIBLE_H = H - CODEX_GRID_Y;
 const CODEX_CARD_W = 95, CODEX_CARD_H = 105, CODEX_COLS = 4, CODEX_GAP = 12;
@@ -48,6 +48,7 @@ ALL_MONSTERS.forEach(m => { FAMILY_NAMES[m.id] = m.wild.name; });
 let ct, detailBody, slotGfx = [], codexContent, codexMask;
 let startOverlay, startBtnRef, removeIndicator;
 let slotsHeaderLabel, filterBarContainer;
+let dropdownOverlay = null; // active dropdown container (null = closed)
 
 // ---- Helpers ----
 
@@ -75,19 +76,25 @@ function filterPill(text, isActive, color) {
 }
 
 function getFilteredMonsters() {
-  let all = [...ALLY_MONSTERS, ...ENEMY_MONSTERS];
+  let all = [...ALL_CODEX_ENTRIES];
 
-  // Filter
-  if (codexFilter === 'ally') all = all.filter(m => !!m.actions);
-  else if (codexFilter === 'enemy') all = all.filter(m => !m.actions);
-  else if (codexFilter === 'unlocked') all = all.filter(m => codexEntries[m.id] === 'unlocked');
-  else if (codexFilter === 'locked') all = all.filter(m => codexEntries[m.id] === 'locked');
+  // Filter by type
+  if (codexFilter === 'wild') all = all.filter(m => m.type === 'wild');
+  else if (codexFilter === 'devo1') all = all.filter(m => m.type === 'devo1');
+  else if (codexFilter === 'devo2') all = all.filter(m => m.type === 'devo2');
+  else if (codexFilter.startsWith('fam:')) {
+    const famId = codexFilter.slice(4);
+    all = all.filter(m => m.sourceId === famId);
+  }
+  // 'all' = no filter
 
   // Sort
   if (codexSort === 'name') {
     all.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  } else if (codexSort === 'family') {
+    all.sort((a, b) => a.sourceId.localeCompare(b.sourceId) || (a.type === 'wild' ? -1 : b.type === 'wild' ? 1 : 0));
   }
-  // 'default' = original data order (no sort)
+  // 'default' = original data order
 
   return all;
 }
@@ -229,6 +236,7 @@ function drawTable(x, y, w, h, headers, dataRows, colColors) {
 }
 
 function drawSkillCards(x, y, w, h, actions) {
+  if (!actions || !actions.length) return;
   const cols = actions.length;
   const cardGap = 6;
   const cardW = (w - cardGap * (cols - 1)) / cols;
@@ -522,99 +530,207 @@ function buildCodexPanel() {
   refreshCodex();
 }
 
+// ── Dropdown menu helpers ──
+
+function closeDropdown() {
+  if (dropdownOverlay) {
+    dropdownOverlay.parent?.removeChild(dropdownOverlay);
+    dropdownOverlay.destroy({ children: true });
+    dropdownOverlay = null;
+  }
+}
+
+function dropdownTrigger(label, value, color, x, y) {
+  const text = `${label}: ${value} ▾`;
+  const tw = text.length * 7 * S + 22;
+  const th = 26;
+  const c = new PIXI.Container();
+  c.x = x; c.y = y;
+  c.addChild(new PIXI.Graphics().roundRect(0, 0, tw, th, 12)
+    .fill({ color: color, alpha: 0.2 })
+    .stroke({ color: color, width: 1, alpha: 0.6 }));
+  const t = lbl(text, 6.5, color, true);
+  t.anchor = { x: 0.5, y: 0.5 }; t.x = tw / 2; t.y = th / 2;
+  c.addChild(t);
+  c._triggerWidth = tw;
+  c.eventMode = 'static'; c.cursor = 'pointer';
+  return c;
+}
+
+function openDropdown(items, anchorGlobal, activeKey, color, onSelect, opts = {}) {
+  closeDropdown();
+  const dd = new PIXI.Container();
+  dd.zIndex = 9999;
+  dropdownOverlay = dd;
+
+  // Backdrop
+  const backdrop = new PIXI.Graphics().rect(0, 0, W, H).fill({ color: 0x000000, alpha: 0.35 });
+  backdrop.eventMode = 'static'; backdrop.cursor = 'default';
+  backdrop.on('pointerdown', (e) => { e.stopPropagation(); closeDropdown(); });
+  dd.addChild(backdrop);
+
+  const cols = opts.cols || 2;
+  const cellW = opts.cellW || 90;
+  const cellH = opts.cellH || 28;
+  const gap = 4;
+  const pad = 8;
+
+  // Separate sections if there's a divider
+  const sections = [[]];
+  items.forEach(item => {
+    if (item.key === '_divider') {
+      sections[sections.length - 1]._title = item.label;
+      sections.push([]);
+    } else {
+      sections[sections.length - 1].push(item);
+    }
+  });
+
+  // Calculate panel size
+  let totalH = pad;
+  const sectionMeta = [];
+  sections.forEach((sec, si) => {
+    const secCols = si > 0 ? (opts.familyCols || 4) : cols;
+    const rows = Math.ceil(sec.length / secCols);
+    const secH = rows * (cellH + gap);
+    if (si > 0) totalH += 16; // section header
+    sectionMeta.push({ cols: secCols, startY: totalH });
+    totalH += secH;
+  });
+  totalH += pad;
+
+  const menuW = Math.max(
+    sections.reduce((max, sec, si) => {
+      const c = sectionMeta[si].cols;
+      return Math.max(max, c * (cellW + gap) - gap + pad * 2);
+    }, 0),
+    160
+  );
+
+  // Center the panel on screen
+  const menuX = Math.round((W - menuW) / 2);
+  const menuY = Math.max(4, Math.round((H - totalH) / 2));
+
+  const panel = new PIXI.Container();
+  panel.x = menuX; panel.y = menuY;
+
+  // Background
+  panel.addChild(new PIXI.Graphics()
+    .roundRect(0, 0, menuW, totalH, 10)
+    .fill({ color: D.panel, alpha: 0.97 })
+    .stroke({ color: color, width: 1, alpha: 0.5 }));
+
+  sections.forEach((sec, si) => {
+    const meta = sectionMeta[si];
+    const secCols = meta.cols;
+    const secCellW = si > 0 ? Math.floor((menuW - pad * 2 + gap) / secCols) - gap : cellW;
+    const gridW = secCols * (secCellW + gap) - gap;
+    const gridX = Math.round((menuW - gridW) / 2);
+
+    // Section header
+    if (si > 0 && sections[si - 1]._title) {
+      const titleY = meta.startY - 14;
+      panel.addChild(new PIXI.Graphics()
+        .moveTo(pad, titleY).lineTo(menuW - pad, titleY)
+        .stroke({ color: D.sep, width: 0.5, alpha: 0.4 }));
+      const ht = lbl(sections[si - 1]._title.replace(/[─ ]/g, ''), 4.5, D.dimmer, true);
+      ht.anchor = { x: 0.5, y: 0.5 }; ht.x = menuW / 2; ht.y = titleY + 1;
+      panel.addChild(ht);
+    }
+
+    sec.forEach((item, i) => {
+      const col = i % secCols, row = Math.floor(i / secCols);
+      const cx = gridX + col * (secCellW + gap);
+      const cy = meta.startY + row * (cellH + gap);
+      const isActive = item.key === activeKey;
+
+      const cell = new PIXI.Container();
+      cell.x = cx; cell.y = cy;
+      cell.eventMode = 'static'; cell.cursor = 'pointer';
+
+      const bg = new PIXI.Graphics()
+        .roundRect(0, 0, secCellW, cellH, 7)
+        .fill({ color: isActive ? color : D.bgAlt, alpha: isActive ? 0.35 : 0.6 })
+        .stroke({ color: isActive ? color : D.sep, width: 1, alpha: isActive ? 0.8 : 0.25 });
+      cell.addChild(bg);
+
+      const t = lbl(item.label, si > 0 ? 5.5 : 6.5, isActive ? color : D.text, isActive);
+      t.anchor = { x: 0.5, y: 0.5 }; t.x = secCellW / 2; t.y = cellH / 2;
+      cell.addChild(t);
+
+      cell.on('pointerdown', (e) => {
+        e.stopPropagation();
+        closeDropdown();
+        onSelect(item.key);
+      });
+      panel.addChild(cell);
+    });
+  });
+
+  dd.addChild(panel);
+  ct.addChild(dd);
+}
+
 function buildFilterBar() {
   filterBarContainer.removeChildren();
 
-  // ── Row 1: [필터] type pills ─── [정렬] sort pills ──
   const typeFilters = [
     { key: 'all',   label: '전체' },
     { key: 'wild',  label: '야생' },
-    { key: 'devo1', label: '1차' },
-    { key: 'devo2', label: '2차' },
+    { key: 'devo1', label: '1차 퇴화' },
+    { key: 'devo2', label: '2차 퇴화' },
   ];
   const sorts = [
-    { key: 'default', label: '기본' },
-    { key: 'name',    label: '이름' },
-    { key: 'family',  label: '종족' },
+    { key: 'default', label: '기본순' },
+    { key: 'name',    label: '이름순' },
+    { key: 'family',  label: '종족순' },
   ];
+
+  // Current labels
+  const filterName = typeFilters.find(f => f.key === codexFilter)?.label
+    || (codexFilter.startsWith('fam:') ? FAMILY_NAMES[codexFilter.slice(4)]?.slice(0, 4) || '종족' : '전체');
+  const sortName = sorts.find(s => s.key === codexSort)?.label || '기본순';
 
   let x = PAD;
 
-  // "필터" section label
-  const filterLabel = lbl('필터', 4.5, D.dimmer, true);
-  filterLabel.x = x; filterLabel.y = 5;
-  filterBarContainer.addChild(filterLabel);
-  x += 28;
-
-  typeFilters.forEach(f => {
-    const pill = filterPill(f.label, codexFilter === f.key, D.neon);
-    pill.x = x; pill.y = 2;
-    pill.eventMode = 'static'; pill.cursor = 'pointer';
-    pill.on('pointerdown', (e) => {
-      e.stopPropagation();
-      codexFilter = f.key;
+  // ── Filter trigger button ──
+  const filterBtn = dropdownTrigger('필터', filterName, D.neon, x, 1);
+  filterBtn.on('pointerdown', (e) => {
+    e.stopPropagation();
+    // Combine type + family items
+    const allItems = [
+      ...typeFilters,
+      { key: '_divider', label: '── 종족 ──' },
+      ...ALL_MONSTERS.map(m => ({
+        key: 'fam:' + m.id,
+        label: m.wild.name,
+      })),
+    ];
+    const globalPos = filterBtn.getGlobalPosition();
+    openDropdown(allItems, globalPos, codexFilter, D.neon, (key) => {
+      if (key === '_divider') return;
+      codexFilter = key;
       scrollOffset = 0;
       buildFilterBar();
       refreshCodex();
-    });
-    filterBarContainer.addChild(pill);
-    x += (pill._pillWidth || 40) + 3;
+    }, { cols: 2, cellW: 110, cellH: 36, familyCols: 4 });
   });
+  filterBarContainer.addChild(filterBtn);
+  x += (filterBtn._triggerWidth || 80) + 10;
 
-  // Vertical separator line
-  x += 4;
-  filterBarContainer.addChild(new PIXI.Graphics()
-    .moveTo(x, 3).lineTo(x, 17).stroke({ color: D.sep, width: 1, alpha: 0.4 }));
-  x += 8;
-
-  // "정렬" section label
-  const sortLabel = lbl('정렬', 4.5, D.dimmer, true);
-  sortLabel.x = x; sortLabel.y = 5;
-  filterBarContainer.addChild(sortLabel);
-  x += 28;
-
-  sorts.forEach(s => {
-    const isActive = codexSort === s.key;
-    const pill = filterPill(s.label + (isActive ? ' ▼' : ''), isActive, 0x7799ff);
-    pill.x = x; pill.y = 2;
-    pill.eventMode = 'static'; pill.cursor = 'pointer';
-    pill.on('pointerdown', (e) => {
-      e.stopPropagation();
-      codexSort = s.key;
+  // ── Sort trigger button ──
+  const sortBtn = dropdownTrigger('정렬', sortName, 0x7799ff, x, 1);
+  sortBtn.on('pointerdown', (e) => {
+    e.stopPropagation();
+    const globalPos = sortBtn.getGlobalPosition();
+    openDropdown(sorts, globalPos, codexSort, 0x7799ff, (key) => {
+      codexSort = key;
       scrollOffset = 0;
       buildFilterBar();
       refreshCodex();
-    });
-    filterBarContainer.addChild(pill);
-    x += (pill._pillWidth || 40) + 3;
+    }, { cols: 3, cellW: 95, cellH: 36 });
   });
-
-  // ── Row 2: 24 family pills with "종족" label ──
-  const famRow = new PIXI.Container();
-  famRow.y = 22;
-
-  const famLabel = lbl('종족', 4.5, D.dimmer, true);
-  famLabel.x = PAD; famLabel.y = 3;
-  famRow.addChild(famLabel);
-
-  let fx = PAD + 28;
-  ALL_MONSTERS.forEach(m => {
-    const isActive = codexFilter === 'fam:' + m.id;
-    const shortName = m.wild.name.slice(0, 3);
-    const pill = filterPill(shortName, isActive, 0xff8844);
-    pill.x = fx; pill.y = 0;
-    pill.eventMode = 'static'; pill.cursor = 'pointer';
-    pill.on('pointerdown', (e) => {
-      e.stopPropagation();
-      codexFilter = isActive ? 'all' : 'fam:' + m.id;
-      scrollOffset = 0;
-      buildFilterBar();
-      refreshCodex();
-    });
-    famRow.addChild(pill);
-    fx += (pill._pillWidth || 30) + 2;
-  });
-  filterBarContainer.addChild(famRow);
+  filterBarContainer.addChild(sortBtn);
 }
 
 function refreshCodex() {

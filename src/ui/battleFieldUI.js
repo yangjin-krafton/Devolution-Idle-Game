@@ -317,20 +317,43 @@ export function applyBackground(env) {
 
 // ---- Enemy Mood Particles ----
 
+// Cache emoji textures to avoid costly PIXI.Text creation each frame
+const _emojiTexCache = {};
+function _getEmojiTex(emoji, fontSize) {
+  const key = emoji + '|' + fontSize;
+  if (_emojiTexCache[key]) return _emojiTexCache[key];
+  const t = new PIXI.Text({ text: emoji, style: { fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif', fontSize, fill: '#ffffff' }});
+  const tex = PIXI.RenderTexture.create({ width: Math.ceil(t.width) + 2, height: Math.ceil(t.height) + 2 });
+  // Can't use app.renderer here, draw to canvas instead
+  _emojiTexCache[key] = t;  // keep the Text object, but reuse via Sprite clone
+  return t.texture;
+}
+
 function _spawnMoodParticle(emoji, x, y) {
   if (!container) return;
-  const t = new PIXI.Text({ text: emoji, style: { fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif', fontSize: 20 + Math.random() * 10, fill: '#ffffff' }});
-  t.anchor.set(0.5); t.x = x + (Math.random() - 0.5) * 60; t.y = y - 20 - Math.random() * 20; t.alpha = 0.9;
-  container.addChild(t);
-  moodParticles.push({ sprite: t, vx: (Math.random() - 0.5) * 0.5, vy: -0.3 - Math.random() * 0.3, life: 1.5 + Math.random() * 0.5, age: 0 });
+  const fontSize = 20 + Math.floor(Math.random() * 3) * 5;  // 20, 25, or 30 (3 sizes only)
+  const key = emoji + '|' + fontSize;
+  if (!_emojiTexCache[key]) {
+    _emojiTexCache[key] = new PIXI.Text({ text: emoji, style: { fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif', fontSize, fill: '#ffffff' }});
+  }
+  const src = _emojiTexCache[key];
+  const s = new PIXI.Sprite(src.texture);
+  s.anchor.set(0.5); s.x = x + (Math.random() - 0.5) * 60; s.y = y - 20 - Math.random() * 20; s.alpha = 0.9;
+  container.addChild(s);
+  moodParticles.push({ sprite: s, vx: (Math.random() - 0.5) * 0.5, vy: -0.3 - Math.random() * 0.3, life: 1.5 + Math.random() * 0.5, age: 0 });
 }
 
 function _spawnFaceEmoji(emoji, x, y) {
   if (!container) return;
-  const t = new PIXI.Text({ text: emoji, style: { fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif', fontSize: 36, fill: '#ffffff' }});
-  t.anchor.set(0.5); t.x = x + 30; t.y = y - 50; t.alpha = 0;
-  container.addChild(t);
-  moodParticles.push({ sprite: t, vx: 0, vy: -0.15, life: 2.0, age: 0, isFace: true });
+  const key = emoji + '|36';
+  if (!_emojiTexCache[key]) {
+    _emojiTexCache[key] = new PIXI.Text({ text: emoji, style: { fontFamily: '"M PLUS Rounded 1c", "Noto Sans KR", sans-serif', fontSize: 36, fill: '#ffffff' }});
+  }
+  const src = _emojiTexCache[key];
+  const s = new PIXI.Sprite(src.texture);
+  s.anchor.set(0.5); s.x = x + 30; s.y = y - 50; s.alpha = 0;
+  container.addChild(s);
+  moodParticles.push({ sprite: s, vx: 0, vy: -0.15, life: 2.0, age: 0, isFace: true });
 }
 
 function _tickEnemyMood() {
